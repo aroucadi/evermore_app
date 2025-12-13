@@ -1,4 +1,3 @@
-
 import { Pinecone } from '@pinecone-database/pinecone';
 import { OpenAIClient } from '@/lib/services/openai/OpenAIClient';
  import { db } from '@/lib/infrastructure/adapters/db';
@@ -25,14 +24,14 @@ export class MemoryService {
     this.openai = new OpenAIClient();
   }
 
-  async storeConversation(sessionId: string, transcript: string): Promise<void> {
+  async storeConversation(sessionId: string, transcript: string, userId: string): Promise<void> {
     if (this.isMock) {
         console.log(`Mock storeConversation for session ${sessionId}`);
         return;
     }
 
     // 1. Chunk conversation (~500 tokens each)
-    const chunks = this.chunkText(transcript, 500);
+    const chunks = this.chunkText(transcript, 500, userId);
 
     // 2. Generate embeddings
     const embeddings = await this.openai.createEmbeddings(
@@ -128,14 +127,14 @@ export class MemoryService {
     }));
   }
 
-  private chunkText(text: string, tokensPerChunk: number): any[] {
+  private chunkText(text: string, tokensPerChunk: number, userId: string): any[] {
     const words = text.split(/\s+/);
     const chunks = [];
 
     for (let i = 0; i < words.length; i += tokensPerChunk) {
       chunks.push({
         text: words.slice(i, i + tokensPerChunk).join(' '),
-        userId: 'user-id', // TODO: extract from context if passed
+        userId,
       });
     }
 
