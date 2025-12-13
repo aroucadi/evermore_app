@@ -1,5 +1,5 @@
-import { SessionRepository } from '../../../../core/domain/repositories/SessionRepository';
-import { Session } from '../../../../core/domain/entities/Session';
+import { SessionRepository } from '../../../core/domain/repositories/SessionRepository';
+import { Session } from '../../../core/domain/entities/Session';
 import { db } from './index';
 import { sessions, jobs } from './schema';
 import { eq, desc } from 'drizzle-orm';
