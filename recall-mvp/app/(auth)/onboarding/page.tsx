@@ -1,70 +1,108 @@
 
 'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Header } from '@/components/common/Header';
 
 export default function OnboardingPage() {
+  const router = useRouter();
+  const [formData, setFormData] = useState({
+    seniorName: '',
+    familyName: '',
+    email: '',
+    relationship: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    // Simulate API call to create users
+    // In real app: POST /api/users
+    try {
+        await fetch('/api/users', {
+            method: 'POST',
+            body: JSON.stringify({
+                name: formData.seniorName,
+                email: 'senior@example.com', // simplified for demo
+                role: 'senior'
+            })
+        });
+
+        // Redirect to portal
+        router.push('/portal');
+    } catch (error) {
+        console.error("Onboarding failed", error);
+    } finally {
+        setLoading(false);
+    }
+  };
+
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-center p-4 sm:p-6">
-      <div className="glass-panel w-full max-w-[400px] rounded-3xl shadow-[0_8px_32px_rgba(0,0,0,0.05)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col overflow-hidden relative">
-        <div className="px-8 pt-10 pb-4 flex flex-col items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold tracking-widest text-warm-primary uppercase">Step 1 of 2</span>
-          </div>
-          <div className="flex w-full gap-2 px-2">
-            <div className="h-1.5 w-1/2 rounded-full bg-warm-primary shadow-sm"></div>
-            <div className="h-1.5 w-1/2 rounded-full bg-gray-200/50 dark:bg-white/10"></div>
-          </div>
+    <div className="min-h-screen flex flex-col bg-neutral-50">
+      <Header />
+
+      <main className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full">
+          <h1 className="text-2xl font-bold mb-6 text-center">Create Your Account</h1>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="seniorName">Senior's Name</Label>
+              <Input
+                id="seniorName"
+                placeholder="e.g. Arthur Thompson"
+                value={formData.seniorName}
+                onChange={(e) => setFormData({...formData, seniorName: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="familyName">Your Name</Label>
+              <Input
+                id="familyName"
+                placeholder="e.g. Sarah Thompson"
+                value={formData.familyName}
+                onChange={(e) => setFormData({...formData, familyName: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">Your Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="sarah@example.com"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="relationship">Relationship</Label>
+              <Input
+                id="relationship"
+                placeholder="e.g. Daughter"
+                value={formData.relationship}
+                onChange={(e) => setFormData({...formData, relationship: e.target.value})}
+                required
+              />
+            </div>
+
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </Button>
+          </form>
         </div>
-        <div className="px-8 pb-4">
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-serif font-semibold leading-tight tracking-tight text-text-main dark:text-white mb-3">
-              Who are we celebrating?
-            </h1>
-            <p className="text-text-sub dark:text-gray-400 text-sm leading-relaxed">
-              We'll help you capture the priceless memories of the senior you love.
-            </p>
-          </div>
-          <div className="flex flex-col gap-6">
-            <Label className="flex flex-col gap-2 group">
-              <span className="text-sm font-semibold text-text-main dark:text-gray-200 pl-1">Senior's Name</span>
-              <div className="relative">
-                <Input className="glass-input form-input w-full rounded-2xl h-14 px-5 pl-5 pr-12 text-base text-text-main dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-warm-primary dark:focus:border-warm-primary focus:ring-2 focus:ring-warm-primary/20 focus:bg-white/60 dark:focus:bg-black/30 transition-all duration-300" placeholder="e.g., Grandma Joyce" type="text"/>
-                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-warm-primary/60 dark:text-warm-secondary/50 pointer-events-none text-[22px]">
-                  sentiment_satisfied
-                </span>
-              </div>
-            </Label>
-            <Label className="flex flex-col gap-2 group">
-              <div className="flex justify-between items-end pl-1 pr-1">
-                <span className="text-sm font-semibold text-text-main dark:text-gray-200">Senior's Email</span>
-                <span className="text-xs text-text-sub dark:text-gray-500 bg-black/5 dark:bg-white/10 px-2 py-0.5 rounded-md">Optional</span>
-              </div>
-              <div className="relative">
-                <Input className="glass-input form-input w-full rounded-2xl h-14 px-5 pl-5 pr-12 text-base text-text-main dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-warm-primary dark:focus:border-warm-primary focus:ring-2 focus:ring-warm-primary/20 focus:bg-white/60 dark:focus:bg-black/30 transition-all duration-300" placeholder="name@example.com" type="email"/>
-                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-warm-primary/60 dark:text-warm-secondary/50 pointer-events-none text-[22px]">
-                  mail
-                </span>
-              </div>
-            </Label>
-          </div>
-        </div>
-        <div className="flex-1 min-h-[32px]"></div>
-        <div className="px-8 pb-8 pt-2 flex flex-col gap-4">
-          <Button className="w-full h-14 bg-warm-primary hover:bg-[#d67e5b] text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg shadow-warm-primary/20 hover:shadow-warm-primary/40 active:scale-[0.98] transition-all duration-300 group">
-            Next: Your Info
-            <span className="material-symbols-outlined text-[20px] transition-transform duration-300 group-hover:translate-x-1">
-              arrow_forward
-            </span>
-          </Button>
-          <Button variant="ghost" className="w-full h-10 text-text-sub dark:text-gray-400 hover:text-warm-primary dark:hover:text-warm-secondary font-medium text-sm flex items-center justify-center transition-colors duration-200">
-            Back
-          </Button>
-        </div>
-      </div>
+      </main>
     </div>
   );
 }

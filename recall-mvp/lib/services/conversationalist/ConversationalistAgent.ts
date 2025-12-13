@@ -1,76 +1,11 @@
 
 import { OpenAIClient } from '@/lib/services/openai/OpenAIClient';
-import { Message } from '@/lib/types';
-
-interface Memory {
-  text: string;
-  timestamp: string;
-  entities: any;
-}
-
-interface SessionContext {
-  userId: string;
-  sessionId: string;
-  history: Message[];
-  memories: Memory[];
-}
-
-interface QuestioningStrategy {
-  buildPrompt(userUtterance: string, context: SessionContext): { system: string };
-}
-
-class SensoryDeepeningStrategy implements QuestioningStrategy {
-  buildPrompt(userUtterance: string, context: SessionContext) {
-    return {
-      system: `You are Recall, conducting reminiscence therapy with ${context.userId}.
-
-CURRENT STATE:
-- User's last response: ${userUtterance.length} chars, brief answer
-- Strategy: SENSORY DEEPENING
-
-YOUR TASK:
-Generate ONE question (max 25 words) that asks about a SPECIFIC sensory detail:
-- Smell, sound, texture, visual appearance, taste
-- Aim to trigger episodic memory
-
-TONE: Warm, curious, patient. Never challenge their memory.`
-    };
-  }
-}
-
-class TemporalThreadingStrategy implements QuestioningStrategy {
-    buildPrompt(userUtterance: string, context: SessionContext) {
-      return {
-        system: `You are Recall, conducting reminiscence therapy with ${context.userId}.
-
-  CURRENT STATE:
-  - User's last response: ${userUtterance.length} chars
-  - Strategy: TEMPORAL THREADING
-
-  YOUR TASK:
-  Generate ONE question (max 25 words) that connects the current topic to a past memory.
-
-  TONE: Warm, curious, patient. Never challenge their memory.`
-      };
-    }
-}
-
-class GracefulExitStrategy implements QuestioningStrategy {
-    buildPrompt(userUtterance: string, context: SessionContext) {
-      return {
-        system: `You are Recall, conducting reminiscence therapy with ${context.userId}.
-
-  CURRENT STATE:
-  - User's last response: ${userUtterance.length} chars, seems to be winding down
-  - Strategy: GRACEFUL EXIT
-
-  YOUR TASK:
-  Generate ONE question (max 25 words) that gracefully ends the conversation.
-
-  TONE: Warm, curious, patient. Never challenge their memory.`
-      };
-    }
-}
+import {
+  SensoryDeepeningStrategy,
+  TemporalThreadingStrategy,
+  GracefulExitStrategy
+} from './strategies';
+import { SessionContext, QuestioningStrategy } from '@/lib/types';
 
 export class ConversationalistAgent {
   private openai: OpenAIClient;
@@ -114,7 +49,7 @@ export class ConversationalistAgent {
     });
 
     return {
-      text: response.choices[0].message.content as string,
+      text: response.choices[0].message.content,
       strategy: strategyName
     };
   }

@@ -1,13 +1,15 @@
 
 import { pgTable, uuid, varchar, text, timestamp, integer, jsonb, boolean } from 'drizzle-orm/pg-core';
 
+import { AnyPgColumn } from 'drizzle-orm/pg-core';
+
 // Users Table
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
   role: varchar('role', { length: 50 }).notNull(), // 'senior' | 'family'
-  seniorId: uuid('senior_id').references(() => users.id),
+  seniorId: uuid('senior_id').references((): AnyPgColumn => users.id),
   phoneNumber: varchar('phone_number', { length: 50 }),
   preferences: jsonb('preferences').$type<{
     conversationSchedule?: string[];

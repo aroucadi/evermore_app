@@ -27,13 +27,13 @@ export const handlers = [
 
   // Send message in conversation
   http.post('/api/sessions/:id/messages', async ({ request, params }) => {
-    const body = await request.json();
+    const body: any = await request.json();
 
     // Mock agent response based on user message
     const agentResponse = {
       id: `msg-${Date.now()}`,
       speaker: 'agent',
-      text: mockAgentResponse(body.message),
+      text: mockAgentResponse(body?.message || ''),
       timestamp: new Date().toISOString()
     };
 

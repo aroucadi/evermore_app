@@ -27,8 +27,9 @@ export interface Message {
   id: string;
   speaker: 'agent' | 'user';
   text: string;
-  timestamp: Date;
+  timestamp: string | Date; // Allow string for serialization
   audioTimestamp?: number; // For audio sync
+  strategy?: string;
 }
 
 // Chapter Types
@@ -56,7 +57,7 @@ export interface EntityMention {
 export interface ChapterMetadata {
   sessionNumber: number;
   wordCount: number;
-  emotionalTone: 'positive' | 'neutral' | 'bittersweet' | 'melancholic';
+  emotionalTone: 'positive' | 'neutral' | 'bittersweet' | 'melancholic' | string;
   lifePeriod?: string; // "1950s", "Navy Years", etc.
 }
 
@@ -67,4 +68,23 @@ export interface ConversationState {
   messages: Message[];
   duration: number;
   isAgentSpeaking: boolean;
+}
+
+// Service Interfaces
+export interface SessionContext {
+  userId: string;
+  sessionId: string;
+  history: Message[];
+  memories: Memory[];
+}
+
+export interface Memory {
+  text: string;
+  timestamp: string | Date;
+  entities?: any;
+  id?: string;
+}
+
+export interface QuestioningStrategy {
+  buildPrompt(userUtterance: string, context: SessionContext): { system: string };
 }
