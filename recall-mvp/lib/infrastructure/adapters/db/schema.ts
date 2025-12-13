@@ -14,6 +14,15 @@ export const users = pgTable('users', {
   preferences: jsonb('preferences').$type<{
     conversationSchedule?: string[];
     voiceTone?: string;
+    topicsLove?: string[];
+    topicsAvoid?: string[];
+    emergencyContact?: {
+      name: string;
+      phoneNumber: string;
+      email?: string;
+      relationship?: string;
+    };
+    timezone?: string;
   }>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
@@ -58,6 +67,32 @@ export const chapters = pgTable('chapters', {
     emotionalTone: string;
     lifePeriod?: string;
   }>(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+});
+
+// Invitations (Conversations) Table
+export const invitations = pgTable('invitations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  seniorId: uuid('senior_id').references(() => users.id).notNull(),
+  scheduledFor: timestamp('scheduled_for').notNull(),
+  status: varchar('status', { length: 50 }).notNull().default('pending'), // 'pending' | 'sent' | 'answered' | 'missed' | 'cancelled'
+  sentAt: timestamp('sent_at'),
+  reminderSent: boolean('reminder_sent').default(false),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+// Alerts Table
+export const alerts = pgTable('alerts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  seniorId: uuid('senior_id').references(() => users.id).notNull(),
+  sessionId: uuid('session_id').references(() => sessions.id),
+  type: varchar('type', { length: 50 }).notNull(), // 'crisis' | 'decline'
+  content: text('content').notNull(),
+  triggerPhrase: text('trigger_phrase'),
+  severity: varchar('severity', { length: 20 }).notNull(), // 'high' | 'low'
+  acknowledged: boolean('acknowledged').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull()
 });
 

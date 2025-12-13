@@ -36,8 +36,6 @@ export class DrizzleChapterRepository implements ChapterRepository {
   }
 
   async findByEntity(userId: string, entityType: string, entityName: string): Promise<Chapter[]> {
-    // Advanced query using JSONB containment or path matching
-    // Drizzle's `sql` operator is useful here for specific JSONB syntax
     const found = await db.select()
       .from(chapters)
       .where(

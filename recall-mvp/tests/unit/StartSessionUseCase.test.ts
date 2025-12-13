@@ -9,7 +9,9 @@ const mockSessionRepository: SessionRepository = {
     create: async (session) => session,
     findById: async () => null,
     update: async () => {},
-    findByUserId: async () => []
+    findByUserId: async () => [],
+    findLastSessions: async () => [],
+    completeSessionTransaction: async () => {}
 };
 
 const mockAIService: AIServicePort = {
@@ -21,6 +23,7 @@ const mockAIService: AIServicePort = {
 
 const mockVectorStore: VectorStorePort = {
     storeConversation: async () => {},
+    storeMemoryChunk: async () => {},
     retrieveContext: async () => []
 };
 
