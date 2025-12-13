@@ -40,6 +40,10 @@ export class DrizzleSessionRepository implements SessionRepository {
     return found.map(this.mapToEntity);
   }
 
+  async findLastSessions(userId: string, count: number): Promise<Session[]> {
+      return this.findByUserId(userId, count);
+  }
+
   async completeSessionTransaction(sessionId: string): Promise<void> {
     // Transaction: Update Session Status AND Insert Job
     await db.transaction(async (tx) => {

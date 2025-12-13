@@ -11,6 +11,15 @@ export class User {
     public preferences?: {
       conversationSchedule?: string[];
       voiceTone?: string;
+      topicsLove?: string[];
+      topicsAvoid?: string[];
+      emergencyContact?: {
+        name: string;
+        phoneNumber: string;
+        email?: string;
+        relationship?: string;
+      };
+      timezone?: string;
     },
     public createdAt?: Date,
     public updatedAt?: Date

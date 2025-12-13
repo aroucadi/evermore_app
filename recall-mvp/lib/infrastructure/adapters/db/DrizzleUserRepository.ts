@@ -29,6 +29,23 @@ export class DrizzleUserRepository implements UserRepository {
     return found ? this.mapToEntity(found) : null;
   }
 
+  async update(user: User): Promise<User> {
+    const [updated] = await db.update(users)
+      .set({
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        seniorId: user.seniorId,
+        phoneNumber: user.phoneNumber,
+        preferences: user.preferences,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    return this.mapToEntity(updated);
+  }
+
   private mapToEntity(raw: any): User {
     return new User(
       raw.id,

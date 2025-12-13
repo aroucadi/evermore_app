@@ -17,7 +17,7 @@ const userRepository = new DrizzleUserRepository();
 const sessionRepository = new DrizzleSessionRepository();
 const chapterRepository = new DrizzleChapterRepository();
 const aiService = new CombinedAIService();
-const vectorStore = new PineconeStore();
+const vectorStore = new PineconeStore(sessionRepository);
 const emailService = new ResendEmailService();
 
 // Use Cases
