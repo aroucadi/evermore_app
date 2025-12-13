@@ -1,5 +1,5 @@
-import { UserRepository } from '../../../../core/domain/repositories/UserRepository';
-import { User } from '../../../../core/domain/entities/User';
+import { UserRepository } from '../../../core/domain/repositories/UserRepository';
+import { User } from '../../../core/domain/entities/User';
 import { db } from './index';
 import { users } from './schema';
 import { eq } from 'drizzle-orm';

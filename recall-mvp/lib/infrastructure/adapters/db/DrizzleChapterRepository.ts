@@ -1,5 +1,5 @@
-import { ChapterRepository } from '../../../../core/domain/repositories/ChapterRepository';
-import { Chapter } from '../../../../core/domain/entities/Chapter';
+import { ChapterRepository } from '../../../core/domain/repositories/ChapterRepository';
+import { Chapter } from '../../../core/domain/entities/Chapter';
 import { db } from './index';
 import { chapters } from './schema';
 import { eq, desc, and, sql } from 'drizzle-orm';

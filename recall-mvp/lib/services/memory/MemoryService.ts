@@ -1,8 +1,8 @@
 
 import { Pinecone } from '@pinecone-database/pinecone';
 import { OpenAIClient } from '@/lib/services/openai/OpenAIClient';
-import { db } from '@/lib/db';
-import { sessions } from '@/lib/db/schema';
+ import { db } from '@/lib/infrastructure/adapters/db';
+ import { sessions } from '@/lib/infrastructure/adapters/db/schema';
 import { eq } from 'drizzle-orm';
 import { Memory } from '@/lib/types';
 

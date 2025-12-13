@@ -1,6 +1,6 @@
 
-import { db } from '@/lib/db';
-import { chapters } from '@/lib/db/schema';
+import { db } from '@/lib/infrastructure/adapters/db';
+import { chapters } from '@/lib/infrastructure/adapters/db/schema';
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 
