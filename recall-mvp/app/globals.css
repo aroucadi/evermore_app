@@ -163,6 +163,14 @@
   0%, 100% { opacity: 0.1; transform: scale(1); }
   50% { opacity: 0.3; transform: scale(1.1); }
 }
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
 
 /* Utility Classes for Custom Animations */
 .animate-wave-slow { animation: wave-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
@@ -170,6 +178,9 @@
 .animate-wave-fast { animation: wave-fast 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 .animate-pulse-slow { animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 .pulse-bg-warm { animation: pulse-warm 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+.animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+.animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
+.mask-fade-top { mask-image: linear-gradient(to bottom, transparent, black 20%); }
 
 /* Material Symbols Base */
 .material-symbols-outlined {
