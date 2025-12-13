@@ -1,0 +1,107 @@
+
+import { User, ConversationSession, Chapter } from '@/lib/types';
+
+export const mockUsers: User[] = [
+  {
+    id: 'user-arthur',
+    name: 'Arthur Thompson',
+    email: 'arthur@example.com',
+    role: 'senior',
+    createdAt: new Date('2025-12-01')
+  },
+  {
+    id: 'user-sarah',
+    name: 'Sarah Thompson',
+    email: 'sarah@example.com',
+    role: 'family',
+    seniorId: 'user-arthur',
+    createdAt: new Date('2025-12-01')
+  }
+];
+
+export const mockSessions: ConversationSession[] = [
+  {
+    id: 'session-001',
+    userId: 'user-arthur',
+    transcript: [
+      {
+        id: 'msg-001',
+        speaker: 'agent',
+        text: "Hi Arthur, it's wonderful to talk with you today. What's been on your mind lately?",
+        timestamp: new Date('2025-12-10T10:00:00')
+      },
+      {
+        id: 'msg-002',
+        speaker: 'user',
+        text: "Oh, I was just thinking about my first job at the Ford plant.",
+        timestamp: new Date('2025-12-10T10:00:15')
+      },
+      {
+        id: 'msg-003',
+        speaker: 'agent',
+        text: "The Ford plant — that sounds like an important place in your life. What did the factory floor smell like when you first walked in?",
+        timestamp: new Date('2025-12-10T10:00:30')
+      }
+    ],
+    duration: 1380, // 23 minutes
+    startedAt: new Date('2025-12-10T10:00:00'),
+    endedAt: new Date('2025-12-10T10:23:00'),
+    status: 'completed'
+  }
+];
+
+export const mockChapters: Chapter[] = [
+  {
+    id: 'chapter-001',
+    sessionId: 'session-001',
+    userId: 'user-arthur',
+    title: "The Ford Plant: Arthur's First Real Job",
+    content: `In 1952, at eighteen years old, Arthur walked through the doors of the Ford plant on 5th Street for the first time. He'd just finished high school, and his father had arranged the interview through a connection with the foreman, Bill. The job was simple on paper—mechanic's apprentice—but Arthur remembers it as the moment he became a man.
+
+"The smell hit you first," Arthur recalls. *"Motor oil, hot metal, cigarette smoke all mixed together. It was deafening—presses banging, engines roaring. But I loved it. I felt like I was part of something big."*
+
+Bill took Arthur under his wing that first week. He was patient, Arthur says, never making him feel stupid for asking questions. They worked side by side on the assembly line, and Arthur learned not just how to fix engines, but how to work with his hands and take pride in a job well done.
+
+The Ford plant would become Arthur's second home for the next forty years. But that first day—the noise, the smell, the handshake from Bill—that was the day Arthur stopped being a kid and started building the life he'd look back on with pride.`,
+    excerpt: "In 1952, at eighteen years old, Arthur walked through the doors of the Ford plant on 5th Street for the first time...",
+    audioHighlightUrl: '/mock-audio/chapter-001-highlight.mp3',
+    audioDuration: 154, // 2:34
+    pdfUrl: '/mock-pdfs/chapter-001.pdf',
+    entities: [
+      { type: 'person', name: 'Bill (foreman)', mentions: 3 },
+      { type: 'person', name: 'Father', mentions: 1 },
+      { type: 'place', name: 'Ford plant, 5th Street', mentions: 5 },
+      { type: 'topic', name: 'First job', mentions: 2 }
+    ],
+    metadata: {
+      sessionNumber: 1,
+      wordCount: 211,
+      emotionalTone: 'positive',
+      lifePeriod: '1950s'
+    },
+    createdAt: new Date('2025-12-10T10:30:00')
+  },
+  {
+    id: 'chapter-002',
+    sessionId: 'session-002',
+    userId: 'user-arthur',
+    title: "Navy Days: Seeing the World at Nineteen",
+    content: `Arthur enlisted in the Navy in 1953, just a year after starting at the Ford plant. "I wanted adventure," he says with a chuckle. *"Working on the factory floor was good money, but I wanted to see what was out there beyond our little town."*
+
+His first deployment took him to the Pacific. Arthur remembers standing on the deck of the destroyer, watching dolphins race alongside the ship. The ocean stretched endlessly in every direction, and for the first time in his life, Arthur felt truly free...`,
+    excerpt: "Arthur enlisted in the Navy in 1953, just a year after starting at the Ford plant...",
+    audioHighlightUrl: '/mock-audio/chapter-002-highlight.mp3',
+    audioDuration: 118,
+    entities: [
+      { type: 'topic', name: 'Navy service', mentions: 8 },
+      { type: 'place', name: 'Pacific Ocean', mentions: 3 }
+    ],
+    metadata: {
+      sessionNumber: 2,
+      wordCount: 187,
+      emotionalTone: 'positive',
+      lifePeriod: '1950s'
+    },
+    createdAt: new Date('2025-12-08T14:45:00')
+  }
+];
