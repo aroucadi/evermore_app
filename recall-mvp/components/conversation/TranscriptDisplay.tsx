@@ -1,9 +1,15 @@
-
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Message } from '@/lib/types';
 import { cn } from '@/lib/utils';
+
+export interface Message {
+    id: string;
+    speaker: 'agent' | 'user';
+    text: string;
+    timestamp: Date;
+    audioTimestamp?: number;
+}
 
 interface TranscriptDisplayProps {
   messages: Message[];

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -10,23 +9,21 @@ import { Sidebar } from '@/components/common/Sidebar';
 
 export default function PortalPage() {
   const { chapters, setChapters, filter, setSearch, toggleTag } = useChapterStore();
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch chapters from API
-    // Using mock user ID for demo
-    fetch('/api/chapters/mock-user-id')
+    // Fetch chapters from API (using mock user ID for demo)
+    fetch('/api/chapters/user-mvp-demo')
       .then((res) => res.json())
-      .then(data => {
-          // ensure dates are objects if needed, but JSON usually returns strings
-          // The store or component might need to handle string -> Date conversion
-          setChapters(data);
-          setLoading(false);
+      .then((data) => {
+          if (Array.isArray(data)) {
+              setChapters(data);
+          } else if (data.chapters) {
+              setChapters(data.chapters);
+          } else {
+              setChapters([]);
+          }
       })
-      .catch(e => {
-          console.error(e);
-          setLoading(false);
-      });
+      .catch(err => console.error("Failed to load chapters", err));
   }, [setChapters]);
 
   const filteredChapters = chapters.filter((chapter) => {
@@ -37,7 +34,7 @@ export default function PortalPage() {
 
     // Tag filter
     if (filter.tags.length > 0) {
-      const chapterTopics = chapter.entities.filter((e) => e.type === 'topic').map((e) => e.name);
+      const chapterTopics = chapter.entities ? chapter.entities.filter((e) => e.type === 'topic').map((e) => e.name) : [];
       if (!filter.tags.some((tag) => chapterTopics.includes(tag))) {
         return false;
       }
@@ -47,7 +44,7 @@ export default function PortalPage() {
   });
 
   const allTags = Array.from(
-    new Set(chapters.flatMap((c) => c.entities.filter((e) => e.type === 'topic').map((e) => e.name)))
+    new Set(chapters.flatMap((c) => c.entities ? c.entities.filter((e) => e.type === 'topic').map((e) => e.name) : []))
   );
 
   return (
@@ -86,14 +83,12 @@ export default function PortalPage() {
 
         {/* Chapter Grid */}
         <div className="grid gap-4">
-          {loading ? (
-              <p>Loading chapters...</p>
-          ) : filteredChapters.map((chapter) => (
+          {filteredChapters.map((chapter) => (
             <ChapterCard key={chapter.id} chapter={chapter} />
           ))}
         </div>
 
-        {!loading && filteredChapters.length === 0 && (
+        {filteredChapters.length === 0 && (
           <div className="text-center py-16 text-neutral-600">
             <p className="text-lg">No chapters found matching your filters.</p>
           </div>

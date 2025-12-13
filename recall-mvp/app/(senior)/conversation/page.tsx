@@ -1,16 +1,14 @@
-
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useConversationStore } from '@/lib/stores/conversationStore';
 import { Button } from '@/components/ui/button';
 import { WaveformVisualizer } from '@/components/conversation/WaveformVisualizer';
 import { TranscriptDisplay } from '@/components/conversation/TranscriptDisplay';
 import { formatDuration } from '@/lib/utils';
-// import { useRouter } from 'next/navigation'; // Unused
+import { Message } from '@/components/conversation/TranscriptDisplay'; // Import type for consistency
 
 export default function ConversationPage() {
-  // const router = useRouter(); // Unused
   const {
     isActive,
     sessionId,
@@ -27,51 +25,45 @@ export default function ConversationPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleStart = async () => {
-    // Call API to start session
-    try {
-        const response = await fetch('/api/sessions/start', {
-            method: 'POST',
-            body: JSON.stringify({ userId: 'mock-user-id' }) // In real app, get from auth context
-        });
-        const data = await response.json();
+    // Call mock API to start session
+    // Using a hardcoded mock user ID for MVP demo flow
+    const response = await fetch('/api/sessions/start', {
+      method: 'POST',
+      body: JSON.stringify({ userId: 'user-mvp-demo' })
+    });
+    const data = await response.json();
 
-        startSession(data.sessionId);
+    startSession(data.sessionId);
 
-        // Add initial greeting (simulated from agent start or websocket)
-        setTimeout(() => {
-            addMessage({
-                id: `msg-${Date.now()}`,
-                speaker: 'agent',
-                text: "Hi Arthur, it's wonderful to talk with you today. What's been on your mind lately?",
-                timestamp: new Date()
-            });
-        }, 1000);
+    // Add initial greeting
+    setTimeout(() => {
+      addMessage({
+        id: `msg-${Date.now()}`,
+        speaker: 'agent',
+        text: "Hi Arthur, it's wonderful to talk with you today. What's been on your mind lately?",
+        timestamp: new Date()
+      });
+    }, 1000);
 
-        // Start duration timer
-        timerRef.current = setInterval(() => {
-            useConversationStore.setState((state) => ({ duration: state.duration + 1 }));
-        }, 1000);
-    } catch (e) {
-        console.error("Failed to start session", e);
-    }
+    // Start duration timer
+    timerRef.current = setInterval(() => {
+      updateDuration(duration + 1);
+    }, 1000);
   };
 
   const handleEnd = async () => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
-      timerRef.current = null;
     }
 
-    // Call API to end session
+    // Call mock API to end session
     if (sessionId) {
         await fetch(`/api/sessions/${sessionId}/end`, {
-            method: 'POST'
+        method: 'POST'
         });
     }
 
     endSession();
-    // Maybe show summary or thank you
-    alert("Conversation ended. Chapter generation started.");
   };
 
   const handleSimulateUserMessage = async () => {
@@ -88,8 +80,8 @@ export default function ConversationPage() {
     // Simulate agent thinking
     setAgentSpeaking(true);
 
-    // Get agent response from API
-    try {
+    if (sessionId) {
+        // Get agent response from mock API
         const response = await fetch(`/api/sessions/${sessionId}/messages`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -98,25 +90,18 @@ export default function ConversationPage() {
         const agentMessage = await response.json();
 
         // Add agent response
-        addMessage({
-            ...agentMessage,
-            timestamp: new Date(agentMessage.timestamp)
-        });
-    } catch (e) {
-        console.error("Failed to get response", e);
+        if (agentMessage.text) {
+             addMessage({
+                id: agentMessage.id,
+                speaker: 'agent',
+                text: agentMessage.text,
+                timestamp: new Date(agentMessage.timestamp)
+            });
+        }
     }
 
     setAgentSpeaking(false);
   };
-
-  // Clean up timer on unmount
-  useEffect(() => {
-      return () => {
-          if (timerRef.current) {
-              clearInterval(timerRef.current);
-          }
-      };
-  }, []);
 
   if (!isActive) {
     return (
@@ -125,7 +110,9 @@ export default function ConversationPage() {
           {/* Microphone Icon */}
           <div className="mb-8 inline-block">
             <div className="w-32 h-32 rounded-full bg-primary-100 flex items-center justify-center">
-              <span className="text-6xl">🎙️</span>
+              <svg className="w-16 h-16 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
             </div>
           </div>
 
@@ -142,7 +129,7 @@ export default function ConversationPage() {
           </Button>
 
           {/* Previous conversations */}
-          <div className="mt-16 text-left">
+          <div className="mt-16">
             <h2 className="text-lg font-semibold mb-4">Previous Conversations</h2>
             <div className="space-y-3">
               <PreviousConversationCard title="The Ford Plant" date="Dec 10" />
@@ -166,7 +153,10 @@ export default function ConversationPage() {
           onClick={handleEnd}
           className="flex items-center gap-2"
         >
-          <span>End Call</span>
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+          </svg>
+          End Call
         </Button>
       </div>
 

@@ -1,6 +1,5 @@
-
 import { create } from 'zustand';
-import { Chapter } from '@/lib/types';
+import { Chapter } from '@/lib/core/domain/entities/Chapter';
 
 interface ChapterStore {
   chapters: Chapter[];

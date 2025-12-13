@@ -1,6 +1,20 @@
-
 import { create } from 'zustand';
-import { ConversationState, Message } from '@/lib/types';
+
+export interface Message {
+    id: string;
+    speaker: 'agent' | 'user';
+    text: string;
+    timestamp: Date;
+    audioTimestamp?: number;
+}
+
+export interface ConversationState {
+  isActive: boolean;
+  sessionId?: string;
+  messages: Message[];
+  duration: number;
+  isAgentSpeaking: boolean;
+}
 
 interface ConversationStore extends ConversationState {
   // Actions

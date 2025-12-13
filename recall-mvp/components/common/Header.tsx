@@ -1,34 +1,14 @@
-
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 
 export function Header() {
   return (
-    <header className="bg-white border-b border-neutral-200">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary-600">
-          <span>🎙️</span>
-          <span>Recall</span>
-        </Link>
-
-        <nav className="hidden md:flex items-center gap-8">
-          <Link href="/portal" className="text-neutral-600 hover:text-primary-600">
-            For Families
-          </Link>
-          <Link href="/conversation" className="text-neutral-600 hover:text-primary-600">
-            For Seniors
-          </Link>
-        </nav>
-
-        <div className="flex items-center gap-4">
-          <Link href="/portal">
-            <Button variant="outline">Sign In</Button>
-          </Link>
-          <Link href="/onboarding">
-            <Button>Get Started</Button>
-          </Link>
-        </div>
-      </div>
+    <header className="flex items-center justify-between p-6 bg-white border-b">
+      <div className="text-2xl font-bold">Recall</div>
+      <nav className="flex gap-4">
+        <Link href="/" className="hover:underline">Home</Link>
+        <Link href="/onboarding" className="hover:underline">Get Started</Link>
+        <Link href="/portal" className="hover:underline">Family Portal</Link>
+      </nav>
     </header>
   );
 }
