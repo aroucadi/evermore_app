@@ -4,8 +4,8 @@ import { AIServicePort } from '../ports/AIServicePort';
 import { EmailServicePort } from '../ports/EmailServicePort';
 import { Chapter } from '../../domain/entities/Chapter';
 import { UserRepository } from '../../domain/repositories/UserRepository';
+import { ChapterGeneratorPort } from '../ports/ChapterGeneratorPort';
 import { randomUUID } from 'crypto';
-import AoTChapterGenerator from '../../../services/biographer/AoTChapterGenerator';
 
 export class GenerateChapterUseCase {
   constructor(
@@ -13,7 +13,8 @@ export class GenerateChapterUseCase {
     private sessionRepository: SessionRepository,
     private userRepository: UserRepository,
     private aiService: AIServicePort,
-    private emailService: EmailServicePort
+    private emailService: EmailServicePort,
+    private chapterGenerator: ChapterGeneratorPort // Injected dependency
   ) {}
 
   async execute(sessionId: string): Promise<string> {
@@ -30,9 +31,8 @@ export class GenerateChapterUseCase {
         summary: ch.excerpt // Using excerpt as summary
     }));
 
-    // Use AoT Chapter Generator
-    const generator = new AoTChapterGenerator();
-    const { chapter: content, atoms } = await generator.generateChapter(transcriptText, previousSummaries);
+    // Use Injected Chapter Generator
+    const { chapter: content, atoms } = await this.chapterGenerator.generateChapter(transcriptText, previousSummaries);
 
     // Create Chapter Entity
     const chapter = new Chapter(
@@ -59,6 +59,8 @@ export class GenerateChapterUseCase {
             atoms: atoms // Store atoms for debugging/future use
         }
     );
+
+    chapter.validate(); // Ensure invariants
 
     const createdChapter = await this.chapterRepository.create(chapter);
 
