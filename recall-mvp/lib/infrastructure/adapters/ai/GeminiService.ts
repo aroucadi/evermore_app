@@ -164,8 +164,17 @@ export class GeminiService implements AIServicePort {
 
          const conversation = await (this.elevenLabs as any).conversationalAi.createConversation({
              agent_id: process.env.ELEVENLABS_AGENT_ID!,
-             // In a real implementation, we would pass dynamic variables or overrides here
-             // to inject 'agentGoal' into the Agent's system prompt.
+             conversation_config_override: {
+                 agent: {
+                     prompt: {
+                         first_message: `Hi ${userName}, I'd love to hear about your stories. ${agentGoal}`
+                     }
+                 }
+             },
+             dynamic_variables: {
+                 user_name: userName,
+                 session_goal: agentGoal
+             }
          });
          return { agentId: conversation.agent_id, conversationId: conversation.conversation_id };
        });

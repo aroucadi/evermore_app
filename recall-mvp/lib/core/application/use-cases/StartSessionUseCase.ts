@@ -1,4 +1,5 @@
 import { SessionRepository } from '../../domain/repositories/SessionRepository';
+import { UserRepository } from '../../domain/repositories/UserRepository';
 import { AIServicePort } from '../ports/AIServicePort';
 import { VectorStorePort } from '../ports/VectorStorePort';
 import { Session } from '../../domain/entities/Session';
@@ -7,11 +8,15 @@ import { randomUUID } from 'crypto';
 export class StartSessionUseCase {
   constructor(
     private sessionRepository: SessionRepository,
+    private userRepository: UserRepository,
     private aiService: AIServicePort,
     private vectorStore: VectorStorePort
   ) {}
 
   async execute(userId: string): Promise<{ session: Session; aiConfig: any }> {
+    const user = await this.userRepository.findById(userId);
+    const userName = user ? user.name : "User";
+
     const memories = await this.vectorStore.retrieveContext(userId);
 
     // Create session entity
@@ -30,7 +35,7 @@ export class StartSessionUseCase {
     const aiConfig = await this.aiService.startVoiceConversation(
         userId,
         createdSession.id,
-        "User", // Should fetch user name
+        userName,
         memories
     );
 

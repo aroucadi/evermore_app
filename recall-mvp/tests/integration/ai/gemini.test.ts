@@ -62,5 +62,20 @@ describe('GeminiService', () => {
     const result = await service.startVoiceConversation('user1', 'session1', 'Alice', []);
     expect(result.agentId).toBe('mock-agent-id');
     expect(result.conversationId).toBe('mock-conv-id');
+
+    expect(mockCreateConversation).toHaveBeenCalledWith(expect.objectContaining({
+        agent_id: 'test-agent',
+        conversation_config_override: expect.objectContaining({
+            agent: expect.objectContaining({
+                prompt: expect.objectContaining({
+                    first_message: expect.stringContaining('Alice')
+                })
+            })
+        }),
+        dynamic_variables: expect.objectContaining({
+            user_name: 'Alice',
+            session_goal: expect.any(String)
+        })
+    }));
   });
 });

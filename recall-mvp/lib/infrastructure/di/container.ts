@@ -26,7 +26,7 @@ export const chapterGenerator = new AoTChapterGeneratorAdapter();
 
 // Use Cases
 export const createUserUseCase = new CreateUserUseCase(userRepository);
-export const startSessionUseCase = new StartSessionUseCase(sessionRepository, aiService, vectorStore);
+export const startSessionUseCase = new StartSessionUseCase(sessionRepository, userRepository, aiService, vectorStore);
 export const processMessageUseCase = new ProcessMessageUseCase(sessionRepository, aiService, vectorStore);
 export const generateChapterUseCase = new GenerateChapterUseCase(chapterRepository, sessionRepository, userRepository, aiService, emailService, chapterGenerator);
 export const endSessionUseCase = new EndSessionUseCase(sessionRepository, jobRepository);
