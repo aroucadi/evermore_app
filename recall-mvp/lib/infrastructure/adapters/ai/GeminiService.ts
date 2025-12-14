@@ -42,7 +42,8 @@ export class GeminiService implements AIServicePort {
   async generateQuestion(
     userUtterance: string,
     history: any[],
-    memories: any[]
+    memories: any[],
+    imageContext?: string
   ): Promise<{ text: string; strategy: string }> {
     try {
       if (!process.env.GOOGLE_CLOUD_PROJECT) {
@@ -53,9 +54,12 @@ export class GeminiService implements AIServicePort {
         You are an empathetic biographer interviewing a senior.
         History: ${JSON.stringify(history)}
         Memories: ${JSON.stringify(memories)}
+        ${imageContext ? `USER JUST SHOWED A PHOTO. ANALYSIS: ${imageContext}` : ''}
         User said: "${userUtterance}"
 
         Generate a follow-up question that encourages deep reflection or sensory details.
+        ${imageContext ? 'Since the user just showed a photo, your question MUST be about that photo, expressing curiosity about the people or place in it.' : ''}
+
         Output JSON: { "text": "Question text", "strategy": "strategy_name" }
       `;
 
@@ -125,21 +129,22 @@ export class GeminiService implements AIServicePort {
      }
   }
 
-  async startVoiceConversation(userId: string, sessionId: string, userName: string, memories: any[]): Promise<{ agentId: string; conversationId: string; wsUrl?: string }> {
+  async startVoiceConversation(userId: string, sessionId: string, userName: string, memories: any[], imageContext?: string): Promise<{ agentId: string; conversationId: string; wsUrl?: string }> {
      try {
        // "The Architect" Logic:
        // Use Gemini to generate a tailored 'goal' for the agent based on recent memories or lack thereof.
        let agentGoal = "Ask about their childhood and early memories.";
 
-       if (process.env.GOOGLE_CLOUD_PROJECT && memories.length > 0) {
+       if (process.env.GOOGLE_CLOUD_PROJECT && (memories.length > 0 || imageContext)) {
            try {
              const planPrompt = `
                 You are the Director of a biography project.
                 The subject is ${userName}.
                 Here are the recent memories/topics discussed: ${JSON.stringify(memories.slice(0, 5))}
+                ${imageContext ? `THE USER JUST UPLOADED A PHOTO TO START: ${imageContext}` : ''}
 
                 Define a specific, engaging goal for the next 5-minute interview session.
-                Focus on exploring emotional depth or a specific event mentioned briefly.
+                ${imageContext ? 'The goal MUST be to explore the story behind the uploaded photo.' : 'Focus on exploring emotional depth or a specific event mentioned briefly.'}
                 Keep it under 30 words.
              `;
              const result = await this.model.generateContent(planPrompt);
@@ -157,17 +162,10 @@ export class GeminiService implements AIServicePort {
              return { agentId: "mock-agent", conversationId: "mock-conv-id", wsUrl: "wss://mock.elevenlabs.io" };
          }
 
-         // We pass the goal as a dynamic variable or overrides if the SDK/Agent supports it.
-         // Since the standard SDK might not support 'overrides' in 'createConversation' directly depending on version,
-         // we simulate the intent here. In a real dynamic agent scenario, we would update the Agent's prompt via API
-         // OR pass 'dynamic_variables' if using a template.
-         // Assuming we can pass config:
-
          const conversation = await (this.elevenLabs as any).conversationalAi.createConversation({
              agent_id: process.env.ELEVENLABS_AGENT_ID!,
-             // Hypothetical property for dynamic context injection supported by some ElevenLabs setups
-             // If not supported, this is where we would use a tool call or updated system prompt via a separate API call.
-             // For the hackathon MVP, we log the intent.
+             // In a real implementation, we would pass dynamic variables or overrides here
+             // to inject 'agentGoal' into the Agent's system prompt.
          });
          return { agentId: conversation.agent_id, conversationId: conversation.conversation_id };
        });
@@ -192,7 +190,9 @@ export class GeminiService implements AIServicePort {
 
         const prompt = "Describe this image in detail, focusing on nostalgic elements, time period, and emotional context. List detected key entities (objects, people) separately as JSON.";
 
-        const result = await this.visionModel.generateContent([prompt, imagePart]);
+        const result = await this.visionModel.generateContent({
+          contents: [{ role: 'user', parts: [{ text: prompt }, imagePart] }]
+        });
         const text = result.response.candidates?.[0].content.parts[0].text;
 
         if (!text) throw new Error("No response from Gemini Vision");
@@ -216,6 +216,49 @@ export class GeminiService implements AIServicePort {
     } catch (error) {
         console.error("Gemini analyzeImage failed:", error);
         return { description: "Unable to analyze image.", detectedEntities: [] };
+    }
+  }
+
+  async generateSpeech(text: string, style?: string): Promise<Buffer> {
+    try {
+        if (!process.env.ELEVENLABS_API_KEY) {
+            // Return empty buffer or mock audio
+            return Buffer.from("mock-audio");
+        }
+
+        // Map 'style' to voice settings if needed (The Empath)
+        let stability = 0.5;
+        let similarityBoost = 0.75;
+
+        if (style === 'emotional_deepening') {
+            stability = 0.3; // More expressive
+        } else if (style === 'factual') {
+            stability = 0.8; // More stable
+        }
+
+        const response = await this.elevenLabs.textToSpeech.convert(
+            process.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB', // Default voice
+            {
+                text,
+                model_id: 'eleven_turbo_v2_5', // Faster model
+                voice_settings: {
+                    stability,
+                    similarity_boost: similarityBoost,
+                }
+            } as any
+        );
+
+        // Convert stream to Buffer
+        const chunks: Buffer[] = [];
+        const stream = response as any;
+        for await (const chunk of stream) {
+            chunks.push(Buffer.from(chunk));
+        }
+        return Buffer.concat(chunks);
+
+    } catch (error) {
+        console.error("ElevenLabs generateSpeech failed:", error);
+        return Buffer.from("");
     }
   }
 }

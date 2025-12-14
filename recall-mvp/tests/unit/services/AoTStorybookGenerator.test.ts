@@ -7,6 +7,8 @@ describe('AoTStorybookGenerator', () => {
   let generator: AoTStorybookGenerator;
 
   beforeEach(() => {
+    process.env.OPENAI_API_KEY = 'test-key'; // Force bypass of missing key check
+    process.env.LLM_PROVIDER = 'openai';
     generator = new AoTStorybookGenerator();
     vi.clearAllMocks();
   });

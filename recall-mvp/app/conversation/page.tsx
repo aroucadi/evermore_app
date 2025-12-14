@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 
 const LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -13,6 +13,9 @@ const LANGUAGES = [
 
 export default function ActiveConversationPage() {
   const router = useRouter();
+  const params = useParams(); // Get sessionId from URL
+  const sessionId = params?.id as string || 'mock-session-id';
+
   const [isListening, setIsListening] = useState(false);
   const [showWaves, setShowWaves] = useState(false);
   const [transcript, setTranscript] = useState<string[]>([]);
@@ -26,21 +29,38 @@ export default function ActiveConversationPage() {
   const [inputValue, setInputValue] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Image Upload State
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+
   // Helper for AI Response logic
-  const handleAIResponse = (text: string) => {
+  const handleAIResponse = (text: string, audioBase64?: string) => {
     let finalText = text;
     if (!text || text.trim().length === 0) {
       finalText = "Tell me more about that.";
     }
     setTranscript(prev => [...prev, finalText]);
+
+    // Play Audio if provided
+    if (audioBase64) {
+        try {
+            const audio = new Audio(`data:audio/mpeg;base64,${audioBase64}`);
+            audio.play();
+        } catch (e) {
+            console.error("Failed to play audio", e);
+        }
+    }
   };
 
   useEffect(() => {
-    // Initial greeting
+    // Initial greeting (Simulated for demo if no history)
     const timer = setTimeout(() => {
-      handleAIResponse('Hello Arthur, it\'s great to speak with you again. I was hoping you could tell me more about that summer trip to the lake house you mentioned?');
-      setIsListening(true);
-      setShowWaves(true);
+      // Only greet if transcript is empty
+      if (transcript.length === 0) {
+          handleAIResponse('Hello Arthur, it\'s great to speak with you again. I was hoping you could tell me more about that summer trip to the lake house you mentioned?');
+          setIsListening(true);
+          setShowWaves(true);
+      }
     }, 1000);
 
     // Simulate auto-save cycle
@@ -60,7 +80,7 @@ export default function ActiveConversationPage() {
       clearTimeout(timer);
       clearInterval(saveInterval);
     };
-  }, [isListening]);
+  }, [isListening, transcript.length]);
 
   // Toast Timer
   useEffect(() => {
@@ -86,23 +106,67 @@ export default function ActiveConversationPage() {
       return;
     }
     // Add user message to transcript (simulated)
-    setTranscript(prev => [...prev, inputValue]); // In a real app, this would be distinguished as user text
+    setTranscript(prev => [...prev, inputValue]);
     setInputValue('');
     setShowInput(false);
 
     // Simulate AI response
     setTimeout(() => {
-        // Here we could simulate an empty response to test the logic: handleAIResponse('');
-        // For now, standard response
         handleAIResponse("That's fascinating. Tell me more.");
     }, 1000);
   };
 
+  const handleShowClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsAnalyzing(true);
+    setToastMessage("Analyzing photo...");
+    setShowWaves(false); // Stop waves during analysis
+    setIsListening(false);
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+        const res = await fetch(`/api/session/${sessionId}/analyze-image`, {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (!res.ok) throw new Error('Failed to analyze image');
+
+        const data = await res.json();
+        handleAIResponse(data.text, data.audioBase64);
+        setToastMessage("Photo analyzed!");
+        setIsListening(true); // Resume listening state conceptually
+        setShowWaves(true);
+
+    } catch (error) {
+        console.error(error);
+        setToastMessage("Failed to analyze photo.");
+    } finally {
+        setIsAnalyzing(false);
+    }
+  };
+
   return (
     <div className="bg-[#2A2320] font-sans text-orange-50 min-h-screen relative overflow-hidden flex flex-col">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        accept="image/*"
+      />
+
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-red-500 text-white px-6 py-3 rounded-full shadow-lg transition-all animate-fade-in">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-orange-500 text-white px-6 py-3 rounded-full shadow-lg transition-all animate-fade-in">
           {toastMessage}
         </div>
       )}
@@ -145,13 +209,13 @@ export default function ActiveConversationPage() {
         </button>
 
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
-          {saveStatus === 'saving' ? (
+          {saveStatus === 'saving' || isAnalyzing ? (
              <span className="material-symbols-outlined text-orange-500 text-sm animate-spin">progress_activity</span>
           ) : (
              <div className={`w-2 h-2 rounded-full bg-orange-500 ${saveStatus === 'recording' ? 'animate-pulse' : ''}`}></div>
           )}
           <span className="text-xs font-bold text-orange-500 tracking-wide uppercase">
-            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved' : 'Recording'}
+            {isAnalyzing ? 'Analyzing...' : saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved' : 'Recording'}
           </span>
         </div>
 
@@ -274,7 +338,11 @@ export default function ActiveConversationPage() {
               </span>
            </button>
 
-           <button className="flex-1 h-16 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+           <button
+              onClick={handleShowClick}
+              disabled={isAnalyzing}
+              className="flex-1 h-16 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+           >
               <span className="material-symbols-outlined text-white/60">photo_camera</span>
               <span className="font-semibold text-white/60">Show</span>
            </button>
