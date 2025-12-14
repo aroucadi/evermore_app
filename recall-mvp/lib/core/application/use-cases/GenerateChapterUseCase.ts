@@ -5,6 +5,7 @@ import { EmailServicePort } from '../ports/EmailServicePort';
 import { Chapter } from '../../domain/entities/Chapter';
 import { UserRepository } from '../../domain/repositories/UserRepository';
 import { randomUUID } from 'crypto';
+import AoTChapterGenerator from '../../../services/biographer/AoTChapterGenerator';
 
 export class GenerateChapterUseCase {
   constructor(
@@ -22,26 +23,40 @@ export class GenerateChapterUseCase {
     const transcript = JSON.parse(session.transcriptRaw || '[]');
     const transcriptText = transcript.map((m: any) => `${m.speaker}: ${m.text}`).join('\n');
 
-    const analysis = await this.aiService.generateChapterAnalysis(transcriptText);
-    const narrative = await this.aiService.generateChapterNarrative(transcriptText, analysis);
+    // Fetch previous chapters for context
+    const previousChapters = await this.chapterRepository.findByUserId(session.userId);
+    const previousSummaries = previousChapters.slice(0, 5).map(ch => ({
+        title: ch.title,
+        summary: ch.excerpt // Using excerpt as summary
+    }));
 
+    // Use AoT Chapter Generator
+    const generator = new AoTChapterGenerator();
+    const { chapter: content, atoms } = await generator.generateChapter(transcriptText, previousSummaries);
+
+    // Create Chapter Entity
     const chapter = new Chapter(
         randomUUID(),
         sessionId,
         session.userId,
-        analysis.title || "New Chapter",
-        narrative.content,
-        narrative.content.substring(0, 100) + '...',
+        atoms.narrativeArc, // Title from AoT
+        content,
+        content.substring(0, 150) + '...', // Excerpt
         new Date(),
-        undefined,
-        undefined,
-        undefined,
-        analysis.entities,
+        undefined, // audioHighlightUrl
+        undefined, // audioDuration
+        undefined, // pdfUrl
+        // Extract entities from atoms if possible, or use empty array.
+        // AoT atoms include people/places in `sensoryDetails` or `bestQuotes` context sometimes,
+        // but strictly speaking we don't have a dedicated entity extraction atom yet.
+        // We can pass empty array for now or try to map something if needed.
+        [],
         {
             sessionNumber: 1, // Logic to count sessions needed
-            wordCount: narrative.wordCount,
-            emotionalTone: analysis.tone,
-            lifePeriod: analysis.period
+            wordCount: content.split(' ').length,
+            emotionalTone: atoms.emotionalValence,
+            lifePeriod: "Unknown", // AoT doesn't explicitly return this separately but could be parsed
+            atoms: atoms // Store atoms for debugging/future use
         }
     );
 
