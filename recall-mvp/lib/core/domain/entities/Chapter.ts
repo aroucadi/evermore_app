@@ -6,6 +6,10 @@ export interface Entity {
   mentions: number;
 }
 
+/**
+ * Domain Entity representing a biographical chapter.
+ * Enforces invariants and business rules.
+ */
 export class Chapter {
   constructor(
     public id: string,
@@ -24,6 +28,37 @@ export class Chapter {
       wordCount: number;
       emotionalTone: string;
       lifePeriod?: string;
+      [key: string]: any;
     }
   ) {}
+
+  /**
+   * Validates the chapter state invariants.
+   * Throws an error if the chapter is invalid.
+   */
+  public validate(): void {
+    if (!this.title || this.title.trim().length === 0) {
+      throw new Error('Chapter title cannot be empty.');
+    }
+    if (!this.content || this.content.trim().length === 0) {
+      throw new Error('Chapter content cannot be empty.');
+    }
+    if (!this.userId) {
+        throw new Error('Chapter must belong to a user.');
+    }
+    if (!this.sessionId) {
+        throw new Error('Chapter must be associated with a session.');
+    }
+    if (this.content.length < 50) {
+        throw new Error('Chapter content is too short to be valid.');
+    }
+  }
+
+  /**
+   * Updates the audio highlight URL.
+   */
+  public setAudioHighlight(url: string, duration: number): void {
+      this.audioHighlightUrl = url;
+      this.audioDuration = duration;
+  }
 }

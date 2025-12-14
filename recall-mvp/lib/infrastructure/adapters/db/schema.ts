@@ -1,5 +1,5 @@
 
-import { pgTable, uuid, varchar, text, timestamp, integer, jsonb, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, integer, jsonb, boolean, index } from 'drizzle-orm/pg-core';
 
 import { AnyPgColumn } from 'drizzle-orm/pg-core';
 
@@ -68,6 +68,10 @@ export const chapters = pgTable('chapters', {
     lifePeriod?: string;
   }>(),
   createdAt: timestamp('created_at').defaultNow().notNull()
+}, (table) => {
+  return {
+    entitiesIdx: index('entities_idx').using('gin', table.entities),
+  }
 });
 
 // Invitations (Conversations) Table

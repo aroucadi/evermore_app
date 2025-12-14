@@ -1,9 +1,11 @@
 import { DrizzleUserRepository } from '../adapters/db/DrizzleUserRepository';
 import { DrizzleSessionRepository } from '../adapters/db/DrizzleSessionRepository';
 import { DrizzleChapterRepository } from '../adapters/db/DrizzleChapterRepository';
+import { DrizzleJobRepository } from '../adapters/db/DrizzleJobRepository';
 import { CombinedAIService } from '../adapters/ai/CombinedAIService';
 import { PineconeStore } from '../adapters/vector/PineconeStore';
 import { ResendEmailService } from '../adapters/email/ResendEmailService';
+import { AoTChapterGeneratorAdapter } from '../adapters/ai/AoTChapterGeneratorAdapter';
 
 import { CreateUserUseCase } from '../../core/application/use-cases/CreateUserUseCase';
 import { StartSessionUseCase } from '../../core/application/use-cases/StartSessionUseCase';
@@ -13,17 +15,19 @@ import { GenerateChapterUseCase } from '../../core/application/use-cases/Generat
 import { GetChaptersUseCase } from '../../core/application/use-cases/GetChaptersUseCase';
 
 // Singletons
-const userRepository = new DrizzleUserRepository();
-const sessionRepository = new DrizzleSessionRepository();
-const chapterRepository = new DrizzleChapterRepository();
-const aiService = new CombinedAIService();
-const vectorStore = new PineconeStore(sessionRepository);
-const emailService = new ResendEmailService();
+export const userRepository = new DrizzleUserRepository();
+export const sessionRepository = new DrizzleSessionRepository();
+export const chapterRepository = new DrizzleChapterRepository();
+export const jobRepository = new DrizzleJobRepository();
+export const aiService = new CombinedAIService();
+export const vectorStore = new PineconeStore(sessionRepository);
+export const emailService = new ResendEmailService();
+export const chapterGenerator = new AoTChapterGeneratorAdapter();
 
 // Use Cases
 export const createUserUseCase = new CreateUserUseCase(userRepository);
 export const startSessionUseCase = new StartSessionUseCase(sessionRepository, aiService, vectorStore);
 export const processMessageUseCase = new ProcessMessageUseCase(sessionRepository, aiService, vectorStore);
-export const generateChapterUseCase = new GenerateChapterUseCase(chapterRepository, sessionRepository, userRepository, aiService, emailService);
-export const endSessionUseCase = new EndSessionUseCase(sessionRepository, generateChapterUseCase);
+export const generateChapterUseCase = new GenerateChapterUseCase(chapterRepository, sessionRepository, userRepository, aiService, emailService, chapterGenerator);
+export const endSessionUseCase = new EndSessionUseCase(sessionRepository, jobRepository);
 export const getChaptersUseCase = new GetChaptersUseCase(chapterRepository);

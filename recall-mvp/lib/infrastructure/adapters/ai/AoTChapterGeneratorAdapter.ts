@@ -1,3 +1,5 @@
+import { ChapterGeneratorPort, ChapterGeneratorResult } from '../../../core/application/ports/ChapterGeneratorPort';
+
 interface AtomicResult {
   atomId: string;
   output: any;
@@ -11,21 +13,16 @@ interface ChapterAtoms {
   sensoryDetails: Array<{sense: string; phrase: string; context: string}>;
   emotionalValence: string;
   previousChapterConnections: Array<{previousChapter: string; connectionType: string; description: string}>;
+  [key: string]: any;
 }
 
-class AoTChapterGenerator {
-
+export class AoTChapterGeneratorAdapter implements ChapterGeneratorPort {
   /**
    * ATOM 1: Extract Primary Narrative Arc
    *
    * PURPOSE: Identify the main story/theme in one clear sentence
    * INPUT: Full conversation transcript
    * OUTPUT: Single sentence describing what this conversation is about
-   *
-   * CONSTRAINTS:
-   * - Must be 10-20 words
-   * - Must be specific (not vague like "Arthur's memories")
-   * - Should capture the TIME and PLACE if mentioned
    */
   async extractNarrativeArc(transcript: string): Promise<AtomicResult> {
     const prompt = `
@@ -72,12 +69,6 @@ OUTPUT FORMAT: Just the sentence, nothing else.
    * PURPOSE: Find 2 quotes that are emotionally resonant and vivid
    * INPUT: Full conversation transcript
    * OUTPUT: Array of 2 quote objects with text
-   *
-   * CONSTRAINTS:
-   * - Each quote must be 10-30 seconds when spoken (~20-60 words)
-   * - Must contain sensory language OR emotional expression
-   * - Must be verbatim from transcript (zero fabrication)
-   * - If transcript has no good quotes, return empty array
    */
   async selectBestQuotes(transcript: string): Promise<AtomicResult> {
     const prompt = `
@@ -138,11 +129,6 @@ CRITICAL RULES:
    * PURPOSE: Identify vivid sensory language used in conversation
    * INPUT: Full conversation transcript
    * OUTPUT: Array of sensory phrases organized by sense type
-   *
-   * CONSTRAINTS:
-   * - Only include phrases that describe sight, sound, smell, touch, taste
-   * - Must be verbatim from transcript
-   * - Return at least 3, maximum 10 details
    */
   async extractSensoryDetails(transcript: string): Promise<AtomicResult> {
     const prompt = `
@@ -199,10 +185,6 @@ RULES:
    * PURPOSE: Classify the overall emotional tone of the conversation
    * INPUT: Full conversation transcript
    * OUTPUT: Single emotion label with confidence score
-   *
-   * CONSTRAINTS:
-   * - Must choose ONE primary emotion from predefined list
-   * - Return confidence score 0-1
    */
   async determineEmotionalValence(transcript: string): Promise<AtomicResult> {
     const prompt = `
@@ -259,11 +241,6 @@ RULES:
    * PURPOSE: Identify how current conversation relates to past chapters
    * INPUT: Current transcript + summaries of previous chapters
    * OUTPUT: Array of connection descriptions
-   *
-   * CONSTRAINTS:
-   * - Only mention connections if genuinely relevant
-   * - Return empty array if no meaningful connections exist
-   * - Maximum 3 connections
    */
   async findPreviousChapterConnections(
     transcript: string,
@@ -382,13 +359,6 @@ RULES:
    * PURPOSE: Use ONLY the atomic outputs to generate final chapter
    * INPUT: ChapterAtoms object with all decomposed elements
    * OUTPUT: Complete 300-500 word biographical chapter
-   *
-   * CONSTRAINTS:
-   * - Must use provided atoms (no additional inference)
-   * - Follow exact structure: Opening → Body → Closing
-   * - Include verbatim quotes from atoms
-   * - Reference sensory details from atoms
-   * - Mention previous chapter connections if provided
    */
   async synthesizeChapter(
     atoms: ChapterAtoms,
@@ -481,7 +451,7 @@ OUTPUT: Just the chapter text with markdown formatting. No preamble.
   async generateChapter(
     transcript: string,
     previousChapters: Array<{title: string; summary: string}> = []
-  ): Promise<{chapter: string; atoms: ChapterAtoms}> {
+  ): Promise<ChapterGeneratorResult> {
 
     console.log('🚀 Starting AoT Chapter Generation...');
 
@@ -554,5 +524,3 @@ OUTPUT: Just the chapter text with markdown formatting. No preamble.
     return data.choices[0].message.content;
   }
 }
-
-export default AoTChapterGenerator;
