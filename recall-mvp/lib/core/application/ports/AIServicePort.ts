@@ -17,4 +17,6 @@ export interface AIServicePort {
     conversationId: string;
     wsUrl?: string;
   }>;
+
+  analyzeImage(imageBase64: string, mimeType: string): Promise<{ description: string; detectedEntities: string[] }>;
 }
