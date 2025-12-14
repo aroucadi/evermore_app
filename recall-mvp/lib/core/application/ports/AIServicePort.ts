@@ -19,7 +19,11 @@ export interface AIServicePort {
     wsUrl?: string;
   }>;
 
-  analyzeImage(imageBase64: string, mimeType: string): Promise<{ description: string; detectedEntities: string[] }>;
+  analyzeImage(imageBase64: string, mimeType: string): Promise<{
+    description: string;
+    detectedEntities: string[];
+    conversationalTrigger?: string; // New field for Proustian Trigger
+  }>;
 
   generateSpeech(text: string, style?: string): Promise<Buffer>;
 }

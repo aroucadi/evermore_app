@@ -15,10 +15,11 @@ export class AnalyzeSessionImageUseCase {
 
     const transcript = JSON.parse(session.transcriptRaw || '[]');
 
-    // 1. Analyze Image
+    // 1. Analyze Image using the new "Proustian Trigger" logic
+    // The aiService.analyzeImage now returns a 'conversationalTrigger' specifically for voice.
     const analysis = await this.aiService.analyzeImage(imageBase64, mimeType);
 
-    // Add implicit user action to transcript
+    // Add implicit user action to transcript (Context grounding)
     transcript.push({
         id: `msg-${Date.now()}`,
         speaker: 'user',
@@ -27,35 +28,44 @@ export class AnalyzeSessionImageUseCase {
         isSystemEvent: true
     });
 
-    // 2. Generate Question based on Image Context
-    const history = transcript.slice(-5);
-    // Retrieve memories relevant to the image description
-    const memories = await this.vectorStore.retrieveContext(session.userId, analysis.description);
+    // 2. Determine the best response
+    // If we have a direct conversational trigger from Vision, use it.
+    // Otherwise, fall back to the text generation.
+    let responseText = analysis.conversationalTrigger;
+    let strategy = 'emotional_deepening';
 
-    const response = await this.aiService.generateQuestion(
-        "I just showed you a photo.",
-        history,
-        memories,
-        analysis.description // Inject image context
-    );
+    if (!responseText) {
+        // Fallback: Use the standard generation loop
+        const history = transcript.slice(-5);
+        const memories = await this.vectorStore.retrieveContext(session.userId, analysis.description);
 
-    // 3. Generate Audio for the Question
-    const audioBuffer = await this.aiService.generateSpeech(response.text, response.strategy);
+        const response = await this.aiService.generateQuestion(
+            "[User showed a photo]",
+            history,
+            memories,
+            analysis.description
+        );
+        responseText = response.text;
+        strategy = response.strategy;
+    }
+
+    // 3. Generate Audio (ElevenLabs - The Presence)
+    const audioBuffer = await this.aiService.generateSpeech(responseText, strategy);
 
     // 4. Update Transcript with Agent Response
     transcript.push({
         id: `msg-${Date.now() + 1}`,
         speaker: 'agent',
-        text: response.text,
+        text: responseText,
         timestamp: new Date().toISOString(),
-        strategy: response.strategy
+        strategy: strategy
     });
 
     session.transcriptRaw = JSON.stringify(transcript);
     await this.sessionRepository.update(session);
 
     return {
-        text: response.text,
+        text: responseText,
         audioBase64: audioBuffer.toString('base64')
     };
   }
