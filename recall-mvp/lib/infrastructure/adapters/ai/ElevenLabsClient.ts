@@ -1,6 +1,6 @@
 
 import { ElevenLabsClient as ElevenLabsSDK } from '@elevenlabs/elevenlabs-js';
-import { MemoryService } from '@/lib/services/memory/MemoryService';
+import { MemoryService } from '@/lib/infrastructure/adapters/memory/MemoryService';
 
 export class ElevenLabsClient {
   private client: ElevenLabsSDK | null = null;

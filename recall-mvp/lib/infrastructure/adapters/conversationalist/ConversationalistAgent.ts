@@ -1,11 +1,12 @@
 
-import { OpenAIClient } from '@/lib/services/openai/OpenAIClient';
+import { OpenAIClient } from '@/lib/infrastructure/adapters/ai/OpenAIClient';
 import {
   SensoryDeepeningStrategy,
   TemporalThreadingStrategy,
   GracefulExitStrategy
 } from './strategies';
-import { SessionContext, QuestioningStrategy } from '@/lib/types';
+import { SessionContext } from '@/lib/core/domain/value-objects/SessionContext';
+import { QuestioningStrategy } from '@/lib/core/application/ports/QuestioningStrategyPort';
 
 export class ConversationalistAgent {
   private openai: OpenAIClient;

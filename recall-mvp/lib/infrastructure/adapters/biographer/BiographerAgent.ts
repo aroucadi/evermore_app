@@ -1,10 +1,10 @@
 
-import { OpenAIClient } from '@/lib/services/openai/OpenAIClient';
+import { OpenAIClient } from '@/lib/infrastructure/adapters/ai/OpenAIClient';
  import { db } from '@/lib/infrastructure/adapters/db';
  import { chapters, sessions } from '@/lib/infrastructure/adapters/db/schema';
 import { eq } from 'drizzle-orm';
-import { Message } from '@/lib/types';
-import { EmailService } from '@/lib/services/email/EmailService';
+import { Message } from '@/lib/core/domain/value-objects/Message';
+import { EmailService } from '@/lib/infrastructure/adapters/email/EmailService';
 
 export class BiographerAgent {
   private openai: OpenAIClient;

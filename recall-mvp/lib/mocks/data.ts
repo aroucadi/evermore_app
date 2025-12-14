@@ -1,5 +1,7 @@
 
-import { User, ConversationSession, Chapter } from '@/lib/types';
+import { User } from '@/lib/core/domain/entities/User';
+import { Session as ConversationSession } from '@/lib/core/domain/entities/Session';
+import { Chapter } from '@/lib/core/domain/entities/Chapter';
 
 export const mockUsers: User[] = [
   {

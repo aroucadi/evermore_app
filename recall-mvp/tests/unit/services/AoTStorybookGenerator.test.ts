@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import AoTStorybookGenerator from '@/lib/services/biographer/AoTStorybookGenerator';
+import AoTStorybookGenerator from '@/lib/infrastructure/adapters/biographer/AoTStorybookGenerator';
 
 global.fetch = vi.fn();
 

@@ -1,5 +1,5 @@
 
-import { SessionContext } from '@/lib/types';
+import { SessionContext } from '@/lib/core/domain/value-objects/SessionContext';
 
 export class SensoryDeepeningStrategy {
   buildPrompt(userUtterance: string, context: SessionContext) {

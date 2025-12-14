@@ -3,7 +3,7 @@ import { db } from '@/lib/infrastructure/adapters/db';
 import { chapters } from '@/lib/infrastructure/adapters/db/schema';
 import { eq } from 'drizzle-orm';
 import { DrizzleChapterRepository } from '@/lib/infrastructure/adapters/db/DrizzleChapterRepository';
-import { StorybookService } from '@/lib/services/storybook/StorybookService';
+import { StorybookService } from '@/lib/infrastructure/adapters/storybook/StorybookService';
 import { CombinedAIService } from '@/lib/infrastructure/adapters/ai/CombinedAIService';
 
 // Factory for service

@@ -1,5 +1,5 @@
-import { ChapterRepository } from '../../core/domain/repositories/ChapterRepository';
-import { AIServicePort } from '../../core/application/ports/AIServicePort';
+import { ChapterRepository } from '../../../core/domain/repositories/ChapterRepository';
+import { AIServicePort } from '../../../core/application/ports/AIServicePort';
 import AoTStorybookGenerator from '../biographer/AoTStorybookGenerator';
 
 export class StorybookService {

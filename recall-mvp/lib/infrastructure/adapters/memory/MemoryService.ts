@@ -1,9 +1,9 @@
 import { Pinecone } from '@pinecone-database/pinecone';
-import { OpenAIClient } from '@/lib/services/openai/OpenAIClient';
+import { OpenAIClient } from '@/lib/infrastructure/adapters/ai/OpenAIClient';
  import { db } from '@/lib/infrastructure/adapters/db';
  import { sessions } from '@/lib/infrastructure/adapters/db/schema';
 import { eq } from 'drizzle-orm';
-import { Memory } from '@/lib/types';
+import { Memory } from '@/lib/core/domain/value-objects/Memory';
 
 export class MemoryService {
   private pinecone: Pinecone | null = null;
