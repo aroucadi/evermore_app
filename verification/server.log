@@ -1,5 +1,5 @@
 
-> recall-mvp@0.1.0 dev /app/recall-mvp
+> recall-mvp@0.1.0 dev
 > next dev
 
  ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
@@ -14,7 +14,6 @@
    - Network:       http://192.168.0.2:3000
 
  ✓ Starting...
- ✓ Ready in 1178ms
+ ✓ Ready in 2.3s
  ○ Compiling /conversation ...
- GET /conversation 200 in 4.6s (compile: 4.3s, render: 271ms)
- GET /test-transcript 200 in 2.7s (compile: 2.3s, render: 446ms)
+ GET /conversation 200 in 5.9s (compile: 5.5s, render: 385ms)

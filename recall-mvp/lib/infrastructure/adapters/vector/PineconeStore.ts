@@ -63,7 +63,7 @@ export class PineconeStore implements VectorStorePort {
         for (const session of recentSessions) {
             if (session.transcriptRaw) {
                 // Parse transcriptRaw if it's JSON, or use as is
-                let transcript = session.transcriptRaw;
+                const transcript = session.transcriptRaw;
                 // Just add a summary/indication marker
                 context.push({
                     type: 'recent_session',

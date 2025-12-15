@@ -204,8 +204,9 @@ export default function ActiveConversationPage() {
         <button
           onClick={() => setShowEndConfirmation(true)}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+          aria-label="End conversation"
         >
-          <span className="material-symbols-outlined text-white/70">close</span>
+          <span className="material-symbols-outlined text-white/70" aria-hidden="true">close</span>
         </button>
 
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20">
@@ -223,8 +224,11 @@ export default function ActiveConversationPage() {
           <button
             onClick={() => setShowLanguageMenu(!showLanguageMenu)}
             className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 transition-colors"
+            aria-label="Conversation options"
+            aria-expanded={showLanguageMenu}
+            aria-haspopup="true"
           >
-            <span className="material-symbols-outlined text-white/70">more_horiz</span>
+            <span className="material-symbols-outlined text-white/70" aria-hidden="true">more_horiz</span>
           </button>
 
           {showLanguageMenu && (
@@ -276,7 +280,7 @@ export default function ActiveConversationPage() {
 
         {/* Live Transcript / Prompts */}
         <div className="w-full mb-12 space-y-6">
-           <div className="space-y-4 max-h-[200px] overflow-y-auto no-scrollbar mask-fade-top">
+           <div className="space-y-4 max-h-[200px] overflow-y-auto no-scrollbar mask-fade-top" role="log" aria-live="polite" aria-relevant="additions text">
               {transcript.map((text, i) => (
                  <div key={i} className="text-2xl md:text-3xl font-medium text-center text-white/90 leading-relaxed animate-fade-in">
                     "{text}"
@@ -294,8 +298,8 @@ export default function ActiveConversationPage() {
               <div className="max-w-lg mx-auto flex flex-col gap-4">
                  <div className="flex justify-between items-center">
                     <h3 className="text-white font-medium">Type your response</h3>
-                    <button onClick={() => setShowInput(false)} className="text-white/50 hover:text-white">
-                       <span className="material-symbols-outlined">close</span>
+                    <button onClick={() => setShowInput(false)} className="text-white/50 hover:text-white" aria-label="Close input">
+                       <span className="material-symbols-outlined" aria-hidden="true">close</span>
                     </button>
                  </div>
                  <textarea
@@ -320,8 +324,9 @@ export default function ActiveConversationPage() {
            <button
              onClick={() => setShowInput(true)}
              className="flex-1 h-16 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+             aria-label="Type a message"
            >
-              <span className="material-symbols-outlined text-white/60">keyboard</span>
+              <span className="material-symbols-outlined text-white/60" aria-hidden="true">keyboard</span>
               <span className="font-semibold text-white/60">Type</span>
            </button>
 
@@ -332,8 +337,9 @@ export default function ActiveConversationPage() {
                  ? 'bg-red-500/20 text-red-500 border border-red-500/50 scale-100'
                  : 'bg-[#FF845E] text-white scale-100 hover:scale-105 shadow-[#FF845E]/40'
               }`}
+              aria-label={isListening ? "Stop recording" : "Start recording"}
            >
-              <span className={`material-symbols-outlined text-4xl transition-transform duration-300 ${isListening ? '' : 'filled'}`}>
+              <span className={`material-symbols-outlined text-4xl transition-transform duration-300 ${isListening ? '' : 'filled'}`} aria-hidden="true">
                  {isListening ? 'stop' : 'mic'}
               </span>
            </button>
@@ -342,8 +348,9 @@ export default function ActiveConversationPage() {
               onClick={handleShowClick}
               disabled={isAnalyzing}
               className="flex-1 h-16 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-50"
+              aria-label="Show a photo"
            >
-              <span className="material-symbols-outlined text-white/60">photo_camera</span>
+              <span className="material-symbols-outlined text-white/60" aria-hidden="true">photo_camera</span>
               <span className="font-semibold text-white/60">Show</span>
            </button>
         </div>
