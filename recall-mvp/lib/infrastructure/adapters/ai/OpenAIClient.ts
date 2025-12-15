@@ -27,7 +27,7 @@ export class OpenAIClient {
 
       // Basic mock response logic based on input
       const lastMessage = params.messages[params.messages.length - 1].content.toLowerCase();
-      let content = "That's very interesting. Tell me more.";
+      const content = "That's very interesting. Tell me more.";
 
       if (lastMessage.includes('analyze') && lastMessage.includes('json')) {
          // Mocking analysis response

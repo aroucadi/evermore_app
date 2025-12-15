@@ -92,7 +92,7 @@ export class SchedulingService {
                  const targetLocalString = `${month}/${day}/${year}, ${hour24 === 0 || hour24 === 12 ? 12 : hour24 % 12}:00:00 ${hour24 >= 12 ? 'PM' : 'AM'}`;
 
                  // Heuristic: start with the UTC time matching the components
-                 let attemptDate = new Date(`${year}-${month}-${day}T${hour24.toString().padStart(2, '0')}:00:00Z`);
+                 const attemptDate = new Date(`${year}-${month}-${day}T${hour24.toString().padStart(2, '0')}:00:00Z`);
 
                  // Check discrepancy
                  // This is getting too complex for a single file edit without libs.
