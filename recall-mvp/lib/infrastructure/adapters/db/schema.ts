@@ -26,6 +26,10 @@ export const users = pgTable('users', {
   }>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
+}, (table) => {
+  return {
+    seniorIdIdx: index('users_senior_id_idx').on(table.seniorId),
+  }
 });
 
 // Sessions Table
@@ -43,6 +47,12 @@ export const sessions = pgTable('sessions', {
   }>(),
   startedAt: timestamp('started_at').notNull(),
   endedAt: timestamp('ended_at')
+}, (table) => {
+  return {
+    userIdIdx: index('sessions_user_id_idx').on(table.userId),
+    // Composite index for dashboard queries: get sessions for user ordered by startedAt
+    userStartedAtIdx: index('sessions_user_started_at_idx').on(table.userId, table.startedAt),
+  }
 });
 
 // Chapters Table
@@ -85,6 +95,11 @@ export const invitations = pgTable('invitations', {
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
+}, (table) => {
+  return {
+    seniorIdIdx: index('invitations_senior_id_idx').on(table.seniorId),
+    seniorStatusIdx: index('invitations_senior_status_idx').on(table.seniorId, table.status),
+  }
 });
 
 // Alerts Table
@@ -98,6 +113,10 @@ export const alerts = pgTable('alerts', {
   severity: varchar('severity', { length: 20 }).notNull(), // 'high' | 'low'
   acknowledged: boolean('acknowledged').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull()
+}, (table) => {
+  return {
+    seniorIdIdx: index('alerts_senior_id_idx').on(table.seniorId),
+  }
 });
 
 // Background Jobs Table (optional, if not using BullMQ)
@@ -111,4 +130,9 @@ export const jobs = pgTable('jobs', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   startedAt: timestamp('started_at'),
   completedAt: timestamp('completed_at')
+}, (table) => {
+  return {
+    statusIdx: index('jobs_status_idx').on(table.status),
+    statusCreatedIdx: index('jobs_status_created_idx').on(table.status, table.createdAt),
+  }
 });
