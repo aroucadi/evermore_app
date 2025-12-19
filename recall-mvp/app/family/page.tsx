@@ -1,9 +1,39 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 
 export default function FamilyPortalPage() {
+  const [topicsToAvoid, setTopicsToAvoid] = useState<string[]>(['Politics', 'Recent Surgery']);
+  const [newTopic, setNewTopic] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleAddTopic = () => {
+    if (newTopic.trim()) {
+      setTopicsToAvoid([...topicsToAvoid, newTopic.trim()]);
+      setNewTopic('');
+      // In a real app, we would call an API here to persist this
+    }
+  };
+
+  const handleRemoveTopic = (topic: string) => {
+    setTopicsToAvoid(topicsToAvoid.filter(t => t !== topic));
+    // API call to persist
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        alert("Book exported successfully! (Download started)");
+    } catch (e) {
+        alert("Failed to export book");
+    } finally {
+        setIsExporting(false);
+    }
+  };
+
   return (
     <div className="bg-[#F8F9FA] min-h-screen font-sans text-slate-900 pb-20">
       {/* Header */}
@@ -92,8 +122,9 @@ export default function FamilyPortalPage() {
               </div>
            </div>
 
-           {/* Right Column: Stats & Gallery */}
+           {/* Right Column: Stats & Gallery & Settings */}
            <div className="space-y-8">
+              {/* Book Progress */}
               <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                  <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <span className="material-symbols-outlined text-orange-500">book</span>
@@ -108,9 +139,58 @@ export default function FamilyPortalPage() {
                        <div className="bg-orange-500 h-2.5 rounded-full" style={{width: '45%'}}></div>
                     </div>
                     <p className="text-xs text-slate-500 mt-2">Est. completion: Nov 15th</p>
+                    <button
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className="w-full mt-4 py-2 bg-slate-900 text-white rounded-lg font-semibold hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                        {isExporting ? 'Generating PDF...' : (
+                            <>
+                                <span className="material-symbols-outlined text-[18px]">download</span>
+                                Export Book (PDF)
+                            </>
+                        )}
+                    </button>
                  </div>
               </div>
 
+              {/* Topics to Avoid (F-01) */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+                 <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <span className="material-symbols-outlined text-red-500">block</span>
+                    Topics to Avoid
+                 </h3>
+                 <div className="space-y-3">
+                    <div className="flex flex-wrap gap-2">
+                        {topicsToAvoid.map((topic, i) => (
+                            <span key={i} className="px-3 py-1 bg-red-50 text-red-600 text-sm font-medium rounded-full flex items-center gap-1">
+                                {topic}
+                                <button onClick={() => handleRemoveTopic(topic)} className="hover:text-red-800">
+                                    <span className="material-symbols-outlined text-[14px]">close</span>
+                                </button>
+                            </span>
+                        ))}
+                    </div>
+                    <div className="flex gap-2 mt-2">
+                        <input
+                            type="text"
+                            value={newTopic}
+                            onChange={(e) => setNewTopic(e.target.value)}
+                            placeholder="Add topic..."
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-blue-500"
+                            onKeyDown={(e) => e.key === 'Enter' && handleAddTopic()}
+                        />
+                        <button
+                            onClick={handleAddTopic}
+                            className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors"
+                        >
+                            <span className="material-symbols-outlined">add</span>
+                        </button>
+                    </div>
+                 </div>
+              </div>
+
+              {/* Recent Photos */}
               <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                  <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-slate-900 flex items-center gap-2">
