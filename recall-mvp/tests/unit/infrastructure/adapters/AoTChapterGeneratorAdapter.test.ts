@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { AoTChapterGeneratorAdapter } from "@/lib/infrastructure/adapters/ai/AoTChapterGeneratorAdapter";
-
-// Mock global fetch
-global.fetch = vi.fn();
+import { LLMPort } from "@/lib/core/application/ports/LLMPort";
 
 describe("AoTChapterGeneratorAdapter", () => {
   let generator: AoTChapterGeneratorAdapter;
+  let mockLLM: LLMPort;
 
   beforeEach(() => {
-    generator = new AoTChapterGeneratorAdapter();
-    vi.clearAllMocks();
+    mockLLM = {
+      generateText: vi.fn(),
+      generateJson: vi.fn(),
+    };
+    generator = new AoTChapterGeneratorAdapter(mockLLM);
   });
 
   const mockTranscript = `
@@ -20,43 +22,15 @@ describe("AoTChapterGeneratorAdapter", () => {
   `;
 
   it("should decompose transcript into atoms", async () => {
-    process.env.OPENAI_API_KEY = "test";
-    process.env.LLM_PROVIDER = "openai";
-
     // Mock successful LLM responses for each atom
-    // Note: Promise.all order is not guaranteed, but usually matches array order.
-    // However, we can use mockImplementation to return based on input content if needed.
-    // But for now, let's assume strict order and see.
-    // Actually, `callLLM` is what calls fetch.
-
-    // We can just return a generic valid JSON structure that satisfies all parsers
-    // or try to match specific calls.
-
-    // Better approach: Mock based on call arguments
-    (global.fetch as any).mockImplementation(async (url: string, options: any) => {
-        const body = JSON.parse(options.body);
-        const content = body.messages[1].content;
-
-        let responseContent = "{}";
-
-        if (content.includes("identify the primary narrative arc")) {
-             responseContent = "A summer road trip in 1969.";
-        } else if (content.includes("selecting the 2 best quotes")) {
-             responseContent = JSON.stringify({ quotes: [{ text: "We were young", reason: "Youth" }] });
-        } else if (content.includes("extracting sensory details")) {
-             responseContent = JSON.stringify({ sensoryDetails: [{ phrase: "smell of salt", sense: "smell" }] });
-        } else if (content.includes("analyzing the emotional tone")) {
-             responseContent = JSON.stringify({ emotion: "nostalgia", confidence: 0.9 });
-        } else if (content.includes("identifying connections")) {
-             responseContent = JSON.stringify({ connections: [] });
-        }
-
-        return {
-            ok: true,
-            json: async () => ({ choices: [{ message: { content: responseContent } }] })
-        };
+    (mockLLM.generateText as any).mockResolvedValue("A summer road trip in 1969.");
+    (mockLLM.generateJson as any).mockImplementation(async (prompt: string) => {
+        if (prompt.includes("best quotes")) return { quotes: [{ text: "We were young", reason: "Youth" }] };
+        if (prompt.includes("sensory details")) return { sensoryDetails: [{ phrase: "smell of salt", sense: "smell" }] };
+        if (prompt.includes("emotional valence")) return { emotion: "nostalgia", confidence: 0.9 };
+        if (prompt.includes("connections")) return { connections: [] };
+        return {};
     });
-
 
     const atoms = await generator.decomposeTranscript(mockTranscript, []);
 
@@ -66,9 +40,6 @@ describe("AoTChapterGeneratorAdapter", () => {
   });
 
   it("should synthesize chapter from atoms", async () => {
-    process.env.OPENAI_API_KEY = "test";
-    process.env.LLM_PROVIDER = "openai";
-
     const mockAtoms = {
       narrativeArc: "A summer road trip",
       bestQuotes: [],
@@ -77,44 +48,23 @@ describe("AoTChapterGeneratorAdapter", () => {
       previousChapterConnections: []
     };
 
-    (global.fetch as any).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ choices: [{ message: { content: "# Chapter 1\n\nIt was a sunny day..." } }] })
-    });
+    (mockLLM.generateText as any).mockResolvedValue("# Chapter 1\n\nIt was a sunny day...");
 
     const chapter = await generator.synthesizeChapter(mockAtoms, mockTranscript);
     expect(chapter).toContain("# Chapter 1");
   });
 
   it("should handle LLM failures gracefully in decomposition", async () => {
-     process.env.OPENAI_API_KEY = "test";
-     process.env.LLM_PROVIDER = "openai";
+      // Mock failure for narrative arc
+      (mockLLM.generateText as any).mockRejectedValue(new Error("API Error"));
 
-      (global.fetch as any).mockImplementation(async (url: string, options: any) => {
-        const body = JSON.parse(options.body);
-        const content = body.messages[1].content;
-
-        if (content.includes("identify the primary narrative arc")) {
-             throw new Error("API Error"); // SIMULATE FAILURE
-        }
-
-        // Return valid empty/default responses for others
-        let responseContent = "{}";
-        if (content.includes("selecting the 2 best quotes")) responseContent = JSON.stringify({ quotes: [] });
-        if (content.includes("extracting sensory details")) responseContent = JSON.stringify({ sensoryDetails: [] });
-        if (content.includes("analyzing the emotional tone")) responseContent = JSON.stringify({ emotion: "neutral" });
-        if (content.includes("identifying connections")) responseContent = JSON.stringify({ connections: [] });
-
-        return {
-            ok: true,
-            json: async () => ({ choices: [{ message: { content: responseContent } }] })
-        };
-    });
+      // Mock success for others to ensure partial failure handling
+      (mockLLM.generateJson as any).mockResolvedValue({});
 
       const atoms = await generator.decomposeTranscript(mockTranscript, []);
 
       // Narrative arc should have fallback
       expect(atoms.narrativeArc).toBeDefined();
-      expect(atoms.narrativeArc).toBe('A Memory from the Past');
+      expect(atoms.narrativeArc).toBe('Memory'); // Implementation fallback
   });
 });

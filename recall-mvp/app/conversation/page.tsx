@@ -93,6 +93,10 @@ export default function ActiveConversationPage() {
   const toggleListening = () => {
     setIsListening(!isListening);
     setShowWaves(!showWaves);
+    // In a real implementation, we would toggle the VAD / Audio Recorder here.
+    if (!isListening) {
+        setToastMessage("Listening...");
+    }
   };
 
   const handleEndConversation = () => {
@@ -100,20 +104,43 @@ export default function ActiveConversationPage() {
     router.push('/dashboard');
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputValue.trim()) {
       setToastMessage('Cannot send an empty message.');
       return;
     }
-    // Add user message to transcript (simulated)
-    setTranscript(prev => [...prev, inputValue]);
+    const messageToSend = inputValue;
+
+    // Optimistic Update
+    setTranscript(prev => [...prev, messageToSend]);
     setInputValue('');
     setShowInput(false);
 
-    // Simulate AI response
-    setTimeout(() => {
-        handleAIResponse("That's fascinating. Tell me more.");
-    }, 1000);
+    try {
+        const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sessionId,
+                message: messageToSend
+            })
+        });
+
+        if (!res.ok) throw new Error("Failed to send message");
+
+        const data = await res.json();
+        // The API returns { text: string, strategy: string }
+        if (data && data.text) {
+             handleAIResponse(data.text);
+        } else {
+             // Fallback if null (e.g. passive monitoring) or error
+             handleAIResponse("I'm listening...");
+        }
+
+    } catch (e) {
+        console.error(e);
+        setToastMessage("Failed to send message to AI.");
+    }
   };
 
   const handleShowClick = () => {
