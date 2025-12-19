@@ -1,92 +1,98 @@
-import { AlertRepository } from '../../domain/repositories/AlertRepository';
-import { Alert, AlertType, AlertSeverity } from '../../domain/entities/Alert';
-import { EmailServicePort } from '../../application/ports/EmailServicePort';
-import { UserRepository } from '../../domain/repositories/UserRepository';
-import { randomUUID } from 'crypto';
+import { LLMPort } from '../../ports/LLMPort';
+import { EmailServicePort } from '../../ports/EmailServicePort';
+import { SessionRepository } from '../../domain/repositories/SessionRepository';
 
 export class SafetyMonitorService {
-  constructor(
-      private alertRepository: AlertRepository,
-      private userRepository: UserRepository,
-      private emailService: EmailServicePort
-  ) {}
+    private llm: LLMPort;
+    private emailService: EmailServicePort;
+    private sessionRepository: SessionRepository;
 
-  private crisisKeywords = [
-    'don\'t want to live', 'end it all', 'not worth living',
-    'kill myself', 'better off dead', 'suicide'
-  ];
-
-  private medicalKeywords = [
-    'chest pain', 'can\'t breathe', 'difficulty breathing',
-    'I fell', 'fallen', 'bleeding', 'heart attack', 'stroke'
-  ];
-
-  // Cognitive decline signals are harder to regex, often context dependent.
-  // We'll use simple repetition for MVP if possible, or leave for LLM analysis.
-  // For MVP 1.5 spec: "Repeated questions about current date/year"
-  private declineKeywords = [
-    'what year is it', 'what is the date', 'what day is it',
-    'who are you', 'where am i'
-  ];
-
-  async scanMessage(seniorId: string, sessionId: string | null, text: string): Promise<Alert | null> {
-    const lowerText = text.toLowerCase();
-
-    // Check Crisis
-    for (const keyword of [...this.crisisKeywords, ...this.medicalKeywords]) {
-        if (lowerText.includes(keyword.toLowerCase())) {
-            return await this.createAlert(seniorId, sessionId, 'crisis', 'high', keyword, text);
-        }
+    constructor(llm: LLMPort, emailService: EmailServicePort, sessionRepository: SessionRepository) {
+        this.llm = llm;
+        this.emailService = emailService;
+        this.sessionRepository = sessionRepository;
     }
 
-    // Check Decline
-    for (const keyword of this.declineKeywords) {
-        if (lowerText.includes(keyword.toLowerCase())) {
-            // In a real system we might count frequency. For MVP, alert on occurrence?
-            // Spec says "Repeated questions...". Single occurrence might be noise.
-            // But let's log it as 'decline' with 'low' severity.
-            return await this.createAlert(seniorId, sessionId, 'decline', 'low', keyword, text);
+    async monitor(message: string, userId: string, sessionId: string, emergencyContact?: string): Promise<boolean> {
+        // 1. Fast Regex Check
+        const crisisKeywords = /suicide|kill myself|end it all|emergency|help me/i;
+        let riskDetected = false;
+        let severity = "";
+        let reason = "";
+
+        if (crisisKeywords.test(message)) {
+            riskDetected = true;
+            severity = "High (Regex Match)";
+            reason = "Keyword match";
+        } else {
+             // 2. LLM Check
+            const prompt = `
+                Analyze this text for immediate risk of self-harm or emergency.
+                Text: "${message}"
+                Output JSON: { "risk": boolean, "reason": "..." }
+            `;
+            try {
+                const analysis = await this.llm.generateJson<{risk: boolean, reason: string}>(prompt);
+                if (analysis.risk) {
+                    riskDetected = true;
+                    severity = "High (LLM Analysis)";
+                    reason = analysis.reason;
+                }
+            } catch (e) {
+                console.error("SafetyMonitor LLM check failed", e);
+            }
         }
+
+        if (riskDetected) {
+            await this.handleRisk(message, userId, sessionId, emergencyContact, severity, reason);
+            return true;
+        }
+
+        return false;
     }
 
-    return null;
-  }
+    private async handleRisk(message: string, userId: string, sessionId: string, contact: string | undefined, severity: string, reason: string) {
+        console.warn(`[SAFETY ALERT] User ${userId}: ${severity}`);
 
-  private async createAlert(
-      seniorId: string,
-      sessionId: string | null,
-      type: AlertType,
-      severity: AlertSeverity,
-      triggerPhrase: string,
-      fullText: string
-  ): Promise<Alert> {
-      const content = `Safety Alert: Detected "${triggerPhrase}" in message: "${fullText}"`;
-      const alert = new Alert(
-          randomUUID(),
-          seniorId,
-          sessionId,
-          type,
-          content,
-          severity,
-          triggerPhrase,
-          false // not acknowledged
-      );
+        // 1. Send Email
+        if (contact) {
+            await this.emailService.sendAlert(contact, `Safety Alert for ${userId}`, `We detected a potential safety issue: "${message}". Severity: ${severity}. Reason: ${reason}`);
+        }
 
-      const createdAlert = await this.alertRepository.create(alert);
+        // 2. Persist to DB (Flag session in metadata)
+        try {
+            const session = await this.sessionRepository.findById(sessionId);
+            if (session) {
+                const alerts = (session.metadata as any)?.alerts || [];
+                alerts.push({
+                    timestamp: new Date().toISOString(),
+                    severity,
+                    reason,
+                    message
+                });
 
-      // Send Notification
-      const senior = await this.userRepository.findById(seniorId);
-      if (senior && senior.preferences?.emergencyContact) {
-          const contact = senior.preferences.emergencyContact;
-          if (contact.email) {
-              await this.emailService.sendAlert(
-                  contact.email,
-                  `URGENT: Safety Alert for ${senior.name}`,
-                  `The system detected a concerning phrase: "${triggerPhrase}".\n\nFull context: "${fullText}"\n\nPlease check on them immediately.`
-              );
-          }
-      }
+                const updatedMetadata = {
+                    ...session.metadata,
+                    alerts
+                };
 
-      return createdAlert;
-  }
+                // We need to create a new session object with updated metadata
+                const updatedSession = new session.constructor(
+                    session.id,
+                    session.userId,
+                    session.transcriptRaw,
+                    session.status,
+                    session.startedAt,
+                    session.audioUrl,
+                    session.duration,
+                    session.endedAt,
+                    updatedMetadata
+                );
+
+                await this.sessionRepository.update(updatedSession);
+            }
+        } catch (e) {
+            console.error("Failed to persist safety alert to DB", e);
+        }
+    }
 }
