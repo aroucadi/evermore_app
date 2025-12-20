@@ -2,6 +2,7 @@ import { SpeechPort } from '../../../core/application/ports/SpeechPort';
 import { VoiceAgentPort } from '../../../core/application/ports/VoiceAgentPort';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { OpenAI } from 'openai';
+import { Readable } from 'stream';
 
 export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
   private client: ElevenLabsClient;
@@ -18,7 +19,12 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
     }
 
     if (process.env.OPENAI_API_KEY) {
-        this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+        // dangerouslyAllowBrowser: true is needed because Vitest runs in JSDOM (browser-like) environment.
+        // In real Node.js server environment, this check is skipped by OpenAI SDK, but we add it for safety in tests.
+        this.openai = new OpenAI({
+            apiKey: process.env.OPENAI_API_KEY,
+            dangerouslyAllowBrowser: process.env.NODE_ENV === 'test'
+        });
     }
   }
 
@@ -50,7 +56,17 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
   async speechToText(audioBuffer: Buffer, contentType: string): Promise<string> {
       // 1. Try OpenAI Whisper if configured (optional internal logic)
       if (this.openai) {
-         // Placeholder for OpenAI logic if needed
+        try {
+          // Convert Buffer to File-like object for OpenAI
+          const file = await this.bufferToFile(audioBuffer, 'audio.webm', contentType);
+          const transcription = await this.openai.audio.transcriptions.create({
+            file: file,
+            model: "whisper-1",
+          });
+          return transcription.text;
+        } catch (e) {
+             console.warn("ElevenLabsAdapter: OpenAI Whisper failed, falling back.", e);
+        }
       }
 
       // 2. Use Injected Fallback (HuggingFace)
@@ -63,6 +79,18 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
       }
 
       throw new Error("Speech to text failed: No working provider available (ElevenLabs requires fallback for STT).");
+  }
+
+  // Helper to convert Buffer to a File object compatible with OpenAI SDK
+  private async bufferToFile(buffer: Buffer, filename: string, contentType: string): Promise<any> {
+      // In Node environment for OpenAI SDK, we might need to pass a ReadStream or similar
+      // simpler hack: create a File object if in environment that supports it, or pass stream
+      // Vitest/Node:
+      return Object.assign(Readable.from(buffer), {
+          path: filename,
+          name: filename,
+          lastModified: Date.now()
+      });
   }
 
   async startConversation(

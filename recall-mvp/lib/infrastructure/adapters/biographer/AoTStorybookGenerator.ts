@@ -1,3 +1,5 @@
+import { LLMPort } from '../../../core/application/ports/LLMPort';
+
 interface StorybookAtoms {
   keyMoments: Array<{moment: string; importance: number; reasoning: string}>;
   visualElements: string[];
@@ -6,13 +8,14 @@ interface StorybookAtoms {
 }
 
 class AoTStorybookGenerator {
+  private llm: LLMPort;
+
+  constructor(llm: LLMPort) {
+    this.llm = llm;
+  }
 
   /**
    * ATOM 1: Identify Key Moments
-   *
-   * PURPOSE: Find the 6-8 most important moments in the story
-   * INPUT: Children's version of chapter
-   * OUTPUT: Ranked list of moments with importance scores
    */
   async identifyKeyMoments(childrensStory: string): Promise<any[]> {
     const prompt = `
@@ -52,17 +55,17 @@ RULES:
 - Extract 6-8 moments minimum
 `;
 
-    const response = await this.callLLM(prompt, { format: 'json' });
-    const parsed = JSON.parse(response);
-    return parsed.moments || [];
+    try {
+      const parsed = await this.llm.generateJson<{moments: any[]}>(prompt);
+      return parsed.moments || [];
+    } catch (e) {
+      console.error("AoT identifyKeyMoments failed", e);
+      return [];
+    }
   }
 
   /**
    * ATOM 2: Extract Visual Elements
-   *
-   * PURPOSE: Identify recurring visual elements for illustration consistency
-   * INPUT: Children's version of chapter
-   * OUTPUT: List of key visual elements (settings, objects, people)
    */
   async extractVisualElements(childrensStory: string): Promise<string[]> {
     const prompt = `
@@ -96,17 +99,17 @@ RULES:
 - Maximum 8 elements
 `;
 
-    const response = await this.callLLM(prompt, { format: 'json' });
-    const parsed = JSON.parse(response);
-    return parsed.visualElements || [];
+    try {
+      const parsed = await this.llm.generateJson<{visualElements: string[]}>(prompt);
+      return parsed.visualElements || [];
+    } catch (e) {
+      console.error("AoT extractVisualElements failed", e);
+      return [];
+    }
   }
 
   /**
    * ATOM 3: Define Narrative Beats
-   *
-   * PURPOSE: Structure story into clear beginning/middle/end
-   * INPUT: Children's version of chapter
-   * OUTPUT: 3-4 narrative beats with suggested page placement
    */
   async defineNarrativeBeats(childrensStory: string): Promise<any[]> {
     const prompt = `
@@ -144,18 +147,17 @@ RULES:
 - Each beat should span 1-2 pages
 - Must cover entire story (no gaps)
 `;
-
-    const response = await this.callLLM(prompt, { format: 'json' });
-    const parsed = JSON.parse(response);
-    return parsed.beats || [];
+    try {
+      const parsed = await this.llm.generateJson<{beats: any[]}>(prompt);
+      return parsed.beats || [];
+    } catch (e) {
+      console.error("AoT defineNarrativeBeats failed", e);
+      return [];
+    }
   }
 
   /**
    * ATOM 4: Extract Character Details
-   *
-   * PURPOSE: Define protagonist's appearance for consistent illustration
-   * INPUT: Original adult chapter (has more detail)
-   * OUTPUT: Character description for artist prompt
    */
   async extractCharacterDetails(adultChapter: string): Promise<any> {
     const prompt = `
@@ -194,10 +196,13 @@ EXAMPLE OUTPUT:
   }
 }
 `;
-
-    const response = await this.callLLM(prompt, { format: 'json' });
-    const parsed = JSON.parse(response);
-    return parsed.character || {};
+    try {
+      const parsed = await this.llm.generateJson<{character: any}>(prompt);
+      return parsed.character || {};
+    } catch (e) {
+      console.error("AoT extractCharacterDetails failed", e);
+      return {};
+    }
   }
 
   /**
@@ -232,10 +237,6 @@ EXAMPLE OUTPUT:
 
   /**
    * PHASE 2: CONTRACT into 4-6 Scenes
-   *
-   * PURPOSE: Select optimal moments and create scene descriptions
-   * INPUT: StorybookAtoms
-   * OUTPUT: Array of 4-6 scenes ready for illustration
    */
   async synthesizeScenes(
     atoms: StorybookAtoms,
@@ -303,9 +304,13 @@ EXAMPLE IMAGE PROMPT:
 OUTPUT: JSON with exactly 6 scenes.
 `;
 
-    const response = await this.callLLM(prompt, { format: 'json', maxTokens: 1500 });
-    const parsed = JSON.parse(response);
-    return parsed.scenes || [];
+    try {
+      const parsed = await this.llm.generateJson<{scenes: any[]}>(prompt, undefined, { maxTokens: 1500 });
+      return parsed.scenes || [];
+    } catch (e) {
+      console.error("AoT synthesizeScenes failed", e);
+      return [];
+    }
   }
 
   /**
@@ -327,59 +332,6 @@ OUTPUT: JSON with exactly 6 scenes.
     console.log('✅ AoT Storybook Scene Generation complete');
 
     return { scenes, atoms };
-  }
-
-  /**
-   * Helper: Call LLM (reuse from chapter generator)
-   */
-  private async callLLM(
-    prompt: string,
-    options: {maxTokens?: number; format?: 'text' | 'json'} = {}
-  ): Promise<string> {
-    const model = process.env.LLM_PROVIDER === 'openai'
-      ? 'gpt-4o-mini'
-      : 'llama-3.1-70b-versatile'; // Groq model
-
-    const apiKey = process.env.LLM_PROVIDER === 'openai'
-        ? process.env.OPENAI_API_KEY
-        : process.env.GROQ_API_KEY;
-
-    if (!apiKey) {
-        console.warn('No LLM API key found, returning mock response for testing.');
-        if (options.format === 'json') {
-             return JSON.stringify({});
-        }
-        return "Mock LLM Response";
-    }
-
-    const url = process.env.LLM_PROVIDER === 'openai'
-        ? 'https://api.openai.com/v1/chat/completions'
-        : 'https://api.groq.com/openai/v1/chat/completions';
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: model,
-        messages: [
-          { role: 'system', content: 'You are a helpful assistant that follows instructions precisely.' },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: options.maxTokens || 500,
-        temperature: 0.7,
-        ...(options.format === 'json' ? { response_format: { type: 'json_object' } } : {})
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`LLM API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    return data.choices[0].message.content;
   }
 }
 
