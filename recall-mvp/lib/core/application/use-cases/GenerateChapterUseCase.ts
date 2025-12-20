@@ -1,10 +1,10 @@
 import { ChapterRepository } from '../../domain/repositories/ChapterRepository';
 import { SessionRepository } from '../../domain/repositories/SessionRepository';
-import { AIServicePort } from '../ports/AIServicePort';
 import { EmailServicePort } from '../ports/EmailServicePort';
 import { Chapter } from '../../domain/entities/Chapter';
 import { UserRepository } from '../../domain/repositories/UserRepository';
 import { ChapterGeneratorPort } from '../ports/ChapterGeneratorPort';
+import { LLMPort } from '../ports/LLMPort';
 import { randomUUID } from 'crypto';
 
 export class GenerateChapterUseCase {
@@ -12,9 +12,9 @@ export class GenerateChapterUseCase {
     private chapterRepository: ChapterRepository,
     private sessionRepository: SessionRepository,
     private userRepository: UserRepository,
-    private aiService: AIServicePort,
+    private chapterGenerator: ChapterGeneratorPort,
     private emailService: EmailServicePort,
-    private chapterGenerator: ChapterGeneratorPort // Injected dependency
+    private llm: LLMPort // Injected but currently unused, keeping for consistency if logic expands
   ) {}
 
   async execute(sessionId: string): Promise<string> {
@@ -28,7 +28,7 @@ export class GenerateChapterUseCase {
     const previousChapters = await this.chapterRepository.findByUserId(session.userId);
     const previousSummaries = previousChapters.slice(0, 5).map(ch => ({
         title: ch.title,
-        summary: ch.excerpt // Using excerpt as summary
+        summary: ch.excerpt
     }));
 
     // Use Injected Chapter Generator
@@ -46,17 +46,13 @@ export class GenerateChapterUseCase {
         undefined, // audioHighlightUrl
         undefined, // audioDuration
         undefined, // pdfUrl
-        // Extract entities from atoms if possible, or use empty array.
-        // AoT atoms include people/places in `sensoryDetails` or `bestQuotes` context sometimes,
-        // but strictly speaking we don't have a dedicated entity extraction atom yet.
-        // We can pass empty array for now or try to map something if needed.
         [],
         {
-            sessionNumber: 1, // Logic to count sessions needed
+            sessionNumber: 1,
             wordCount: content.split(' ').length,
             emotionalTone: atoms.emotionalValence,
-            lifePeriod: "Unknown", // AoT doesn't explicitly return this separately but could be parsed
-            atoms: atoms // Store atoms for debugging/future use
+            lifePeriod: "Unknown",
+            atoms: atoms
         }
     );
 

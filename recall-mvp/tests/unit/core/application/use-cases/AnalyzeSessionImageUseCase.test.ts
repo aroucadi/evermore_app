@@ -1,13 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AnalyzeSessionImageUseCase } from '@/lib/core/application/use-cases/AnalyzeSessionImageUseCase';
 import { SessionRepository } from '@/lib/core/domain/repositories/SessionRepository';
-import { AIServicePort } from '@/lib/core/application/ports/AIServicePort';
+import { LLMPort } from '@/lib/core/application/ports/LLMPort';
+import { SpeechPort } from '@/lib/core/application/ports/SpeechPort';
 import { VectorStorePort } from '@/lib/core/application/ports/VectorStorePort';
 
 describe('AnalyzeSessionImageUseCase', () => {
   let useCase: AnalyzeSessionImageUseCase;
   let sessionRepo: SessionRepository;
-  let aiService: AIServicePort;
+  let llm: LLMPort;
+  let speech: SpeechPort;
   let vectorStore: VectorStorePort;
 
   beforeEach(() => {
@@ -26,20 +28,19 @@ describe('AnalyzeSessionImageUseCase', () => {
         completeSessionTransaction: vi.fn()
     } as any;
 
-    aiService = {
-        analyzeImage: vi.fn().mockResolvedValue({
-            description: "A photo of a dog.",
-            detectedEntities: ["dog"]
-        }),
-        generateQuestion: vi.fn().mockResolvedValue({
+    llm = {
+        analyzeImage: vi.fn().mockResolvedValue("A photo of a dog."),
+        generateJson: vi.fn().mockResolvedValue({
             text: "Tell me about the dog.",
             strategy: "visual_inquiry"
         }),
-        generateSpeech: vi.fn().mockResolvedValue(Buffer.from("audio")),
-        generateChapterAnalysis: vi.fn(),
-        generateChapterNarrative: vi.fn(),
-        startVoiceConversation: vi.fn()
-    } as any;
+        generateText: vi.fn()
+    };
+
+    speech = {
+        textToSpeech: vi.fn().mockResolvedValue(Buffer.from("audio")),
+        speechToText: vi.fn()
+    };
 
     vectorStore = {
         retrieveContext: vi.fn().mockResolvedValue([]),
@@ -47,15 +48,18 @@ describe('AnalyzeSessionImageUseCase', () => {
         storeMemoryChunk: vi.fn()
     } as any;
 
-    useCase = new AnalyzeSessionImageUseCase(sessionRepo, aiService, vectorStore);
+    useCase = new AnalyzeSessionImageUseCase(sessionRepo, llm, speech, vectorStore);
   });
 
   it('should analyze image, generate question and audio, and update transcript', async () => {
     const result = await useCase.execute('session-1', 'base64img', 'image/jpeg');
 
-    expect(aiService.analyzeImage).toHaveBeenCalledWith('base64img', 'image/jpeg');
-    expect(aiService.generateQuestion).toHaveBeenCalled();
-    expect(aiService.generateSpeech).toHaveBeenCalledWith("Tell me about the dog.", "visual_inquiry");
+    expect(llm.analyzeImage).toHaveBeenCalledWith('base64img', 'image/jpeg', expect.any(String));
+    // expect(llm.generateJson).toHaveBeenCalled(); // This might not be called if analyzeImage returns conversationalTrigger (simulated by mocking analyzeImage response behavior if we wanted to test that path, but here we test the fallback path or we mock the prompt response).
+
+    // In this test, analyzeImage returns simple string "A photo of a dog.", so the logic falls back to step 2 (generateJson)
+    expect(llm.generateJson).toHaveBeenCalled();
+    expect(speech.textToSpeech).toHaveBeenCalledWith("Tell me about the dog.", "visual_inquiry");
 
     expect(sessionRepo.update).toHaveBeenCalled();
     const updatedSession = (sessionRepo.update as any).mock.calls[0][0];

@@ -1,11 +1,13 @@
 import { SessionRepository } from '../../domain/repositories/SessionRepository';
-import { AIServicePort } from '../ports/AIServicePort';
+import { LLMPort } from '../ports/LLMPort';
+import { SpeechPort } from '../ports/SpeechPort';
 import { VectorStorePort } from '../ports/VectorStorePort';
 
 export class AnalyzeSessionImageUseCase {
   constructor(
     private sessionRepository: SessionRepository,
-    private aiService: AIServicePort,
+    private llm: LLMPort,
+    private speech: SpeechPort,
     private vectorStore: VectorStorePort
   ) {}
 
@@ -15,9 +17,19 @@ export class AnalyzeSessionImageUseCase {
 
     const transcript = JSON.parse(session.transcriptRaw || '[]');
 
-    // 1. Analyze Image using the new "Proustian Trigger" logic
-    // The aiService.analyzeImage now returns a 'conversationalTrigger' specifically for voice.
-    const analysis = await this.aiService.analyzeImage(imageBase64, mimeType);
+    // 1. Analyze Image using LLM directly (Proustian Trigger)
+    // We expect the LLM adapter to handle the prompt construction for image analysis
+    // Or we provide the prompt here.
+    const prompt = "Analyze this image for a biography session. Output JSON: {description: string, detectedEntities: string[], conversationalTrigger?: string}";
+    const analysisRaw = await this.llm.analyzeImage(imageBase64, mimeType, prompt);
+
+    let analysis: { description: string; detectedEntities: string[]; conversationalTrigger?: string };
+    try {
+        const clean = analysisRaw.replace(/```json\n?|\n?```/g, '').trim();
+        analysis = JSON.parse(clean);
+    } catch {
+        analysis = { description: analysisRaw, detectedEntities: [] };
+    }
 
     // Add implicit user action to transcript (Context grounding)
     transcript.push({
@@ -29,28 +41,28 @@ export class AnalyzeSessionImageUseCase {
     });
 
     // 2. Determine the best response
-    // If we have a direct conversational trigger from Vision, use it.
-    // Otherwise, fall back to the text generation.
     let responseText = analysis.conversationalTrigger;
     let strategy = 'emotional_deepening';
 
     if (!responseText) {
-        // Fallback: Use the standard generation loop
+        // Fallback: Use the standard generation loop via LLM
         const history = transcript.slice(-5);
         const memories = await this.vectorStore.retrieveContext(session.userId, analysis.description);
 
-        const response = await this.aiService.generateQuestion(
-            "[User showed a photo]",
-            history,
-            memories,
-            analysis.description
-        );
+        const textPrompt = `
+            Context: ${JSON.stringify(history)}
+            Memories: ${JSON.stringify(memories)}
+            Image: ${analysis.description}
+            User showed a photo.
+            Generate follow up question JSON: { "text": "...", "strategy": "..." }
+        `;
+        const response = await this.llm.generateJson<{text: string, strategy: string}>(textPrompt);
         responseText = response.text;
         strategy = response.strategy;
     }
 
-    // 3. Generate Audio (ElevenLabs - The Presence)
-    const audioBuffer = await this.aiService.generateSpeech(responseText, strategy);
+    // 3. Generate Audio
+    const audioBuffer = await this.speech.textToSpeech(responseText, strategy);
 
     // 4. Update Transcript with Agent Response
     transcript.push({

@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
+import { PDFPort } from "../../../core/application/ports/PDFPort";
 
-export class PDFService {
+export class PDFService implements PDFPort {
     async generateBook(chapters: { title: string; content: string }[], photos: string[]): Promise<Buffer> {
         const doc = new jsPDF();
 

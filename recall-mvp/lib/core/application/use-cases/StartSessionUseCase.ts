@@ -1,6 +1,6 @@
 import { SessionRepository } from '../../domain/repositories/SessionRepository';
 import { UserRepository } from '../../domain/repositories/UserRepository';
-import { AIServicePort } from '../ports/AIServicePort';
+import { DirectorService } from '../services/DirectorService';
 import { VectorStorePort } from '../ports/VectorStorePort';
 import { Session } from '../../domain/entities/Session';
 import { randomUUID } from 'crypto';
@@ -9,7 +9,7 @@ export class StartSessionUseCase {
   constructor(
     private sessionRepository: SessionRepository,
     private userRepository: UserRepository,
-    private aiService: AIServicePort,
+    private directorService: DirectorService,
     private vectorStore: VectorStorePort
   ) {}
 
@@ -31,8 +31,8 @@ export class StartSessionUseCase {
     // Save to DB
     const createdSession = await this.sessionRepository.create(session);
 
-    // Start AI conversation
-    const aiConfig = await this.aiService.startVoiceConversation(
+    // Start AI conversation via Director (who orchestrates VoiceAgent)
+    const aiConfig = await this.directorService.startSession(
         userId,
         createdSession.id,
         userName,
