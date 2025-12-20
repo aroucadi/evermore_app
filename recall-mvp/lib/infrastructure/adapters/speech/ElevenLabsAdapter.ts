@@ -1,8 +1,9 @@
-import { SpeechPort } from '../../../core/application/ports/SpeechPort';
+import { SpeechPort, SpeechToTextResult } from '../../../core/application/ports/SpeechPort';
 import { VoiceAgentPort } from '../../../core/application/ports/VoiceAgentPort';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { OpenAI } from 'openai';
 import { Readable } from 'stream';
+import { normalizeSpeech } from '../../../core/application/services/SpeechNormalizer';
 
 export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
   private client: ElevenLabsClient;
@@ -53,17 +54,22 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
       }
   }
 
-  async speechToText(audioBuffer: Buffer, contentType: string): Promise<string> {
-      // 1. Try OpenAI Whisper if configured (optional internal logic)
+  async speechToText(audioBuffer: Buffer, contentType: string): Promise<SpeechToTextResult> {
+      // 1. Try OpenAI Whisper if configured
       if (this.openai) {
         try {
-          // Convert Buffer to File-like object for OpenAI
           const file = await this.bufferToFile(audioBuffer, 'audio.webm', contentType);
           const transcription = await this.openai.audio.transcriptions.create({
             file: file,
             model: "whisper-1",
-          });
-          return transcription.text;
+            response_format: "verbose_json"
+          }) as any;
+
+          return {
+              text: transcription.text,
+              confidence: 0.95, // High confidence for Whisper
+              normalizedText: normalizeSpeech(transcription.text)
+          };
         } catch (e) {
              console.warn("ElevenLabsAdapter: OpenAI Whisper failed, falling back.", e);
         }
@@ -78,14 +84,11 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
           }
       }
 
-      throw new Error("Speech to text failed: No working provider available (ElevenLabs requires fallback for STT).");
+      throw new Error("Speech to text failed: No working provider available.");
   }
 
   // Helper to convert Buffer to a File object compatible with OpenAI SDK
   private async bufferToFile(buffer: Buffer, filename: string, contentType: string): Promise<any> {
-      // In Node environment for OpenAI SDK, we might need to pass a ReadStream or similar
-      // simpler hack: create a File object if in environment that supports it, or pass stream
-      // Vitest/Node:
       return Object.assign(Readable.from(buffer), {
           path: filename,
           name: filename,

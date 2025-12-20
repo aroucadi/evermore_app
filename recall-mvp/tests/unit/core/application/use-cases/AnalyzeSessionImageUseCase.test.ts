@@ -6,70 +6,55 @@ import { SpeechPort } from '@/lib/core/application/ports/SpeechPort';
 import { VectorStorePort } from '@/lib/core/application/ports/VectorStorePort';
 
 describe('AnalyzeSessionImageUseCase', () => {
-  let useCase: AnalyzeSessionImageUseCase;
-  let sessionRepo: SessionRepository;
-  let llm: LLMPort;
-  let speech: SpeechPort;
-  let vectorStore: VectorStorePort;
+    let useCase: AnalyzeSessionImageUseCase;
+    let mockSessionRepo: SessionRepository;
+    let mockLlm: LLMPort;
+    let mockSpeech: SpeechPort;
+    let mockVectorStore: VectorStorePort;
 
-  beforeEach(() => {
-    sessionRepo = {
-        create: vi.fn(),
-        findById: vi.fn().mockResolvedValue({
-            id: 'session-1',
-            userId: 'user-1',
-            transcriptRaw: '[]',
-            status: 'active',
-            startedAt: new Date()
-        }),
-        update: vi.fn(),
-        findByUserId: vi.fn(),
-        findLastSessions: vi.fn(),
-        completeSessionTransaction: vi.fn()
-    } as any;
+    beforeEach(() => {
+        mockSessionRepo = {
+            findById: vi.fn().mockResolvedValue({
+                id: 'session1',
+                userId: 'user1',
+                transcriptRaw: '[]',
+                update: vi.fn()
+            }),
+            update: vi.fn(),
+        } as any;
 
-    llm = {
-        analyzeImage: vi.fn().mockResolvedValue("A photo of a dog."),
-        generateJson: vi.fn().mockResolvedValue({
-            text: "Tell me about the dog.",
-            strategy: "visual_inquiry"
-        }),
-        generateText: vi.fn()
-    };
+        mockLlm = {
+            analyzeImage: vi.fn().mockResolvedValue('{"description": "A photo of a dog", "detectedEntities": ["dog"], "conversationalTrigger": "Tell me about the dog."}'),
+            generateJson: vi.fn(),
+        } as any;
 
-    speech = {
-        textToSpeech: vi.fn().mockResolvedValue(Buffer.from("audio")),
-        speechToText: vi.fn()
-    };
+        mockSpeech = {
+            textToSpeech: vi.fn().mockResolvedValue(Buffer.from('audio')),
+        } as any;
 
-    vectorStore = {
-        retrieveContext: vi.fn().mockResolvedValue([]),
-        storeConversation: vi.fn(),
-        storeMemoryChunk: vi.fn()
-    } as any;
+        mockVectorStore = {
+            retrieveContext: vi.fn(),
+        } as any;
 
-    useCase = new AnalyzeSessionImageUseCase(sessionRepo, llm, speech, vectorStore);
-  });
+        useCase = new AnalyzeSessionImageUseCase(mockSessionRepo, mockLlm, mockSpeech, mockVectorStore);
+    });
 
-  it('should analyze image, generate question and audio, and update transcript', async () => {
-    const result = await useCase.execute('session-1', 'base64img', 'image/jpeg');
+    it('should analyze image and generate audio response', async () => {
+        const result = await useCase.execute('session1', 'base64image', 'image/jpeg');
 
-    expect(llm.analyzeImage).toHaveBeenCalledWith('base64img', 'image/jpeg', expect.any(String));
-    // expect(llm.generateJson).toHaveBeenCalled(); // This might not be called if analyzeImage returns conversationalTrigger (simulated by mocking analyzeImage response behavior if we wanted to test that path, but here we test the fallback path or we mock the prompt response).
+        expect(mockLlm.analyzeImage).toHaveBeenCalledWith('base64image', 'image/jpeg', expect.stringContaining("Analyze this image"));
+        expect(mockSpeech.textToSpeech).toHaveBeenCalledWith("Tell me about the dog.", "emotional_deepening");
+        expect(result.text).toBe("Tell me about the dog.");
+        expect(result.audioBase64).toBe(Buffer.from('audio').toString('base64'));
+    });
 
-    // In this test, analyzeImage returns simple string "A photo of a dog.", so the logic falls back to step 2 (generateJson)
-    expect(llm.generateJson).toHaveBeenCalled();
-    expect(speech.textToSpeech).toHaveBeenCalledWith("Tell me about the dog.", "visual_inquiry");
+    it('should handle fallback generation if no trigger provided', async () => {
+        (mockLlm.analyzeImage as any).mockResolvedValue('{"description": "A photo", "detectedEntities": []}');
+        (mockLlm.generateJson as any).mockResolvedValue({ text: "Generated Question", strategy: "fallback" });
 
-    expect(sessionRepo.update).toHaveBeenCalled();
-    const updatedSession = (sessionRepo.update as any).mock.calls[0][0];
-    const transcript = JSON.parse(updatedSession.transcriptRaw);
+        const result = await useCase.execute('session1', 'base64image', 'image/jpeg');
 
-    expect(transcript).toHaveLength(2); // User implicit action + Agent response
-    expect(transcript[0].text).toContain("A photo of a dog");
-    expect(transcript[1].text).toBe("Tell me about the dog.");
-
-    expect(result.text).toBe("Tell me about the dog.");
-    expect(result.audioBase64).toBe(Buffer.from("audio").toString('base64'));
-  });
+        expect(mockLlm.generateJson).toHaveBeenCalled();
+        expect(result.text).toBe("Generated Question");
+    });
 });

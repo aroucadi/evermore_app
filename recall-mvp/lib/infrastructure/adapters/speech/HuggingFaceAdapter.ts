@@ -1,4 +1,5 @@
-import { SpeechPort } from '../../../core/application/ports/SpeechPort';
+import { SpeechPort, SpeechToTextResult } from '../../../core/application/ports/SpeechPort';
+import { normalizeSpeech } from '../../../core/application/services/SpeechNormalizer';
 
 export class HuggingFaceAdapter implements SpeechPort {
     private apiKey: string;
@@ -31,9 +32,9 @@ export class HuggingFaceAdapter implements SpeechPort {
         return Buffer.from(arrayBuffer);
     }
 
-    async speechToText(audioBuffer: Buffer, contentType: string): Promise<string> {
+    async speechToText(audioBuffer: Buffer, contentType: string): Promise<SpeechToTextResult> {
         if (!this.apiKey) {
-            return "Mock transcription from HuggingFace";
+            return { text: "Mock transcription from HuggingFace", confidence: 1.0, normalizedText: "Mock transcription from HuggingFace" };
         }
 
         const response = await fetch(`https://api-inference.huggingface.co/models/${this.sttModel}`, {
@@ -50,6 +51,13 @@ export class HuggingFaceAdapter implements SpeechPort {
         }
 
         const result = await response.json();
-        return result.text || "";
+        // HF Whisper output usually { text: "..." }
+        const text = result.text || "";
+
+        return {
+            text,
+            confidence: 0.8, // HF API doesn't always return confidence for Whisper, defaulting to 0.8
+            normalizedText: normalizeSpeech(text)
+        };
     }
 }
