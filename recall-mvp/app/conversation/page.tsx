@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
+import { AudioPipeline } from '@/lib/audio/AudioPipeline';
 
 const LANGUAGES = [
   { code: 'en', name: 'English', flag: '🇺🇸' },
@@ -28,6 +28,10 @@ export default function ActiveConversationPage() {
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Audio Pipeline State
+  const audioPipeline = useRef<AudioPipeline | null>(null);
+  const [volume, setVolume] = useState(0);
 
   // Image Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,29 +62,41 @@ export default function ActiveConversationPage() {
       // Only greet if transcript is empty
       if (transcript.length === 0) {
           handleAIResponse('Hello Arthur, it\'s great to speak with you again. I was hoping you could tell me more about that summer trip to the lake house you mentioned?');
-          setIsListening(true);
-          setShowWaves(true);
+          // Don't auto-start listening until user taps mic for permissions
       }
     }, 1000);
 
-    // Simulate auto-save cycle
-    const saveInterval = setInterval(() => {
-      if (isListening) {
+    // Initialize Audio Pipeline
+    audioPipeline.current = new AudioPipeline();
+    audioPipeline.current.onVolumeChange = (vol) => {
+        setVolume(vol);
+        // Do not auto-show waves based on volume alone if not explicitly listening,
+        // but here we only call start() when listening.
+    };
+    audioPipeline.current.onSpeechStart = () => {
+        setSaveStatus('recording');
+        setShowWaves(true);
+    };
+    audioPipeline.current.onSpeechEnd = async (blob) => {
+        setShowWaves(false);
         setSaveStatus('saving');
-        setTimeout(() => {
-          setSaveStatus('saved');
-          setTimeout(() => {
-            setSaveStatus('recording');
-          }, 2000);
-        }, 1500);
-      }
-    }, 10000);
+        setToastMessage("Processing speech...");
+        await sendAudio(blob);
+        setSaveStatus('saved');
+    };
+    audioPipeline.current.onError = (err) => {
+        console.error("Audio Pipeline Error:", err);
+        setToastMessage("Audio Error: " + err.message);
+        setIsListening(false);
+    };
 
     return () => {
       clearTimeout(timer);
-      clearInterval(saveInterval);
+      if (audioPipeline.current) {
+          audioPipeline.current.stop();
+      }
     };
-  }, [isListening, transcript.length]);
+  }, []); // Only run once on mount
 
   // Toast Timer
   useEffect(() => {
@@ -90,18 +106,75 @@ export default function ActiveConversationPage() {
     }
   }, [toastMessage]);
 
-  const toggleListening = () => {
-    setIsListening(!isListening);
-    setShowWaves(!showWaves);
-    // In a real implementation, we would toggle the VAD / Audio Recorder here.
-    if (!isListening) {
+  const sendAudio = async (blob: Blob) => {
+      try {
+          const formData = new FormData();
+          formData.append('file', blob);
+
+          const res = await fetch('/api/chat/speech-to-text', {
+              method: 'POST',
+              body: formData,
+          });
+
+          if (!res.ok) throw new Error("STT failed");
+
+          const data = await res.json();
+          if (data.text) {
+              setTranscript(prev => [...prev, data.text]);
+              // Send text to Chat API to get AI response
+              await handleSendMessageText(data.text);
+          }
+      } catch (e) {
+          console.error("Failed to process audio", e);
+          setToastMessage("Could not understand audio");
+      }
+  };
+
+  const toggleListening = async () => {
+    if (!audioPipeline.current) return;
+
+    if (isListening) {
+        audioPipeline.current.stop();
+        setIsListening(false);
+        setShowWaves(false);
+    } else {
+        await audioPipeline.current.initialize();
+        await audioPipeline.current.start();
+        setIsListening(true);
         setToastMessage("Listening...");
     }
   };
 
   const handleEndConversation = () => {
-    // Logic to save session final state could go here
+    if (audioPipeline.current) audioPipeline.current.stop();
     router.push('/dashboard');
+  };
+
+  const handleSendMessageText = async (text: string) => {
+    try {
+        const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sessionId,
+                message: text
+            })
+        });
+
+        if (!res.ok) throw new Error("Failed to send message");
+
+        const data = await res.json();
+        // The API returns { text: string, strategy: string }
+        if (data && data.text) {
+             handleAIResponse(data.text);
+        } else {
+             handleAIResponse("I'm listening...");
+        }
+
+    } catch (e) {
+        console.error(e);
+        setToastMessage("Failed to send message to AI.");
+    }
   };
 
   const handleSendMessage = async () => {
@@ -116,31 +189,7 @@ export default function ActiveConversationPage() {
     setInputValue('');
     setShowInput(false);
 
-    try {
-        const res = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                sessionId,
-                message: messageToSend
-            })
-        });
-
-        if (!res.ok) throw new Error("Failed to send message");
-
-        const data = await res.json();
-        // The API returns { text: string, strategy: string }
-        if (data && data.text) {
-             handleAIResponse(data.text);
-        } else {
-             // Fallback if null (e.g. passive monitoring) or error
-             handleAIResponse("I'm listening...");
-        }
-
-    } catch (e) {
-        console.error(e);
-        setToastMessage("Failed to send message to AI.");
-    }
+    await handleSendMessageText(messageToSend);
   };
 
   const handleShowClick = () => {
@@ -153,8 +202,8 @@ export default function ActiveConversationPage() {
 
     setIsAnalyzing(true);
     setToastMessage("Analyzing photo...");
-    setShowWaves(false); // Stop waves during analysis
-    setIsListening(false);
+    setShowWaves(false);
+    if (isListening) toggleListening(); // Pause listening
 
     const formData = new FormData();
     formData.append('image', file);
@@ -170,8 +219,6 @@ export default function ActiveConversationPage() {
         const data = await res.json();
         handleAIResponse(data.text, data.audioBase64);
         setToastMessage("Photo analyzed!");
-        setIsListening(true); // Resume listening state conceptually
-        setShowWaves(true);
 
     } catch (error) {
         console.error(error);
@@ -290,12 +337,16 @@ export default function ActiveConversationPage() {
       <main className="flex-1 flex flex-col items-center justify-center relative z-10 w-full max-w-lg mx-auto px-6">
         {/* Visualizer Area */}
         <div className="flex-1 w-full flex items-center justify-center min-h-[300px]">
-          {showWaves ? (
+          {isListening ? (
              <div className="flex items-center gap-1.5 h-24">
+               {/* Use real volume to scale waves */}
                {[...Array(8)].map((_, i) => (
-                  <div key={i} className={`w-3 rounded-full bg-gradient-to-t from-[#FF845E] to-[#FF9A7B] ${
-                    i % 3 === 0 ? 'animate-wave-slow' : i % 2 === 0 ? 'animate-wave-fast' : 'animate-wave-medium'
-                  }`}></div>
+                  <div key={i}
+                       className={`w-3 rounded-full bg-gradient-to-t from-[#FF845E] to-[#FF9A7B] transition-all duration-75`}
+                       style={{
+                           height: `${Math.max(10, volume * 100 * (1 + Math.sin(Date.now()/100 + i)))}%`
+                       }}
+                  ></div>
                ))}
              </div>
           ) : (

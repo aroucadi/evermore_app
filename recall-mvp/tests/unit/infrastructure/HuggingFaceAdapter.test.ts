@@ -43,7 +43,7 @@ describe('HuggingFaceAdapter', () => {
                 headers: expect.objectContaining({ 'Content-Type': 'audio/wav' })
             })
         );
-        expect(result).toBe('Transcribed text');
+        expect(result.text).toBe('Transcribed text');
     });
 
     it('should return mock if no API key', async () => {
