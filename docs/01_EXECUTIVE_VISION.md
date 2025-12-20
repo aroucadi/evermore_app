@@ -1,63 +1,55 @@
 # 01. Executive & Product Vision
 
-## 1.1 Product Mission & Problem Statement
+## 1.1 Product Mission & North Star
 
-**Problem Statement:**
-Every day, a generation of stories, wisdom, and family history is lost as seniors pass away without documenting their lives. Traditional methods of biography (writing, hiring a ghostwriter) are time-consuming, expensive, or physically difficult for seniors. Families struggle to bridge the generational gap and preserve their legacy in a meaningful, accessible format.
+**The Problem: The Silent Extinction of Wisdom**
+Every day, a generation of stories, wisdom, and family history is lost as seniors pass away without documenting their lives. This is not just a loss of data; it is a loss of identity for future generations.
 
-**Mission:**
+**Why Existing Solutions Fail:**
+1.  **Ghostwriters:** Prohibitively expensive ($5,000+) and invasive.
+2.  **DIY Journals:** Require immense discipline; suffer from "blank page syndrome."
+3.  **Audio Recorders:** Result in an "MP3 Graveyard"—unstructured, unsearchable hours of audio that no one listens to.
+4.  **Video Calls (Zoom/FaceTime):** Ephemeral. They happen and are gone. They lack the *intent* of preservation.
+
+**The Mission:**
 To democratize the preservation of human legacy by creating "Recall," an empathetic, AI-powered active living biographer. We aim to capture, structure, and immortalize the life stories of seniors through natural, voice-first conversations anchored by visual memories.
 
----
-
-## 1.2 Target Users & Personas
-
-### **Primary User: "The Storyteller" (Senior)**
-- **Demographics:** Age 70+, retired, varying levels of tech-literacy.
-- **Goals:** Share their life story, feel heard/valued, leave a legacy for grandkids.
-- **Pain Points:** Typing is difficult; memory can be foggy; "blank page syndrome" (don't know where to start).
-- **Behavior:** Prefers talking over typing; appreciates patience and prompting.
-
-### **Secondary User: "The Custodian" (Family Member)**
-- **Demographics:** Age 30-60, child or grandchild of the Storyteller.
-- **Goals:** Preserve family history, better understand their parents, create a keepsake.
-- **Pain Points:** Guilt over not calling enough; lack of time to interview parents personally.
-- **Behavior:** Sets up the account; consumes the output (Chapters, Storybooks); manages subscription.
+**What "Great" Looks Like:**
+"Great" is when a senior finishes a session feeling *heard* and *valued*, not tired. "Great" is when a grandchild reads a chapter 50 years from now and hears their grandparent's voice in the text. "Great" is invisible technology.
 
 ---
 
-## 1.3 Value Proposition
+## 1.2 Core Principles & Philosophy
 
-1.  **Zero-Friction Capture:** No typing required. The interface is voice-first, designed for accessibility.
-2.  **Proustian Triggers:** "Visual Memory Anchoring" uses personal photos to unlock deep, specific memories that text prompts miss.
-3.  **Active Listening:** The AI "Director" doesn't just record; it asks follow-up questions, detects emotion, and steers the conversation like a professional interviewer.
-4.  **Structured Output:** Raw audio is transformed into polished, chronological "Chapters" and "Storybooks" suitable for printing or sharing.
+### **Design Values (Non-Negotiables)**
+1.  **Zero-Friction Capture:** If it requires a keyboard, we have failed. The interface must be "Invisible." Voice is the only first-class citizen.
+2.  **Empathy > Efficiency:** The AI must prioritize making the user feel safe and understood over rushing to the next question. It should handle silence, tears, and laughter with grace.
+3.  **Dignity by Design:** The UI must never feel "geriatric" or condescending. It should feel premium, timeless, and respectful (Terracotta/Sand palette, serif fonts).
 
----
+### **Technical Philosophy**
+1.  **"Buy Intelligence, Rent Infrastructure":** We leverage state-of-the-art foundation models (Gemini, ElevenLabs) for reasoning and generation, but we own the *Context* and the *Workflow*. We do not train base models.
+2.  **Dependency Inversion:** The core domain (Biographies, Stories) is sacred. It must never depend on the AI provider. If OpenAI dies, we swap the adapter. The Domain survives.
+3.  **Type Safety as Documentation:** We prefer strict TypeScript types and Zod schemas over extensive comments. The code *is* the contract.
+4.  **Lossy Input, Structured Output:** We accept messy, stuttering, mumbling audio (Lossy) and guarantee pristine, chronological, formatted chapters (Structured).
 
-## 1.4 Success Metrics (KPIs & OKRs)
-
-| Metric Category | KPI | Target (MVP) |
-| :--- | :--- | :--- |
-| **Engagement** | Average Session Duration | > 15 minutes |
-| **Retention** | Weekly Active Seniors | > 60% |
-| **Output Quality** | Chapters Generated / Session | > 0.8 |
-| **Growth** | Family Member Invites | > 2 per Senior |
-| **Technical** | Voice Latency (P95) | < 2000ms |
-
----
-
-## 1.5 Non-Goals & Exclusions
-
--   **Not a Medical Device:** Recall is not a diagnostic tool for dementia or Alzheimer's, though it is dementia-friendly.
--   **Not a Social Network:** There is no public feed. Stories are private by default, shared only with invited family.
--   **Not a General Assistant:** Recall does not set timers, check weather, or order groceries. It is strictly a biographer.
+### **Tradeoffs Consciously Accepted**
+-   **Latency vs. Quality:** We accept slightly higher latency (1-2s) in voice responses to allow for "Thinking" (Chain-of-Thought) to ensure safety and empathy, rather than instant but shallow reactions.
+-   **Cost vs. Capability:** We use premium models (Gemini 1.5 Pro, ElevenLabs). We accept higher COGS per user to deliver a magical experience, rather than optimizing for cheap, robotic interactions.
+-   **Strict Privacy vs. Features:** We do not train shared models on user data. This limits some "community" features but ensures trust.
 
 ---
 
-## 1.6 Assumptions & Constraints
+## 1.3 Success Metrics
 
--   **Connectivity:** Users have stable internet (WiFi/4G) sufficient for audio streaming.
--   **Hardware:** Users have a device with a working microphone and speaker (smartphone or tablet).
--   **Language:** MVP is English-only.
--   **Privacy:** Users own their data. We do not train public models on private stories without explicit consent.
+### **User-Level Success (The Storyteller)**
+-   **"The Proust Effect":** Frequency of "I haven't thought about that in years" moments (measured via sentiment analysis).
+-   **Session Completion Rate:** > 80% of started sessions result in a saved chapter.
+-   **NPS:** > 70 (World Class).
+
+### **System-Level Success**
+-   **Biographer Reliability:** < 1% of generated chapters require manual "Rescue" (editing) by family members due to hallucination or incoherence.
+-   **Voice Latency:** P95 < 2000ms (Total Turn-Around Time).
+
+### **AI-Level Success**
+-   **Safety:** 0 false negatives on "High Risk" topics (Self-harm, Abuse).
+-   **Context Retention:** The AI successfully references a fact mentioned > 3 turns ago in 90% of relevant opportunities.

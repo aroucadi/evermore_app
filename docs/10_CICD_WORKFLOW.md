@@ -1,52 +1,52 @@
-# 10. CI/CD & Development Workflow
+# 10. CI/CD & Testing Strategy
 
-## 10.1 Branching Strategy
+## 10.1 Testing Philosophy: The Pyramid
 
-We follow **Trunk-Based Development** (or lightweight GitHub Flow).
+We strictly adhere to the **Test Pyramid**. We do not rely on slow E2E tests to catch logic bugs.
 
--   `main`: Production-ready code. Deploys automatically to Staging.
--   `feature/*`: Short-lived feature branches.
--   `fix/*`: Bug fixes.
+### **1. Unit Tests (70% of Volume)**
+-   **Scope:** Domain Entities, Domain Services, Utility Functions.
+-   **Speed:** < 5ms per test.
+-   **Mocking:** PURE. No DB, No Network.
+-   **Example:** `TimeFormatter.test.ts`, `Chapter.validate()`.
 
-**Pull Request Rules:**
--   Must pass CI (Tests).
--   Must have 1 approval.
--   Squash & Merge.
+### **2. Integration Tests (20% of Volume)**
+-   **Scope:** Use Cases + Adapters.
+-   **Speed:** < 500ms per test.
+-   **Mocking:** DB is "In-Memory" (or Dockerized Postgres). External APIs (Vertex/ElevenLabs) are **Mocked**.
+-   **Why:** Verifies that the Application Layer correctly orchestrates the Adapters.
 
----
-
-## 10.2 Environments
-
-| Env | URL | Purpose | Data |
-| :--- | :--- | :--- | :--- |
-| **Dev** | `localhost:3000` | Local development | Local Postgres |
-| **Preview** | `git-branch.vercel.app` | PR review | Staging DB |
-| **Prod** | `recall.com` | Live traffic | Prod DB |
-
----
-
-## 10.3 Build Pipeline (GitHub Actions)
-
-1.  **Checkout Code**
-2.  **Install Dependencies:** `pnpm install`
-3.  **Lint & Format:** `pnpm lint` (ESLint + Prettier)
-4.  **Unit Tests:** `pnpm test:unit` (Vitest) - **BLOCKER**
-5.  **Build:** `pnpm build` (Next.js build) - **BLOCKER**
-6.  **E2E Tests:** `pnpm test:e2e` (Playwright) - *Optional for PR, required for Release.*
+### **3. E2E Tests (10% of Volume)**
+-   **Scope:** Critical User Journeys (Login -> Record -> Save).
+-   **Speed:** > 10s per test.
+-   **Mocking:** Minimal. Runs against "Preview" environment.
+-   **Tool:** Playwright.
 
 ---
 
-## 10.4 Test Strategy
+## 10.2 CI Pipeline (GitHub Actions)
 
--   **Unit Tests (Vitest):**
-    -   Target: Domain Entities, Utils, Stateless Logic.
-    -   Coverage: 100% aimed for `lib/core/domain`.
-    -   Mocking: Mock all infrastructure (DB, AI).
+**Trigger:** Push to `main` or PR.
 
--   **Integration Tests:**
-    -   Target: Use Cases + Adapters (InMemory DB).
-    -   Check if Use Cases correctly call Ports.
+1.  **Static Analysis:**
+    -   `pnpm lint` (ESLint: strict rules).
+    -   `pnpm type-check` (TypeScript: no `any`).
+2.  **Unit/Integration:**
+    -   `pnpm test:unit` (Vitest).
+    -   **Gate:** Must pass 100%.
+3.  **Build:**
+    -   `pnpm build` (Next.js production build).
+    -   **Gate:** Zero warnings.
+4.  **E2E (Nightly/Release):**
+    -   `pnpm test:e2e` (Playwright).
 
--   **E2E Tests (Playwright):**
-    -   Target: Critical Paths (Login -> Start Session -> End Session).
-    -   Run against Preview environment.
+---
+
+## 10.3 Regression Strategy
+
+### **Golden Datasets**
+We maintain a set of "Golden Transcripts" (`tests/fixtures/transcripts/`) with known correct outputs.
+-   **Drift Detection:** If the prompt changes, we run the Golden Set. If the generated Chapter differs significantly (Semantic Distance > 0.1) from the Golden Chapter, the PR is flagged.
+
+### **Snapshot Testing**
+-   UI Components are snapshot-tested to prevent visual regressions in generic components.

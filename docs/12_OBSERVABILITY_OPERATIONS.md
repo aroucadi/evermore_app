@@ -1,40 +1,53 @@
 # 12. Observability & Operations
 
-## 12.1 Logging
+## 12.1 Logging Strategy
 
--   **Library:** `pino` or `console` (structured).
--   **Structure:** `{ level: 'info', timestamp: '...', component: 'GeminiService', message: '...', metadata: {...} }`
--   **Destination:** Vercel Logs -> Datadog / Logflare (Integration).
--   **PII Rule:** NEVER log raw audio content or user emails in plain text.
+We practice **Structured Logging**. Every log entry is a JSON object, not a string.
 
----
+### **What We Log**
+-   **Request ID:** `x-request-id` propagated through all layers.
+-   **Context:** `userId`, `sessionId`, `component` ("GeminiAdapter", "AudioPipeline").
+-   **Events:**
+    -   `voice_session.started`
+    -   `chapter.generated` (with token_usage stats)
+    -   `error.captured`
 
-## 12.2 Monitoring & Metrics
-
--   **Dashboard:** Vercel Analytics / Datadog.
--   **Key Metrics:**
-    -   `vitals.ttfb` (Time to First Byte)
-    -   `api.error_rate` (5xx responses)
-    -   `job.chapter_generation.duration`
-    -   `voice.connection_drops`
-
----
-
-## 12.3 Alerting
-
--   **Channel:** Slack (`#ops-alerts`) + PagerDuty (Critical).
--   **Triggers:**
-    -   Error Rate > 1% for 5 mins -> **High Priority**.
-    -   Database CPU > 80% -> **Warning**.
-    -   "Credit Card Failed" -> **Business Alert**.
+### **What We NEVER Log**
+-   **PII:** Email addresses, Phone numbers (masked).
+-   **Raw Content:** The user's audio binary, the raw transcript text (unless debug level enabled for specific user with consent).
+-   **Secrets:** API Keys, DB Passwords.
 
 ---
 
-## 12.4 Incident Response
+## 12.2 Metrics & Dashboards
 
-1.  **Ack:** On-call engineer acknowledges alert.
-2.  **Triage:** Is it code, infra, or 3rd party (OpenAI/Google down)?
-    -   *If 3rd party:* Update Status Page.
-    -   *If Code:* Revert last deployment immediately.
-3.  **Resolve:** Fix root cause.
-4.  **Post-Mortem:** Write "What happened, why, and how to prevent it."
+### **AI Metrics**
+-   **Token Usage:** Prompt Tokens vs Completion Tokens (Cost driver).
+-   **Latency:**
+    -   `llm_ttfb`: Time to first token.
+    -   `tts_latency`: Time to audio ready.
+-   **Quality:**
+    -   `retry_rate`: How often we retry LLM calls due to JSON parse errors.
+
+### **System Metrics**
+-   **Database:** Connection pool utilization.
+-   **Vercel:** Function invocation duration.
+
+---
+
+## 12.3 Incident Playbooks
+
+### **Scenario A: Vertex AI Outage**
+**Detection:** `llm_error_rate` spikes > 10%.
+**Resolution:**
+1.  **Ack** via PagerDuty.
+2.  **Flip Feature Flag:** `ENABLE_OPENAI_FALLBACK = true`.
+3.  **Verify:** Check logs to see OpenAI adapter taking traffic.
+4.  **Communicate:** Update Status Page: "AI Provider Degradation - Failed over to backup."
+
+### **Scenario B: Database Connection Limit**
+**Detection:** Log errors `too_many_connections`.
+**Resolution:**
+1.  **Immediate:** Kill idle queries.
+2.  **Short-term:** Increase pool size in `drizzle.config`.
+3.  **Long-term:** Implement PgBouncer or scale Neon compute.

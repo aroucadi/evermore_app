@@ -1,35 +1,51 @@
-# 13. Launch & Go-To-Market Readiness
+# 13. Launch, Growth & Scale Strategy
 
-## 13.1 Pre-Launch Checklist
+## 13.1 Launch Phases
 
-### **Functional**
-- [ ] Voice conversation completes successfully (5/5 times).
-- [ ] Chapter generated correctly from session.
-- [ ] Photo upload triggers correct analysis.
-- [ ] Alert emails are sent (tested with mock data).
+### **Phase 1: Alpha ("The Family Circle")**
+-   **Goal:** Validation of "The Proust Effect". Does it actually work emotionally?
+-   **Scale:** 10 Seniors.
+-   **Strategy:** High-touch. Founder manually onboards each senior.
+-   **Success Metric:** 5/10 seniors complete 3+ sessions.
 
-### **Security**
-- [ ] All API keys rotated and secured.
-- [ ] Database accessible only from Vercel IPs.
-- [ ] RLS policies active and verified.
+### **Phase 2: Beta ("The Waitlist")**
+-   **Goal:** Stress test Infrastructure & Cost Economics.
+-   **Scale:** 100-500 Users.
+-   **Strategy:** Invite codes. Drip feed access.
+-   **Economics:** Monitor "Cost Per Chapter". Target < $0.50.
 
-### **Legal/Compliance**
-- [ ] Privacy Policy & ToS linked in footer.
-- [ ] "Recording in Progress" indicator visible.
-- [ ] Cookie Banner active.
-
----
-
-## 13.2 Rollout Strategy
-
-1.  **Alpha (Friends & Family):** 10 Users. Manual onboarding. White-glove support.
-2.  **Beta (Waitlist):** 100 Users. Invite codes. Monitor costs closely.
-3.  **Public Launch:** Marketing push. Feature flags ready to disable "Image Analysis" if costs spike.
+### **Phase 3: General Availability (GA)**
+-   **Goal:** Growth.
+-   **Strategy:** Referral Loops (Family invites Senior).
 
 ---
 
-## 13.3 Feedback Loops
+## 13.2 Adoption Strategy
 
--   **In-App:** "Report a Bug" button.
--   **Post-Session:** "How was that chat?" (1-5 stars) after session ends.
--   **Analytics:** Track "Session Completion Rate" as primary proxy for satisfaction.
+### **The "Custodian" Loop**
+We target the *Adult Children* (30-50s), not the seniors directly.
+1.  **Hook:** "Don't let Mom's stories fade away."
+2.  **Action:** Child buys subscription -> Sends magic link to Mom.
+3.  **Reward:** Child gets the first Chapter via email.
+
+### **Retention Levers**
+1.  **Sunday Ritual:** Auto-schedule calls for Sunday afternoons.
+2.  **Printed Book:** The physical artifact is the ultimate retention hook. You don't churn until you get the book.
+
+---
+
+## 13.3 Scaling Bottlenecks
+
+### **1. Concurrent Voice Streams**
+-   **Limit:** WebSocket connections per server instance.
+-   **Solution:** Horizontal scaling of Next.js / Separate WebSocket Server (e.g., PartyKit) if Vercel limits are hit.
+
+### **2. Database Writes**
+-   **Limit:** Postgres connections.
+-   **Solution:** Read Replicas for the "Feed" (Read-heavy).
+
+### **3. Cost**
+-   **Limit:** Vertex/ElevenLabs bills.
+-   **Solution:**
+    -   Cache TTS for common phrases ("Hello", "Good to see you").
+    -   Switch to "Flash" models for summarization tasks.
