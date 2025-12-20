@@ -12,7 +12,10 @@ export async function POST(request: NextRequest) {
 
         const audioBuffer = await speechProvider.textToSpeech(text, style);
 
-        return new NextResponse(audioBuffer, {
+        // Convert Buffer to Blob for strict type compatibility with NextResponse BodyInit
+        const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+
+        return new NextResponse(blob, {
             headers: {
                 'Content-Type': 'audio/mpeg',
                 'Content-Length': audioBuffer.length.toString(),
