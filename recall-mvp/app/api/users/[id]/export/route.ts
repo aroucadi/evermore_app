@@ -11,7 +11,11 @@ export async function GET(
 
         const pdfBuffer = await exportBookUseCase.execute(id);
 
-        return new NextResponse(pdfBuffer, {
+        // Convert Buffer to Blob for strict type compatibility with NextResponse BodyInit
+        // Explicitly cast to any to bypass the Buffer/ArrayBuffer mismatch in strict mode
+        const blob = new Blob([pdfBuffer as any], { type: 'application/pdf' });
+
+        return new NextResponse(blob, {
             headers: {
                 'Content-Type': 'application/pdf',
                 'Content-Disposition': `attachment; filename="life-story-${id}.pdf"`,

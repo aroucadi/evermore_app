@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/infrastructure/adapters/db';
-import { chapters } from '@/lib/infrastructure/adapters/db/schema';
-import { eq } from 'drizzle-orm';
 import { DrizzleChapterRepository } from '@/lib/infrastructure/adapters/db/DrizzleChapterRepository';
 import { StorybookService } from '@/lib/infrastructure/adapters/storybook/StorybookService';
-import { CombinedAIService } from '@/lib/infrastructure/adapters/ai/CombinedAIService';
+import { llmProvider } from '@/lib/infrastructure/di/container';
 
 // Factory for service
 function getStorybookService() {
     const chapterRepo = new DrizzleChapterRepository();
-    const aiService = new CombinedAIService();
-    return new StorybookService(chapterRepo, aiService);
+    // Inject llmProvider from container
+    return new StorybookService(chapterRepo, llmProvider);
 }
 
 export async function GET(
@@ -28,7 +25,7 @@ export async function GET(
         const result = await service.generateStorybook(id);
 
         return NextResponse.json(result);
-    } catch (error) {
+    } catch (error: any) {
         console.error("Storybook generation error:", error);
         return NextResponse.json({ error: "Failed to generate storybook" }, { status: 500 });
     }
@@ -44,7 +41,7 @@ export async function POST(
     const result = await service.generateStorybook(id);
 
     return NextResponse.json(result);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating storybook:', error);
     return NextResponse.json(
       { error: 'Failed to generate storybook' },

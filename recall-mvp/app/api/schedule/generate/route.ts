@@ -1,11 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DrizzleUserRepository } from '@/lib/infrastructure/adapters/db/DrizzleUserRepository';
-import { DrizzleInvitationRepository } from '@/lib/infrastructure/adapters/db/DrizzleInvitationRepository';
-import { SchedulingService } from '@/lib/core/application/services/SchedulingService';
-
-const userRepository = new DrizzleUserRepository();
-const invitationRepository = new DrizzleInvitationRepository();
-const schedulingService = new SchedulingService(userRepository, invitationRepository);
+import { invitationScheduler } from '@/lib/infrastructure/di/container';
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +9,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
     }
 
-    const invitations = await schedulingService.generateScheduleForUser(userId);
+    const invitations = await invitationScheduler.generateScheduleForUser(userId);
 
     return NextResponse.json({
         message: `Generated ${invitations.length} invitations`,

@@ -13,7 +13,8 @@ export async function POST(request: NextRequest) {
         const audioBuffer = await speechProvider.textToSpeech(text, style);
 
         // Convert Buffer to Blob for strict type compatibility with NextResponse BodyInit
-        const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+        // Explicitly cast to any to bypass the Buffer/ArrayBuffer mismatch in strict mode
+        const blob = new Blob([audioBuffer as any], { type: 'audio/mpeg' });
 
         return new NextResponse(blob, {
             headers: {

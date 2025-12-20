@@ -1,11 +1,12 @@
 import { ChapterRepository } from '../../../core/domain/repositories/ChapterRepository';
 import { AIServicePort } from '../../../core/application/ports/AIServicePort';
 import AoTStorybookGenerator from '../biographer/AoTStorybookGenerator';
+import { LLMPort } from '../../../core/application/ports/LLMPort';
 
 export class StorybookService {
   constructor(
     private chapterRepository: ChapterRepository,
-    private aiService: AIServicePort // Can reuse this or specific one
+    private llm: LLMPort // Inject LLM instead of AIServicePort for AoT
   ) {}
 
   async generateStorybook(chapterId: string): Promise<any> {
@@ -16,7 +17,7 @@ export class StorybookService {
     // Assuming simple simplification or using AI service
     const childrensStory = await this.simplifyForChildren(chapter.content);
 
-    const generator = new AoTStorybookGenerator();
+    const generator = new AoTStorybookGenerator(this.llm);
     const { scenes, atoms } = await generator.generateStorybookScenes(childrensStory, chapter.content);
 
     // In a real implementation, we would generate images here using an ImageGenerationPort

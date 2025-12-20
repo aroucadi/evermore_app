@@ -1,6 +1,23 @@
-import { LLMPort } from '../../ports/LLMPort';
-import { VoiceAgentPort } from '../../ports/VoiceAgentPort';
-import { UserRepository } from '../../domain/repositories/UserRepository';
+import { LLMPort } from '../ports/LLMPort';
+import { VoiceAgentPort } from '../ports/VoiceAgentPort';
+
+// Type definition for Memory if not available in domain/entities yet,
+// strictly it should be imported from domain.
+// Assuming we have a Memory entity or interface.
+// If not, we will define a minimal interface here or assume it's passed as is.
+// For now, using 'any' with a TODO or interface if I can verify it.
+// Checking previous DirectorService, it used 'any[]'.
+// I will define a local interface for now or use `any` if strict domain type is missing.
+
+export interface SessionContext {
+    userId: string;
+    sessionId: string;
+    userName: string;
+    memories: any[]; // TODO: Replace with strict Memory[] type
+    imageContext?: string;
+    topicsAvoid: string[];
+    topicsLove: string[];
+}
 
 interface DirectorAnalysis {
     contextSummary: string;
@@ -10,39 +27,18 @@ interface DirectorAnalysis {
     finalGoal: string;
 }
 
-export class DirectorService {
-    private llm: LLMPort;
-    private voiceAgent: VoiceAgentPort;
-    private userRepository: UserRepository | null = null;
+export class SessionGoalArchitect {
+    constructor(
+        private llm: LLMPort,
+        private voiceAgent: VoiceAgentPort
+    ) {}
 
-    constructor(llm: LLMPort, voiceAgent: VoiceAgentPort, userRepository?: UserRepository) {
-        this.llm = llm;
-        this.voiceAgent = voiceAgent;
-        if (userRepository) {
-            this.userRepository = userRepository;
-        }
-    }
+    async determineSessionGoal(context: SessionContext) {
+        const { userId, sessionId, userName, memories, imageContext, topicsAvoid, topicsLove } = context;
 
-    async startSession(userId: string, sessionId: string, userName: string, memories: any[], imageContext?: string) {
-        // 1. Fetch User Preferences
-        let topicsAvoid: string[] = [];
-        let topicsLove: string[] = [];
-
-        if (this.userRepository) {
-            const user = await this.userRepository.findById(userId);
-            if (user && user.preferences) {
-                try {
-                   const prefs = typeof user.preferences === 'string' ? JSON.parse(user.preferences) : user.preferences;
-                   if (prefs.topicsAvoid) topicsAvoid = prefs.topicsAvoid;
-                   if (prefs.topicsLove) topicsLove = prefs.topicsLove;
-                } catch (e) {
-                    console.warn("Failed to parse user preferences");
-                }
-            }
-        }
-
-        // 2. Chain of Thought Execution (The Director Agent)
+        // 1. Chain of Thought Execution (The Director Agent)
         let goal = "Ask about their childhood.";
+
         try {
             // We use a structured output to enforce the Chain of Thought process
             const prompt = `
@@ -73,14 +69,14 @@ OUTPUT FORMAT (JSON):
 `;
             const analysis = await this.llm.generateJson<DirectorAnalysis>(prompt);
 
-            console.log(`[DirectorService] Chain of Thought Result for ${userName}:`, JSON.stringify(analysis, null, 2));
+            console.log(`[SessionGoalArchitect] Chain of Thought Result for ${userName}:`, JSON.stringify(analysis, null, 2));
 
             if (analysis.finalGoal) {
                 goal = analysis.finalGoal;
             }
 
         } catch (e) {
-            console.error("Director Chain of Thought failed, falling back to basic prompt.", e);
+            console.error("SessionGoalArchitect Chain of Thought failed, falling back to basic prompt.", e);
             // Fallback logic if JSON parsing fails
              const fallbackPrompt = `
                 You are the Director of a biography project. Subject: ${userName}.
@@ -95,11 +91,11 @@ OUTPUT FORMAT (JSON):
              try {
                  goal = await this.llm.generateText(fallbackPrompt, { maxTokens: 50 });
              } catch (fallbackError) {
-                 console.error("Director fallback also failed.", fallbackError);
+                 console.error("SessionGoalArchitect fallback also failed.", fallbackError);
              }
         }
 
-        // 3. Start Voice Agent with this Goal
+        // 2. Start Voice Agent with this Goal
         return this.voiceAgent.startConversation(userId, sessionId, userName, {
             goal: goal.trim(),
             memories,

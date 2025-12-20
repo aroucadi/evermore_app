@@ -1,10 +1,13 @@
 import { UserRepository } from '../../domain/repositories/UserRepository';
 import { User } from '../../domain/entities/User';
 
-export class UserProfileService {
+export class UserProfileUpdater {
   constructor(private userRepository: UserRepository) {}
 
-  async updateSeniorProfile(id: string, updates: Partial<NonNullable<User['preferences']>>): Promise<User> {
+  async updateSeniorProfile(
+    id: string,
+    updates: Partial<NonNullable<User['preferences']>>
+  ): Promise<User> {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new Error('User not found');
@@ -16,7 +19,7 @@ export class UserProfileService {
 
     const updatedPreferences = {
       ...user.preferences,
-      ...updates
+      ...updates,
     };
 
     user.preferences = updatedPreferences;
@@ -25,21 +28,24 @@ export class UserProfileService {
   }
 
   async getProfile(id: string): Promise<User | null> {
-      return await this.userRepository.findById(id);
+    return await this.userRepository.findById(id);
   }
 
-  async updateFamilyProfile(id: string, updates: { seniorId?: string }): Promise<User> {
+  async updateFamilyProfile(
+    id: string,
+    updates: { seniorId?: string }
+  ): Promise<User> {
     const user = await this.userRepository.findById(id);
     if (!user) {
       throw new Error('User not found');
     }
 
     if (user.role !== 'family') {
-        throw new Error('Can only update profile for family users');
+      throw new Error('Can only update profile for family users');
     }
 
     if (updates.seniorId) {
-        user.seniorId = updates.seniorId;
+      user.seniorId = updates.seniorId;
     }
 
     return await this.userRepository.update(user);

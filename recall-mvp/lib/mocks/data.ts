@@ -22,10 +22,10 @@ export const mockUsers: User[] = [
 ];
 
 export const mockSessions: ConversationSession[] = [
-  {
-    id: 'session-001',
-    userId: 'user-arthur',
-    transcriptRaw: JSON.stringify([
+  new ConversationSession(
+    'session-001',
+    'user-arthur',
+    JSON.stringify([
       {
         id: 'msg-001',
         speaker: 'agent',
@@ -45,11 +45,13 @@ export const mockSessions: ConversationSession[] = [
         timestamp: new Date('2025-12-10T10:00:30')
       }
     ]),
-    duration: 1380, // 23 minutes
-    startedAt: new Date('2025-12-10T10:00:00'),
-    endedAt: new Date('2025-12-10T10:23:00'),
-    status: 'completed'
-  }
+    'completed',
+    new Date('2025-12-10T10:00:00'),
+    undefined,
+    1380, // 23 minutes
+    new Date('2025-12-10T10:23:00'),
+    {}
+  )
 ];
 
 export const mockChapters: Chapter[] = [

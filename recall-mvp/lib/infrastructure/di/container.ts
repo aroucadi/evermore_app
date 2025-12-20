@@ -2,6 +2,7 @@ import { DrizzleUserRepository } from '../adapters/db/DrizzleUserRepository';
 import { DrizzleSessionRepository } from '../adapters/db/DrizzleSessionRepository';
 import { DrizzleChapterRepository } from '../adapters/db/DrizzleChapterRepository';
 import { DrizzleJobRepository } from '../adapters/db/DrizzleJobRepository';
+import { DrizzleInvitationRepository } from '../adapters/db/DrizzleInvitationRepository';
 
 // New Adapters
 import { GoogleVertexAdapter } from '../adapters/ai/GoogleVertexAdapter';
@@ -13,10 +14,11 @@ import { PineconeStore } from '../adapters/vector/PineconeStore';
 import { ResendEmailService } from '../adapters/email/ResendEmailService';
 import { PDFService } from '../adapters/biographer/PDFService';
 
-// Domain Services
-import { SafetyMonitorService } from '../../core/application/services/SafetyMonitorService';
-import { DirectorService } from '../../core/application/services/DirectorService';
-import { UserProfileService } from '../../core/application/services/UserProfileService';
+// Domain Services / Application Services
+import { ContentSafetyGuard } from '../../core/application/services/ContentSafetyGuard';
+import { SessionGoalArchitect } from '../../core/application/services/SessionGoalArchitect';
+import { UserProfileUpdater } from '../../core/application/services/UserProfileUpdater';
+import { InvitationScheduler } from '../../core/application/services/InvitationScheduler';
 
 // Mocks
 import { MockAIService } from '../adapters/mocks/MockAIService';
@@ -42,6 +44,7 @@ export const userRepository = new DrizzleUserRepository();
 export const sessionRepository = new DrizzleSessionRepository();
 export const chapterRepository = new DrizzleChapterRepository();
 export const jobRepository = new DrizzleJobRepository();
+const invitationRepository = new DrizzleInvitationRepository();
 
 // --- ADAPTERS CONFIGURATION ---
 const isHuggingFace = process.env.SPEECH_PROVIDER === 'huggingface';
@@ -64,28 +67,23 @@ export const chapterGenerator = useMocks
     ? new MockChapterGeneratorAdapter()
     : new AoTChapterGeneratorAdapter(llmProvider);
 
-export const safetyMonitor = new SafetyMonitorService(llmProvider, emailService, sessionRepository);
+export const contentSafetyGuard = new ContentSafetyGuard(llmProvider, emailService, sessionRepository);
 export const pdfService = new PDFService();
-export const userProfileService = new UserProfileService(userRepository);
+export const userProfileUpdater = new UserProfileUpdater(userRepository);
 
-// Voice Agent Strategy
-// If using HuggingFace, we use Manual/REST adapter because HF doesn't provide a WebSocket Agent.
-// If using ElevenLabs, we use the ElevenLabsAdapter which implements VoiceAgentPort via WS.
 const voiceAgentProvider = isHuggingFace
     ? new ManualVoiceAgentAdapter()
-    : (speechProvider as ElevenLabsAdapter); // ElevenLabsAdapter implements both Speech and VoiceAgent
+    : (speechProvider as ElevenLabsAdapter);
 
-export const directorService = new DirectorService(llmProvider, voiceAgentProvider, userRepository);
-
+export const sessionGoalArchitect = new SessionGoalArchitect(llmProvider, voiceAgentProvider);
+export const invitationScheduler = new InvitationScheduler(userRepository, invitationRepository);
 
 // --- LEGACY/BRIDGE SUPPORT ---
-// While we refactor, we keep this bridge but we will update UseCases to NOT use it where possible.
-
 class AIServiceBridge implements AIServicePort {
     constructor(
         private llm: GoogleVertexAdapter,
         private speech: any, // SpeechPort
-        private director: DirectorService
+        private director: SessionGoalArchitect
     ) {}
 
     async generateQuestion(userUtterance: string, history: any[], memories: any[], imageContext?: string): Promise<{ text: string; strategy: string }> {
@@ -113,7 +111,7 @@ class AIServiceBridge implements AIServicePort {
     }
 
     async startVoiceConversation(userId: string, sessionId: string, userName: string, memories: any[], imageContext?: string): Promise<{ agentId: string; conversationId: string; wsUrl?: string }> {
-        return this.director.startSession(userId, sessionId, userName, memories, imageContext);
+         throw new Error("Deprecated: Use SessionGoalArchitect directly.");
     }
 
     async analyzeImage(imageBase64: string, mimeType: string): Promise<{ description: string; detectedEntities: string[]; conversationalTrigger?: string }> {
@@ -133,48 +131,41 @@ class AIServiceBridge implements AIServicePort {
 
 export const aiService = useMocks
     ? new MockAIService()
-    : new AIServiceBridge(llmProvider, speechProvider, directorService);
+    : new AIServiceBridge(llmProvider, speechProvider, sessionGoalArchitect);
 
 
-// Use Cases - Updated to use Granular Ports where possible for SOLID
-// Note: We are transitioning away from 'aiService' god object.
+// Use Cases
 
 export const createUserUseCase = new CreateUserUseCase(userRepository);
 
-// StartSession now depends on DirectorService + SessionRepo
-// It previously depended on aiService for 'startVoiceConversation', which Director handles.
-// But StartSessionUseCase signature might still expect AIServicePort if we haven't updated the class yet.
-// We will update the classes next. For now, we pass the existing dependencies as they were,
-// but we will update them to use the granular services we have instantiated above.
-
-// Refactoring Use Case instantiation:
 export const startSessionUseCase = new StartSessionUseCase(
     sessionRepository,
     userRepository,
-    directorService, // Injected instead of AIServicePort
+    sessionGoalArchitect,
     vectorStore
 );
 
 export const processMessageUseCase = new ProcessMessageUseCase(
     sessionRepository,
-    llmProvider, // Injected LLMPort
+    userRepository, // Added UserRepository injection
+    llmProvider,
     vectorStore,
-    safetyMonitor // Injected SafetyMonitor
+    contentSafetyGuard
 );
 
 export const generateChapterUseCase = new GenerateChapterUseCase(
     chapterRepository,
     sessionRepository,
     userRepository,
-    chapterGenerator, // Injected ChapterGeneratorPort
+    chapterGenerator,
     emailService,
-    llmProvider // Injected LLMPort (for internal logic if needed)
+    llmProvider
 );
 
 export const analyzeSessionImageUseCase = new AnalyzeSessionImageUseCase(
     sessionRepository,
-    llmProvider, // Injected LLMPort
-    speechProvider, // Injected SpeechPort
+    llmProvider,
+    speechProvider,
     vectorStore
 );
 

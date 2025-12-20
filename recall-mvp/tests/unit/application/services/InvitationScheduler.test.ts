@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SchedulingService } from '@/lib/core/application/services/SchedulingService';
+import { InvitationScheduler } from '@/lib/core/application/services/InvitationScheduler';
 import { UserRepository } from '@/lib/core/domain/repositories/UserRepository';
 import { InvitationRepository } from '@/lib/core/domain/repositories/InvitationRepository';
 import { User } from '@/lib/core/domain/entities/User';
 import { Invitation } from '@/lib/core/domain/entities/Invitation';
 
-describe('SchedulingService', () => {
-    let service: SchedulingService;
+describe('InvitationScheduler', () => {
+    let service: InvitationScheduler;
     let mockUserRepo: UserRepository;
     let mockInvitationRepo: InvitationRepository;
 
@@ -17,7 +17,7 @@ describe('SchedulingService', () => {
             create: vi.fn(),
             update: vi.fn(),
             findBySeniorId: vi.fn(),
-        };
+        } as any;
 
         mockInvitationRepo = {
             create: vi.fn(async (inv) => inv),
@@ -25,9 +25,9 @@ describe('SchedulingService', () => {
             findByToken: vi.fn(),
             update: vi.fn(),
             findPendingBySeniorId: vi.fn(async () => []),
-        };
+        } as any;
 
-        service = new SchedulingService(mockUserRepo, mockInvitationRepo);
+        service = new InvitationScheduler(mockUserRepo, mockInvitationRepo);
     });
 
     it('should generate an invitation for a matching schedule', async () => {

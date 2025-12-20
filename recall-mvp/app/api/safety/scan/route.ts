@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DrizzleAlertRepository } from '@/lib/infrastructure/adapters/db/DrizzleAlertRepository';
-import { DrizzleUserRepository } from '@/lib/infrastructure/adapters/db/DrizzleUserRepository';
-import { ConsoleEmailService } from '@/lib/infrastructure/adapters/email/ConsoleEmailService';
-import { SafetyMonitorService } from '@/lib/core/application/services/SafetyMonitorService';
-
-const alertRepository = new DrizzleAlertRepository();
-const userRepository = new DrizzleUserRepository();
-const emailService = new ConsoleEmailService();
-const safetyMonitorService = new SafetyMonitorService(alertRepository, userRepository, emailService);
+import { contentSafetyGuard, userRepository } from '@/lib/infrastructure/di/container';
 
 export async function POST(req: NextRequest) {
   try {
@@ -17,14 +9,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const alert = await safetyMonitorService.scanMessage(seniorId, sessionId, text);
+    // Get Emergency Contact
+    const user = await userRepository.findById(seniorId);
+    const emergencyContact = user?.preferences?.emergencyContact?.email;
 
-    if (alert) {
-        // In a real system, we would trigger email/SMS here immediately.
-        console.log(`[SAFETY ALERT] Triggered for user ${seniorId}: ${alert.content}`);
-    }
+    // Monitor returns boolean (true if risk detected)
+    const riskDetected = await contentSafetyGuard.monitor(text, seniorId, sessionId || 'manual-scan', emergencyContact);
 
-    return NextResponse.json({ alert });
+    return NextResponse.json({ riskDetected });
   } catch (error: any) {
     console.error('Error scanning message:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { UserProfileService } from '@/lib/core/application/services/UserProfileService';
+import { UserProfileUpdater } from '@/lib/core/application/services/UserProfileUpdater';
 import { UserRepository } from '@/lib/core/domain/repositories/UserRepository';
 import { User } from '@/lib/core/domain/entities/User';
 
-describe('UserProfileService', () => {
-    let service: UserProfileService;
+describe('UserProfileUpdater', () => {
+    let service: UserProfileUpdater;
     let mockUserRepo: UserRepository;
 
     beforeEach(() => {
@@ -14,8 +14,8 @@ describe('UserProfileService', () => {
             create: vi.fn(),
             update: vi.fn(async (u) => u),
             findBySeniorId: vi.fn(),
-        };
-        service = new UserProfileService(mockUserRepo);
+        } as any;
+        service = new UserProfileUpdater(mockUserRepo);
     });
 
     it('should update senior preferences', async () => {

@@ -1,14 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { DirectorService } from '../../../../../lib/core/application/services/DirectorService';
-import { LLMPort } from '../../../../../lib/core/application/ports/LLMPort';
-import { VoiceAgentPort } from '../../../../../lib/core/application/ports/VoiceAgentPort';
-import { UserRepository } from '../../../../../lib/core/domain/repositories/UserRepository';
+import { SessionGoalArchitect, SessionContext } from '@/lib/core/application/services/SessionGoalArchitect';
+import { LLMPort } from '@/lib/core/application/ports/LLMPort';
+import { VoiceAgentPort } from '@/lib/core/application/ports/VoiceAgentPort';
 
-describe('DirectorService (Chain of Thought)', () => {
-    let director: DirectorService;
+describe('SessionGoalArchitect (Chain of Thought)', () => {
+    let architect: SessionGoalArchitect;
     let mockLLM: LLMPort;
     let mockVoiceAgent: VoiceAgentPort;
-    let mockUserRepo: UserRepository;
 
     beforeEach(() => {
         mockLLM = {
@@ -19,14 +17,8 @@ describe('DirectorService (Chain of Thought)', () => {
         mockVoiceAgent = {
             startConversation: vi.fn()
         };
-        mockUserRepo = {
-            findById: vi.fn().mockResolvedValue({
-                id: '1',
-                preferences: { topicsAvoid: ['politics'], topicsLove: ['music'] }
-            })
-        } as any;
 
-        director = new DirectorService(mockLLM, mockVoiceAgent, mockUserRepo);
+        architect = new SessionGoalArchitect(mockLLM, mockVoiceAgent);
     });
 
     it('should use Chain of Thought to determine goal', async () => {
@@ -38,7 +30,16 @@ describe('DirectorService (Chain of Thought)', () => {
             finalGoal: "Ask about their first concert experience."
         });
 
-        await director.startSession('u1', 's1', 'John', []);
+        const context: SessionContext = {
+            userId: 'u1',
+            sessionId: 's1',
+            userName: 'John',
+            memories: [],
+            topicsAvoid: ['politics'],
+            topicsLove: ['music']
+        };
+
+        await architect.determineSessionGoal(context);
 
         expect(mockLLM.generateJson).toHaveBeenCalled();
         const callArgs = (mockLLM.generateJson as any).mock.calls[0][0];
@@ -55,7 +56,16 @@ describe('DirectorService (Chain of Thought)', () => {
         vi.spyOn(mockLLM, 'generateJson').mockRejectedValue(new Error("CoT Failed"));
         vi.spyOn(mockLLM, 'generateText').mockResolvedValue("Fallback Goal");
 
-        await director.startSession('u1', 's1', 'John', []);
+        const context: SessionContext = {
+            userId: 'u1',
+            sessionId: 's1',
+            userName: 'John',
+            memories: [],
+            topicsAvoid: [],
+            topicsLove: []
+        };
+
+        await architect.determineSessionGoal(context);
 
         expect(mockLLM.generateText).toHaveBeenCalled();
         expect(mockVoiceAgent.startConversation).toHaveBeenCalledWith(

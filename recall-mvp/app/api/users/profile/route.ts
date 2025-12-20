@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { DrizzleUserRepository } from '@/lib/infrastructure/adapters/db/DrizzleUserRepository';
-import { UserProfileService } from '@/lib/core/application/services/UserProfileService';
-
-const userRepository = new DrizzleUserRepository();
-const userProfileService = new UserProfileService(userRepository);
+import { userProfileUpdater } from '@/lib/infrastructure/di/container';
 
 // Allowed fields for senior updates (whitelist)
 const SENIOR_ALLOWED_FIELDS = [
@@ -44,16 +40,10 @@ export async function POST(req: NextRequest) {
     let updatedUser;
     if (type === 'senior') {
         sanitizedUpdates = sanitizeUpdates(updates, SENIOR_ALLOWED_FIELDS);
-        // Ensure at least one valid field is being updated
-        if (Object.keys(sanitizedUpdates).length === 0) {
-           // We might want to return an error or just proceed with empty updates (no-op)
-           // But strictly speaking, if user sent garbage, it's better to log or warn.
-           // For now, passing empty object is safe as service handles partials.
-        }
-        updatedUser = await userProfileService.updateSeniorProfile(id, sanitizedUpdates);
+        updatedUser = await userProfileUpdater.updateSeniorProfile(id, sanitizedUpdates);
     } else if (type === 'family') {
         sanitizedUpdates = sanitizeUpdates(updates, FAMILY_ALLOWED_FIELDS);
-        updatedUser = await userProfileService.updateFamilyProfile(id, sanitizedUpdates);
+        updatedUser = await userProfileUpdater.updateFamilyProfile(id, sanitizedUpdates);
     } else {
         return NextResponse.json({ error: 'Invalid user type' }, { status: 400 });
     }

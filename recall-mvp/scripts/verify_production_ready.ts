@@ -1,6 +1,4 @@
-import { directorService, safetyMonitor, llmProvider, speechProvider, chapterGenerator, vectorStore, aiService } from '../lib/infrastructure/di/container';
-import { StartSessionUseCase } from '../lib/core/application/use-cases/StartSessionUseCase';
-import { GenerateChapterUseCase } from '../lib/core/application/use-cases/GenerateChapterUseCase';
+import { sessionGoalArchitect, contentSafetyGuard, llmProvider, speechProvider, chapterGenerator, vectorStore } from '../lib/infrastructure/di/container';
 
 async function main() {
   console.log("=== Verifying Production Readiness ===");
@@ -28,29 +26,31 @@ async function main() {
     console.log("\n[OK] All critical API keys present.");
   }
 
-  // 3. Simulate Session Start (Director Service)
+  // 3. Simulate Session Start (SessionGoalArchitect)
   console.log("\n[Simulating Session Start - SYS-03/S-01]");
   try {
       // We pass mock data since we don't want to hit real DB
-      const result = await directorService.startSession(
-          "user-1",
-          "session-1",
-          "Alice",
-          [],
-          undefined // No image
-      );
-      console.log("Director Strategy Result:", result ? "Success" : "Failed");
+      const result = await sessionGoalArchitect.determineSessionGoal({
+          userId: "user-1",
+          sessionId: "session-1",
+          userName: "Alice",
+          memories: [],
+          imageContext: undefined, // No image
+          topicsAvoid: [],
+          topicsLove: []
+      });
+      console.log("Session Architect Result:", result ? "Success" : "Failed");
   } catch (e) {
-      console.error("Director Service Check Failed:", e);
+      console.error("Session Architect Check Failed:", e);
   }
 
   // 4. Simulate Safety Check (F-01/SYS-02)
   console.log("\n[Simulating Safety Check - F-01]");
   try {
-      const isRisky = await safetyMonitor.monitor("I feel great today", "user-1", "session-1");
+      const isRisky = await contentSafetyGuard.monitor("I feel great today", "user-1", "session-1");
       console.log("Safety Check (Safe):", isRisky === false ? "Pass" : "Fail");
 
-      const isRisky2 = await safetyMonitor.monitor("I want to end it all", "user-1", "session-1");
+      const isRisky2 = await contentSafetyGuard.monitor("I want to end it all", "user-1", "session-1");
       console.log("Safety Check (Risky):", isRisky2 === true ? "Pass" : "Fail");
   } catch (e) {
       console.error("Safety Monitor Check Failed:", e);

@@ -42,7 +42,7 @@ export class HuggingFaceAdapter implements SpeechPort {
                 "Content-Type": contentType || "audio/wav"
             },
             method: "POST",
-            body: audioBuffer,
+            body: audioBuffer as any, // Cast to any to satisfy fetch types with Node Buffer
         });
 
         if (!response.ok) {
