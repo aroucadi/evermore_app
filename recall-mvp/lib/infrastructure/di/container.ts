@@ -16,6 +16,7 @@ import { PDFService } from '../adapters/biographer/PDFService';
 // Domain Services
 import { SafetyMonitorService } from '../../core/application/services/SafetyMonitorService';
 import { DirectorService } from '../../core/application/services/DirectorService';
+import { UserProfileService } from '../../core/application/services/UserProfileService';
 
 // Mocks
 import { MockAIService } from '../adapters/mocks/MockAIService';
@@ -45,9 +46,12 @@ export const jobRepository = new DrizzleJobRepository();
 // --- ADAPTERS CONFIGURATION ---
 const isHuggingFace = process.env.SPEECH_PROVIDER === 'huggingface';
 
+// Always instantiate HuggingFaceAdapter as a potential fallback or primary
+const hfAdapter = new HuggingFaceAdapter();
+
 export const speechProvider = isHuggingFace
-    ? new HuggingFaceAdapter()
-    : new ElevenLabsAdapter();
+    ? hfAdapter
+    : new ElevenLabsAdapter(hfAdapter); // Inject fallback STT provider
 
 export const llmProvider = new GoogleVertexAdapter();
 
@@ -62,6 +66,7 @@ export const chapterGenerator = useMocks
 
 export const safetyMonitor = new SafetyMonitorService(llmProvider, emailService, sessionRepository);
 export const pdfService = new PDFService();
+export const userProfileService = new UserProfileService(userRepository);
 
 // Voice Agent Strategy
 // If using HuggingFace, we use Manual/REST adapter because HF doesn't provide a WebSocket Agent.

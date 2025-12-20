@@ -1,25 +1,32 @@
 import { SpeechPort } from '../../../core/application/ports/SpeechPort';
 import { VoiceAgentPort } from '../../../core/application/ports/VoiceAgentPort';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
-import { OpenAI } from 'openai'; // Use OpenAI for STT fallback if needed
+import { OpenAI } from 'openai';
 
 export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
   private client: ElevenLabsClient;
   private openai: OpenAI | null = null;
+  private sttFallback: SpeechPort | null = null;
 
-  constructor() {
+  constructor(sttFallback?: SpeechPort) {
     this.client = new ElevenLabsClient({
       apiKey: process.env.ELEVENLABS_API_KEY || 'mock-key',
     });
 
-    // Initialize OpenAI if key is available, for STT fallback
+    if (sttFallback) {
+        this.sttFallback = sttFallback;
+    }
+
     if (process.env.OPENAI_API_KEY) {
         this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     }
   }
 
   async textToSpeech(text: string, style?: string): Promise<Buffer> {
-      if (!process.env.ELEVENLABS_API_KEY) return Buffer.from("mock-audio-mp3");
+      if (!process.env.ELEVENLABS_API_KEY) {
+          console.warn("ElevenLabsAdapter: No API Key, using mock audio.");
+          return Buffer.from("mock-audio-mp3");
+      }
 
       try {
         const stability = style === 'emotional' ? 0.35 : 0.7;
@@ -41,26 +48,21 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
   }
 
   async speechToText(audioBuffer: Buffer, contentType: string): Promise<string> {
-      // ElevenLabs does not strictly provide general purpose STT via this SDK in the same way.
-      // We fall back to OpenAI Whisper if available, or return a polite error/mock.
+      // 1. Try OpenAI Whisper if configured (optional internal logic)
       if (this.openai) {
+         // Placeholder for OpenAI logic if needed
+      }
+
+      // 2. Use Injected Fallback (HuggingFace)
+      if (this.sttFallback) {
           try {
-              // Note: OpenAI API expects a File object or similar.
-              // We need to verify how to send buffer.
-              // 'openai' package supports `await openai.audio.transcriptions.create({ file: ... })`
-              // We mock it for now to avoid complex File/FormData polyfills in Node environment without 'form-data' package
-              // unless we install it.
-              // Given constraints, I will return a placeholder if we can't easily call Whisper here without more deps.
-              console.warn("ElevenLabsAdapter: Delegating STT to OpenAI (Not fully implemented without 'form-data' dep).");
-              return "";
+              return await this.sttFallback.speechToText(audioBuffer, contentType);
           } catch (e) {
-              console.error("STT Fallback failed", e);
-              return "";
+              console.error("ElevenLabsAdapter: STT Fallback failed", e);
           }
       }
 
-      console.warn("ElevenLabsAdapter: STT not supported and no OpenAI fallback configured.");
-      return ""; // Return empty string instead of throwing to prevent app crash
+      throw new Error("Speech to text failed: No working provider available (ElevenLabs requires fallback for STT).");
   }
 
   async startConversation(

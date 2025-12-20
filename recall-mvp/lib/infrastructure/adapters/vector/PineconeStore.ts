@@ -8,32 +8,39 @@ export class PineconeStore implements VectorStorePort {
   private pinecone: Pinecone;
   private openai: OpenAI;
   private indexName: string = 'recall-memories';
+  private isMock: boolean;
 
   constructor(private sessionRepository: SessionRepository) {
+    const pineconeKey = process.env.PINECONE_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
+
+    if (!pineconeKey || !openaiKey) {
+        console.warn("PineconeStore: Missing API keys (PINECONE_API_KEY or OPENAI_API_KEY). Running in MOCK mode.");
+        this.isMock = true;
+    } else {
+        this.isMock = false;
+    }
+
     this.pinecone = new Pinecone({
-      apiKey: process.env.PINECONE_API_KEY || 'mock-key',
+      apiKey: pineconeKey || 'mock-key',
     });
     this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || 'mock-key',
+      apiKey: openaiKey || 'mock-key',
     });
   }
 
   async storeConversation(sessionId: string, transcript: string, userId: string): Promise<void> {
-      // Original method - maybe keeping for backward compat or updating to use chunking
       await this.storeMemoryChunk(userId, sessionId, transcript, { type: 'full_conversation' });
   }
 
   async storeMemoryChunk(userId: string, sessionId: string, text: string, metadata: any): Promise<void> {
-    if (!process.env.PINECONE_API_KEY || !process.env.OPENAI_API_KEY) {
-        console.log("Mocking vector store - storeMemoryChunk");
-        return;
-    }
+    if (this.isMock) return;
 
     try {
         const embedding = await this.openai.embeddings.create({
             model: 'text-embedding-3-small',
             input: text,
-            dimensions: 1536 // Explicitly set or use 384 as per spec if model supports it (text-embedding-3-small allows shortening but standard is 1536)
+            dimensions: 1536
         });
 
         const index = this.pinecone.index(this.indexName);
@@ -49,22 +56,22 @@ export class PineconeStore implements VectorStorePort {
             }
         }]);
     } catch (error) {
-        console.error("Error storing memory chunk:", error);
+        console.error("PineconeStore: Error storing memory chunk:", error);
     }
   }
 
   async retrieveContext(userId: string, currentTopic?: string): Promise<any[]> {
     const context: any[] = [];
 
-    // 1. Load recent context (Last 2 sessions)
-    // We append this even if we are mocking or if topic search fails
+    // 1. Load recent context (Last 2 sessions) from DB (Reliable source)
     try {
         const recentSessions = await this.sessionRepository.findLastSessions(userId, 2);
         for (const session of recentSessions) {
             if (session.transcriptRaw) {
-                // Parse transcriptRaw if it's JSON, or use as is
-                const transcript = session.transcriptRaw;
-                // Just add a summary/indication marker
+                const transcript = typeof session.transcriptRaw === 'string'
+                    ? session.transcriptRaw
+                    : JSON.stringify(session.transcriptRaw);
+
                 context.push({
                     type: 'recent_session',
                     text: `Previous session on ${session.startedAt}: ${transcript.substring(0, 500)}...`,
@@ -73,11 +80,12 @@ export class PineconeStore implements VectorStorePort {
             }
         }
     } catch (e) {
-        console.error("Failed to load recent sessions:", e);
+        console.error("PineconeStore: Failed to load recent sessions:", e);
     }
 
-    if (!process.env.PINECONE_API_KEY || !process.env.OPENAI_API_KEY) {
-        context.push({ text: "This is a mock memory about childhood.", metadata: { date: "1950s" } });
+    if (this.isMock) {
+        // Return dummy context if mocking
+        context.push({ text: "User grew up in a small town called Oakhaven.", metadata: { date: "1950s" } });
         return context;
     }
 
@@ -86,19 +94,14 @@ export class PineconeStore implements VectorStorePort {
 
         let queryEmbedding: number[] = [];
 
-        if (currentTopic) {
-             const embeddingResponse = await this.openai.embeddings.create({
-                model: 'text-embedding-3-small',
-                input: currentTopic
-            });
-            queryEmbedding = embeddingResponse.data[0].embedding;
-        } else {
-             const embeddingResponse = await this.openai.embeddings.create({
-                model: 'text-embedding-3-small',
-                input: "important life events and summary"
-            });
-            queryEmbedding = embeddingResponse.data[0].embedding;
-        }
+        // If no topic provided, use a generic query to get broad context
+        const queryText = currentTopic || "important life events summary childhood family career";
+
+        const embeddingResponse = await this.openai.embeddings.create({
+            model: 'text-embedding-3-small',
+            input: queryText
+        });
+        queryEmbedding = embeddingResponse.data[0].embedding;
 
         const queryResponse = await index.query({
             vector: queryEmbedding,
@@ -116,7 +119,7 @@ export class PineconeStore implements VectorStorePort {
         return [...context, ...vectorMatches];
 
     } catch (error) {
-        console.error("Error retrieving context:", error);
+        console.error("PineconeStore: Error retrieving context:", error);
         return context;
     }
   }

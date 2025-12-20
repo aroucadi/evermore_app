@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ProcessMessageUseCase } from '@/lib/core/application/use-cases/ProcessMessageUseCase';
-import { container } from '@/lib/infrastructure/di/container';
+import { processMessageUseCase } from '@/lib/infrastructure/di/container';
 
 export async function POST(req: NextRequest) {
     try {
@@ -11,7 +10,6 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing sessionId or message' }, { status: 400 });
         }
 
-        const processMessageUseCase = container.resolve<ProcessMessageUseCase>('processMessageUseCase');
         const response = await processMessageUseCase.execute(sessionId, message, 'user');
 
         return NextResponse.json(response);
