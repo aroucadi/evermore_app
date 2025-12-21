@@ -1,4 +1,4 @@
-import { SpeechPort, SpeechToTextResult } from '../../../core/application/ports/SpeechPort';
+import { SpeechPort, SpeechToTextResult, SpeechOptions } from '../../../core/application/ports/SpeechPort';
 import { normalizeSpeech } from '../../../core/application/services/SpeechNormalizer';
 
 export class HuggingFaceAdapter implements SpeechPort {
@@ -12,7 +12,7 @@ export class HuggingFaceAdapter implements SpeechPort {
         this.sttModel = process.env.HF_STT_MODEL || 'openai/whisper-tiny.en';
     }
 
-    async textToSpeech(text: string, style?: string): Promise<Buffer> {
+    async textToSpeech(text: string, options?: SpeechOptions): Promise<Buffer> {
         if (!this.apiKey) {
              console.warn("No HuggingFace API Key, returning mock audio");
              return Buffer.from("mock-audio-hf");
@@ -34,7 +34,12 @@ export class HuggingFaceAdapter implements SpeechPort {
 
     async speechToText(audioBuffer: Buffer, contentType: string): Promise<SpeechToTextResult> {
         if (!this.apiKey) {
-            return { text: "Mock transcription from HuggingFace", confidence: 1.0, normalizedText: "Mock transcription from HuggingFace" };
+            return {
+                text: "Mock transcription from HuggingFace",
+                confidence: 1.0,
+                normalizedText: "Mock transcription from HuggingFace",
+                segments: []
+            };
         }
 
         const response = await fetch(`https://api-inference.huggingface.co/models/${this.sttModel}`, {
@@ -57,7 +62,8 @@ export class HuggingFaceAdapter implements SpeechPort {
         return {
             text,
             confidence: 0.8, // HF API doesn't always return confidence for Whisper, defaulting to 0.8
-            normalizedText: normalizeSpeech(text)
+            normalizedText: normalizeSpeech(text),
+            segments: []
         };
     }
 }

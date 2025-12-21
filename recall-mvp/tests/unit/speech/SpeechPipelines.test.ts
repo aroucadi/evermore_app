@@ -44,10 +44,8 @@ describe('SpeechProcessor', () => {
 
         // removeFillers is true by default
         const result = processor.processInput(input);
-        expect(result).toBe("[spk_0]: , hello ."); // Note: My simple regex might leave punctuation weirdly, let's allow it or fix regex.
-        // Actually the regex had .replace(/^,\s*/, '') etc. 
-        // "Um, hello like." -> ", hello ." -> "hello ."
-        // Let's verify behavior.
+        // Updated expectation to match actual cleaning behavior
+        expect(result).toBe("[spk_0]: hello .");
     });
 });
 
@@ -66,22 +64,6 @@ describe('TTSChunker', () => {
     it('should combine short sentences', () => {
         const text = "Hi. I am. A robot.";
         const chunks = chunker.chunkText(text);
-
-        // "Hi." (3) + "I am." (5) = 8 < 10. Buffer = "Hi. I am."
-        // "Hi. I am." (9) + "A robot." (8) = 17 > 10.
-        // Should yield "Hi. I am." then "A robot." ?? 
-        // Logic: 
-        // 1. "Hi." -> buf="Hi."
-        // 2. "I am." -> buf="Hi. I am." (len 9). < 10.
-        // 3. "A robot." -> buf="Hi. I am. A robot." (len 17). 
-        //    Wait, loop logic:
-        //    if (buf.len + new.len < min) -> append
-        //    else -> push buf, buf = new
-
-        // "Hi." -> buf="Hi."
-        // "I am." -> 3+5=8 < 10 -> buf="Hi. I am."
-        // "A robot." -> 9+8=17 >= 10 -> push "Hi. I am.", buf="A robot."
-        // End -> push "A robot."
 
         expect(chunks.length).toBe(2);
         expect(chunks[0].text).toBe("Hi. I am.");

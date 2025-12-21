@@ -6,6 +6,7 @@ import { DrizzleInvitationRepository } from '../adapters/db/DrizzleInvitationRep
 
 // New Adapters
 import { GoogleVertexAdapter } from '../adapters/ai/GoogleVertexAdapter';
+import { GoogleEmbeddingAdapter } from '../adapters/ai/GoogleEmbeddingAdapter';
 import { ElevenLabsAdapter } from '../adapters/speech/ElevenLabsAdapter';
 import { HuggingFaceAdapter } from '../adapters/speech/HuggingFaceAdapter';
 import { ManualVoiceAgentAdapter } from '../adapters/speech/ManualVoiceAgentAdapter';
@@ -57,9 +58,10 @@ export const speechProvider = isHuggingFace
     : new ElevenLabsAdapter(hfAdapter); // Inject fallback STT provider
 
 export const llmProvider = new GoogleVertexAdapter();
+export const embeddingProvider = new GoogleEmbeddingAdapter(process.env.GOOGLE_PROJECT_ID || 'mock-project');
 
 // Services wired with strict DI
-export const vectorStore = useMocks ? new MockVectorStore() : new PineconeStore(sessionRepository);
+export const vectorStore = useMocks ? new MockVectorStore() : new PineconeStore(embeddingProvider);
 export const emailService = useMocks ? new MockEmailService() : new ResendEmailService();
 
 // AoT needs LLM
@@ -125,7 +127,7 @@ class AIServiceBridge implements AIServicePort {
     }
 
     async generateSpeech(text: string, style?: string): Promise<Buffer> {
-        return this.speech.textToSpeech(text, style);
+        return this.speech.textToSpeech(text, { style });
     }
 }
 
