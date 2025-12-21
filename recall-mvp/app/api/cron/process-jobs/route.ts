@@ -1,12 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateChapterUseCase, jobRepository } from '@/lib/infrastructure/di/container';
+import { timingSafeEqual } from 'crypto';
 
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
 
-  // Security: Ensure CRON_SECRET is set and matches the header
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  // Security: Ensure CRON_SECRET is set
+  // We use timingSafeEqual to prevent timing attacks on the secret comparison
+  let isAuthorized = false;
+  if (cronSecret && authHeader) {
+    const expected = `Bearer ${cronSecret}`;
+    const expectedBuffer = Buffer.from(expected);
+    const actualBuffer = Buffer.from(authHeader);
+
+    if (expectedBuffer.length === actualBuffer.length) {
+      isAuthorized = timingSafeEqual(expectedBuffer, actualBuffer);
+    }
+  }
+
+  if (!isAuthorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
