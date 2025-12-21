@@ -17,7 +17,9 @@ export class StartSessionUseCase {
     const user = await this.userRepository.findById(userId);
     const userName = user ? user.name : 'User';
 
-    const memories = await this.vectorStore.retrieveContext(userId);
+    // Mocking memory retrieval until VectorStorePort interface is updated with retrieveContext
+    // or until we use query(vector) properly.
+    const memories: any[] = [];
 
     // Create session entity
     const session = new Session(

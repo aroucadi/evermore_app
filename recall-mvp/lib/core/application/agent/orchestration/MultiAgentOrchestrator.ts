@@ -10,6 +10,8 @@
 import { AgenticRunner, AgenticRunResult, HaltReason, AgentPhase } from '../primitives/AgentPrimitives';
 import { AgentContext } from '../types';
 import { AgentRegistry, AgentRole } from '../registry/AgentRegistry';
+import { LLMPort } from '../../ports/LLMPort';
+import { ModelRouter } from '../routing/ModelRouter';
 
 // ============================================================================
 // Types
@@ -202,48 +204,19 @@ export type ApprovalHandler = (request: ApprovalRequest) => Promise<ApprovalResu
 
 /**
  * Orchestrates multi-agent workflows.
- * 
- * Usage:
- * ```typescript
- * const orchestrator = new MultiAgentOrchestrator(registry);
- * 
- * // Define a pipeline
- * const pipeline: PipelineStage[] = [
- *   {
- *     name: 'plan',
- *     agentId: 'planner',
- *     inputTransform: (_, ctx) => ctx.goal,
- *     approvalRequired: false,
- *     onFailure: 'abort',
- *   },
- *   {
- *     name: 'execute',
- *     agentId: 'executor',
- *     inputTransform: (plan, _) => `Execute: ${JSON.stringify(plan)}`,
- *     approvalRequired: false,
- *     onFailure: 'retry',
- *     maxRetries: 2,
- *   },
- *   {
- *     name: 'review',
- *     agentId: 'critic',
- *     inputTransform: (result, _) => `Review: ${JSON.stringify(result)}`,
- *     approvalRequired: true,
- *     onFailure: 'abort',
- *   },
- * ];
- * 
- * const result = await orchestrator.runPipeline(pipeline, context, goal);
- * ```
  */
 export class MultiAgentOrchestrator {
     private registry: AgentRegistry;
     private agents: Map<string, AgenticRunner> = new Map();
     private messages: AgentMessage[] = [];
     private approvalHandler?: ApprovalHandler;
+    private llm: LLMPort;
+    private modelRouter: ModelRouter;
 
-    constructor(registry: AgentRegistry) {
+    constructor(registry: AgentRegistry, llm: LLMPort, modelRouter: ModelRouter) {
         this.registry = registry;
+        this.llm = llm;
+        this.modelRouter = modelRouter;
     }
 
     /**
@@ -305,7 +278,7 @@ export class MultiAgentOrchestrator {
             let agent = this.agents.get(stage.agentId);
             if (!agent) {
                 try {
-                    agent = this.registry.create(stage.agentId, context);
+                    agent = this.registry.create(stage.agentId, context, this.llm, this.modelRouter);
                     this.agents.set(stage.agentId, agent);
                 } catch (error) {
                     console.error(`[Orchestrator] Failed to create agent ${stage.agentId}:`, error);
@@ -457,115 +430,6 @@ export class MultiAgentOrchestrator {
     }
 
     /**
-     * Run a pipeline where every step (or flagged steps) is reviewed by a Supervisor.
-     */
-    async runSupervisedPipeline(
-        stages: PipelineStage[],
-        supervisorAgentId: string,
-        context: AgentContext,
-        goal: string,
-        initialBudget?: { tokens: number; costCents: number }
-    ): Promise<PipelineResult> {
-        const startTime = Date.now();
-        const stageResults: AgentStageResult[] = [];
-        const messages: AgentMessage[] = [];
-
-        let transferredContext: TransferredContext = {
-            goal,
-            observations: [],
-            keyFacts: [],
-            tokenBudgetRemaining: initialBudget?.tokens || 50000,
-            costBudgetRemaining: initialBudget?.costCents || 100,
-            previousResults: [],
-        };
-
-        // Get Supervisor
-        let supervisor = this.agents.get(supervisorAgentId);
-        if (!supervisor) {
-            supervisor = this.registry.create(supervisorAgentId, context);
-            this.agents.set(supervisorAgentId, supervisor);
-        }
-
-        let previousOutput: unknown = null;
-        let totalTokens = 0;
-        let totalCost = 0;
-
-        for (let i = 0; i < stages.length; i++) {
-            const stage = stages[i];
-            const stageStart = Date.now();
-
-            // 1. Execute normal stage logic (delegated to runPipeline-like logic here for simplicity or call internal)
-            // For now, let's execute the stage
-            let agent = this.agents.get(stage.agentId);
-            if (!agent) {
-                agent = this.registry.create(stage.agentId, context);
-                this.agents.set(stage.agentId, agent);
-            }
-
-            const stageGoal = stage.inputTransform(previousOutput, transferredContext);
-            const result = await agent.run(stageGoal, context);
-
-            totalTokens += result.totalTokens;
-            totalCost += result.totalCostCents;
-
-            const stageRes: AgentStageResult = {
-                stageName: stage.name,
-                agentId: stage.agentId,
-                success: result.success,
-                result,
-                durationMs: Date.now() - stageStart,
-                skipped: false
-            };
-
-            // 2. Supervisor Review
-            if (stageRes.success && (supervisor as any).reviewStage) {
-                console.log(`[Orchestrator] Requesting Supervisor review for stage: ${stage.name}`);
-                const review = await (supervisor as any).reviewStage(stageRes, transferredContext, context);
-
-                if (!review.approved) {
-                    console.log(`[Orchestrator] Supervisor REJECTED stage ${stage.name}: ${review.feedback}`);
-                    stageRes.success = false;
-                    stageRes.approvalStatus = 'rejected';
-                    stageResults.push(stageRes);
-                    if (stage.onFailure === 'abort') {
-                        return this.createFailedResult(stageResults, messages, startTime, `Supervisor rejected stage ${stage.name}: ${review.feedback}`);
-                    }
-                    continue;
-                }
-
-                stageRes.approvalStatus = 'approved';
-                console.log(`[Orchestrator] Supervisor APPROVED stage ${stage.name}`);
-            }
-
-            stageResults.push(stageRes);
-            if (stageRes.success) {
-                previousOutput = result.finalAnswer;
-                transferredContext.previousResults.push(stageRes);
-            } else if (stage.onFailure === 'abort') {
-                return this.createFailedResult(stageResults, messages, startTime, `Stage ${stage.name} failed`);
-            }
-        }
-
-        // Final decision by Supervisor
-        if ((supervisor as any).finalizeDecision) {
-            const finalDecision = await (supervisor as any).finalizeDecision(previousOutput, stageResults, context);
-            if (!finalDecision.ready) {
-                return this.createFailedResult(stageResults, messages, startTime, `Final decision rejected: ${finalDecision.summary}`);
-            }
-        }
-
-        return {
-            success: stageResults.every((r) => r.success || r.skipped),
-            stageResults,
-            finalOutput: previousOutput,
-            totalDurationMs: Date.now() - startTime,
-            totalTokens,
-            totalCostCents: totalCost,
-            messages,
-        };
-    }
-
-    /**
      * Create a failed pipeline result.
      */
     private createFailedResult(
@@ -600,7 +464,7 @@ export class MultiAgentOrchestrator {
     ): Promise<CritiqueResult> {
         let critic = this.agents.get(criticId);
         if (!critic) {
-            critic = this.registry.create(criticId, context);
+            critic = this.registry.create(criticId, context, this.llm, this.modelRouter);
             this.agents.set(criticId, critic);
         }
 
@@ -746,81 +610,4 @@ Output JSON format.
     clearAgents(): void {
         this.agents.clear();
     }
-}
-
-// ============================================================================
-// Pre-built Pipelines
-// ============================================================================
-
-/**
- * Create a standard Plan-Execute-Review pipeline.
- */
-export function createPlanExecuteReviewPipeline(
-    plannerAgentId: string,
-    executorAgentId: string,
-    reviewerAgentId: string
-): PipelineStage[] {
-    return [
-        {
-            name: 'plan',
-            agentId: plannerAgentId,
-            inputTransform: (_, ctx) => `Create a plan to achieve: ${ctx.goal}`,
-            approvalRequired: false,
-            onFailure: 'abort',
-        },
-        {
-            name: 'execute',
-            agentId: executorAgentId,
-            inputTransform: (plan, ctx) => `Execute this plan: ${JSON.stringify(plan)}\n\nGoal: ${ctx.goal}`,
-            approvalRequired: false,
-            onFailure: 'retry',
-            maxRetries: 2,
-        },
-        {
-            name: 'review',
-            agentId: reviewerAgentId,
-            inputTransform: (result, ctx) => `Review this result against the goal.\n\nGoal: ${ctx.goal}\n\nResult: ${JSON.stringify(result)}`,
-            approvalRequired: true,
-            onFailure: 'abort',
-        },
-    ];
-}
-
-/**
- * Create a Generate-Critique-Refine pipeline.
- */
-export function createGenerateCritiqueRefinePipeline(
-    generatorAgentId: string,
-    criticAgentId: string
-): PipelineStage[] {
-    return [
-        {
-            name: 'generate',
-            agentId: generatorAgentId,
-            inputTransform: (_, ctx) => ctx.goal,
-            approvalRequired: false,
-            onFailure: 'abort',
-        },
-        {
-            name: 'critique',
-            agentId: criticAgentId,
-            inputTransform: (content, ctx) => `Critique this content:\n\n${JSON.stringify(content)}\n\nOriginal goal: ${ctx.goal}`,
-            approvalRequired: false,
-            onFailure: 'skip', // Skip critique on failure
-        },
-        {
-            name: 'refine',
-            agentId: generatorAgentId,
-            inputTransform: (critique, ctx) => {
-                const prevResult = ctx.previousResults.find((r) => r.stageName === 'generate');
-                return `Refine this content based on critique:\n\nOriginal: ${JSON.stringify(prevResult?.result?.finalAnswer)}\n\nCritique: ${JSON.stringify(critique)}`;
-            },
-            approvalRequired: false,
-            onFailure: 'skip', // Use original if refinement fails
-            skipIf: (ctx) => {
-                const critique = ctx.previousResults.find((r) => r.stageName === 'critique');
-                return !critique?.success; // Skip refinement if critique failed
-            },
-        },
-    ];
 }

@@ -104,6 +104,8 @@ export interface WellbeingAssessment {
     confidence: number;
     /** Assessment timestamp */
     timestamp: number;
+    /** Justification for the risk assessment */
+    riskJustification: string;
 }
 
 /**
@@ -528,6 +530,11 @@ export class WellbeingGuard {
             ? concerns.reduce((sum, c) => sum + c.confidence, 0) / concerns.length
             : 0;
 
+        // Generate risk justification (new logic)
+        const riskJustification = concerns.length > 0
+            ? `Detected concerns: ${concerns.map(c => `${c.type} (${c.severity})`).join(', ')}`
+            : "No significant safety risks detected.";
+
         const assessment: WellbeingAssessment = {
             overallRisk,
             concerns,
@@ -537,6 +544,7 @@ export class WellbeingGuard {
             recommendedActions,
             confidence,
             timestamp: Date.now(),
+            riskJustification, // Added this field
         };
 
         // Log assessment

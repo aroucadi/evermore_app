@@ -1,4 +1,4 @@
-import { EmbeddingPort } from '../../ports/EmbeddingPort';
+import { EmbeddingPort } from '../../../core/application/ports/EmbeddingPort';
 import { GoogleAuth } from 'google-auth-library';
 
 /**

@@ -47,7 +47,11 @@ export class AnalyzeSessionImageUseCase {
     if (!responseText) {
         // Fallback: Use the standard generation loop via LLM
         const history = transcript.slice(-5);
-        const memories = await this.vectorStore.retrieveContext(session.userId, analysis.description);
+
+        // Mocking vector store retrieval since retrieveContext doesn't exist on VectorStorePort interface yet
+        // In real impl, this would query(vector) but we don't have embeddings here.
+        // Assuming we skip memory for now or use query() with dummy vector if we had it.
+        const memories: any[] = [];
 
         const textPrompt = `
             Context: ${JSON.stringify(history)}
@@ -62,7 +66,7 @@ export class AnalyzeSessionImageUseCase {
     }
 
     // 3. Generate Audio
-    const audioBuffer = await this.speech.textToSpeech(responseText, strategy);
+    const audioBuffer = await this.speech.textToSpeech(responseText, { style: strategy });
 
     // 4. Update Transcript with Agent Response
     transcript.push({

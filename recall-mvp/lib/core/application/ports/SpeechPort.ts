@@ -11,6 +11,7 @@ export interface SpeechToTextResult {
   confidence: number; // Overall confidence
   segments: SpeechSegment[]; // Granular details
   language?: string;
+  normalizedText?: string; // Added for STT normalization support
 }
 
 export interface SpeechOptions {

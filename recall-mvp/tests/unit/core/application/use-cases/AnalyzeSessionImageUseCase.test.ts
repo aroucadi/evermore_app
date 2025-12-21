@@ -43,7 +43,7 @@ describe('AnalyzeSessionImageUseCase', () => {
         const result = await useCase.execute('session1', 'base64image', 'image/jpeg');
 
         expect(mockLlm.analyzeImage).toHaveBeenCalledWith('base64image', 'image/jpeg', expect.stringContaining("Analyze this image"));
-        expect(mockSpeech.textToSpeech).toHaveBeenCalledWith("Tell me about the dog.", "emotional_deepening");
+        expect(mockSpeech.textToSpeech).toHaveBeenCalledWith("Tell me about the dog.", { style: "emotional_deepening" });
         expect(result.text).toBe("Tell me about the dog.");
         expect(result.audioBase64).toBe(Buffer.from('audio').toString('base64'));
     });

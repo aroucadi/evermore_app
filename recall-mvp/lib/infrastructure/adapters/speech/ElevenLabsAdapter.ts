@@ -1,4 +1,4 @@
-import { SpeechPort, SpeechToTextResult } from '../../../core/application/ports/SpeechPort';
+import { SpeechPort, SpeechToTextResult, SpeechOptions } from '../../../core/application/ports/SpeechPort';
 import { VoiceAgentPort } from '../../../core/application/ports/VoiceAgentPort';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
 import { OpenAI } from 'openai';
@@ -29,13 +29,14 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
     }
   }
 
-  async textToSpeech(text: string, style?: string): Promise<Buffer> {
+  async textToSpeech(text: string, options?: SpeechOptions): Promise<Buffer> {
       if (!process.env.ELEVENLABS_API_KEY) {
           console.warn("ElevenLabsAdapter: No API Key, using mock audio.");
           return Buffer.from("mock-audio-mp3");
       }
 
       try {
+        const style = options?.style;
         const stability = style === 'emotional' ? 0.35 : 0.7;
         const response = await this.client.textToSpeech.convert(
             process.env.ELEVENLABS_VOICE_ID || 'pNInz6obpgDQGcFmaJgB',
@@ -68,7 +69,8 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
           return {
               text: transcription.text,
               confidence: 0.95, // High confidence for Whisper
-              normalizedText: normalizeSpeech(transcription.text)
+              normalizedText: normalizeSpeech(transcription.text),
+              segments: [] // OpenAI verbose_json might have segments but for now we skip mapping them strictly
           };
         } catch (e) {
              console.warn("ElevenLabsAdapter: OpenAI Whisper failed, falling back.", e);

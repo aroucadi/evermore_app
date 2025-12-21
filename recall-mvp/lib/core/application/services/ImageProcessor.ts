@@ -1,6 +1,7 @@
 import { ImagePort, ImageAnalysisRequest, ImageAnalysisResult, ImageGenerationRequest, ImageGenerationResult } from '../ports/ImagePort';
 import { WellbeingGuard } from '../agent/safety/WellbeingGuard';
 import { RiskSeverity } from '../agent/safety/WellbeingGuard';
+import { EmotionCategory, EmotionIntensity, EmotionalState } from '../agent/persona/EmpathyEngine';
 
 export class ImageProcessor {
     constructor(
@@ -8,18 +9,31 @@ export class ImageProcessor {
         private wellbeingGuard: WellbeingGuard
     ) { }
 
+    private getDefaultEmotionalState(): EmotionalState {
+        return {
+            primaryEmotion: EmotionCategory.NEUTRAL,
+            confidence: 1.0,
+            intensity: EmotionIntensity.LOW,
+            triggers: [],
+            valence: 0,
+            arousal: 0,
+            needsSupport: false,
+            recommendEscalation: false,
+            analysisDetails: {
+                textSignals: [],
+                combinedScore: 0,
+                timestamp: Date.now()
+            }
+        };
+    }
+
     /**
      * Analyzes an image while ensuring safety and senior-specific context.
      */
     async analyzeImage(request: ImageAnalysisRequest): Promise<ImageAnalysisResult> {
         // Simple safety check on the prompt if provided
         if (request.prompt) {
-            const safetyAssessment = this.wellbeingGuard.assessWellbeing(request.prompt, {
-                primaryEmotion: 'neutral',
-                confidence: 1.0,
-                intensity: 0.5,
-                triggers: []
-            });
+            const safetyAssessment = this.wellbeingGuard.assessWellbeing(request.prompt, this.getDefaultEmotionalState());
 
             if (safetyAssessment.overallRisk === RiskSeverity.HIGH || safetyAssessment.overallRisk === RiskSeverity.CRITICAL) {
                 return {
@@ -34,12 +48,7 @@ export class ImageProcessor {
 
         // Post-analysis safety check on the description
         if (result.description) {
-            const descriptionAssessment = this.wellbeingGuard.assessWellbeing(result.description, {
-                primaryEmotion: 'neutral',
-                confidence: 1.0,
-                intensity: 0.5,
-                triggers: []
-            });
+            const descriptionAssessment = this.wellbeingGuard.assessWellbeing(result.description, this.getDefaultEmotionalState());
 
             if (descriptionAssessment.overallRisk === RiskSeverity.HIGH || descriptionAssessment.overallRisk === RiskSeverity.CRITICAL) {
                 return {
@@ -59,12 +68,7 @@ export class ImageProcessor {
      */
     async generateImage(request: ImageGenerationRequest): Promise<ImageGenerationResult> {
         // Safety check on generation prompt
-        const safetyAssessment = this.wellbeingGuard.assessWellbeing(request.prompt, {
-            primaryEmotion: 'neutral',
-            confidence: 1.0,
-            intensity: 0.5,
-            triggers: []
-        });
+        const safetyAssessment = this.wellbeingGuard.assessWellbeing(request.prompt, this.getDefaultEmotionalState());
 
         if (safetyAssessment.overallRisk === RiskSeverity.HIGH || safetyAssessment.overallRisk === RiskSeverity.CRITICAL) {
             throw new Error(`Image generation blocked: ${safetyAssessment.riskJustification}`);
