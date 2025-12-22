@@ -524,11 +524,39 @@ Think step by step, use tools when needed, and provide final answers.`;
     ): Promise<void> {
         tracer.startSpan('task_decomposition');
 
-        // For now, we skip complex decomposition and go straight to planning
-        // In the future, this would use AoT to break down complex goals
-        await sm.transition('TASK_DECOMPOSED');
-        tracer.logTransition(AgentPhase.DECOMPOSING_TASK, AgentPhase.PLANNING, 'TASK_DECOMPOSED');
-        tracer.endSpan('OK');
+        try {
+            // Attempt a simple decomposition for complex queries
+            if (goal.length > 200) {
+                 const decompPrompt = `
+You are an expert planner. Break down the user's complex request into a list of high-level sub-goals.
+
+USER REQUEST: "${goal}"
+
+Output a JSON array of strings representing the sub-goals in order.
+Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
+`;
+                 const decision = await this.callLLMWithRouting(decompPrompt, TaskComplexity.REASONING);
+                 let subgoals: string[] = [];
+                 try {
+                     // Try to parse JSON, sometimes LLMs wrap in markdown
+                     const cleaned = decision.result.replace(/```json|```/g, '').trim();
+                     subgoals = JSON.parse(cleaned);
+                     sm.setIntermediateResult('subgoals', subgoals);
+                     tracer.recordEvent('task_decomposed', { count: subgoals.length });
+                 } catch (e) {
+                     console.warn('Failed to parse decomposition, proceeding with monolithic goal.', e);
+                 }
+            }
+
+            await sm.transition('TASK_DECOMPOSED');
+            tracer.logTransition(AgentPhase.DECOMPOSING_TASK, AgentPhase.PLANNING, 'TASK_DECOMPOSED');
+            tracer.endSpan('OK');
+        } catch (error) {
+            console.error('Task decomposition failed:', error);
+            // Non-fatal, just proceed to planning with original goal
+            await sm.transition('TASK_DECOMPOSED');
+            tracer.endSpan('ERROR', (error as Error).message);
+        }
     }
 
     /**

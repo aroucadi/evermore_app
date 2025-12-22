@@ -58,7 +58,8 @@ export class StepExecutor implements IStepExecutor {
         }
 
         // 3. Validation Layer
-        if (success) {
+        // Skip validation for Final Answer, as it's typically just a text blob or simple object
+        if (success && step.action !== 'Final Answer') {
             const validation = this.validateResult(output, step.expectedOutputType);
             if (!validation.valid) {
                 success = false;
