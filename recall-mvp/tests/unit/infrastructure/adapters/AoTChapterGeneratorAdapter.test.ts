@@ -10,6 +10,7 @@ describe("AoTChapterGeneratorAdapter", () => {
     mockLLM = {
       generateText: vi.fn(),
       generateJson: vi.fn(),
+      analyzeImage: vi.fn(),
     };
     generator = new AoTChapterGeneratorAdapter(mockLLM);
   });
@@ -25,11 +26,11 @@ describe("AoTChapterGeneratorAdapter", () => {
     // Mock successful LLM responses for each atom
     (mockLLM.generateText as any).mockResolvedValue("A summer road trip in 1969.");
     (mockLLM.generateJson as any).mockImplementation(async (prompt: string) => {
-        if (prompt.includes("best quotes")) return { quotes: [{ text: "We were young", reason: "Youth" }] };
-        if (prompt.includes("sensory details")) return { sensoryDetails: [{ phrase: "smell of salt", sense: "smell" }] };
-        if (prompt.includes("emotional valence")) return { emotion: "nostalgia", confidence: 0.9 };
-        if (prompt.includes("connections")) return { connections: [] };
-        return {};
+      if (prompt.includes("best quotes")) return { quotes: [{ text: "We were young", reason: "Youth" }] };
+      if (prompt.includes("sensory details")) return { sensoryDetails: [{ phrase: "smell of salt", sense: "smell" }] };
+      if (prompt.includes("emotional valence")) return { emotion: "nostalgia", confidence: 0.9 };
+      if (prompt.includes("connections")) return { connections: [] };
+      return {};
     });
 
     const atoms = await generator.decomposeTranscript(mockTranscript, []);
@@ -55,16 +56,16 @@ describe("AoTChapterGeneratorAdapter", () => {
   });
 
   it("should handle LLM failures gracefully in decomposition", async () => {
-      // Mock failure for narrative arc
-      (mockLLM.generateText as any).mockRejectedValue(new Error("API Error"));
+    // Mock failure for narrative arc
+    (mockLLM.generateText as any).mockRejectedValue(new Error("API Error"));
 
-      // Mock success for others to ensure partial failure handling
-      (mockLLM.generateJson as any).mockResolvedValue({});
+    // Mock success for others to ensure partial failure handling
+    (mockLLM.generateJson as any).mockResolvedValue({});
 
-      const atoms = await generator.decomposeTranscript(mockTranscript, []);
+    const atoms = await generator.decomposeTranscript(mockTranscript, []);
 
-      // Narrative arc should have fallback
-      expect(atoms.narrativeArc).toBeDefined();
-      expect(atoms.narrativeArc).toBe('Memory'); // Implementation fallback
+    // Narrative arc should have fallback
+    expect(atoms.narrativeArc).toBeDefined();
+    expect(atoms.narrativeArc).toBe('Memory'); // Implementation fallback
   });
 });

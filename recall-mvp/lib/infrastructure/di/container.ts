@@ -42,6 +42,7 @@ import { AIServicePort } from '../../core/application/ports/AIServicePort';
 import { LLMPort } from '../../core/application/ports/LLMPort';
 
 const useMocks = process.env.USE_MOCKS === 'true';
+const llmProvider_env = process.env.LLM_PROVIDER || 'auto'; // 'huggingface', 'google_ai', 'vertex', 'auto', 'mock'
 
 // Singletons
 export const userRepository = new DrizzleUserRepository();
@@ -60,16 +61,78 @@ export const speechProvider = isHuggingFace
     ? hfAdapter
     : new ElevenLabsAdapter(hfAdapter); // Inject fallback STT provider
 
+// --- LLM PROVIDER SELECTION ---
+// Priority: explicit LLM_PROVIDER > USE_MOCKS > auto-detect based on available keys
+import { GoogleAIStudioAdapter } from '../adapters/ai/GoogleAIStudioAdapter';
+import { HuggingFaceLLMAdapter } from '../adapters/ai/HuggingFaceLLMAdapter';
 
+function selectLLMProvider() {
+    // Explicit mock mode
+    if (useMocks) {
+        console.log('[DI] Using MockLLM (USE_MOCKS=true)');
+        return new MockLLM();
+    }
 
-export const llmProvider = useMocks
-    ? new MockLLM()
-    : new GoogleVertexAdapter();
+    // Explicit provider selection
+    switch (llmProvider_env) {
+        case 'huggingface':
+            console.log('[DI] Using HuggingFaceLLMAdapter (FREE - Mistral/Llama)');
+            return new HuggingFaceLLMAdapter();
+        case 'google_ai':
+            console.log('[DI] Using GoogleAIStudioAdapter (FREE Gemini API)');
+            return new GoogleAIStudioAdapter();
+        case 'vertex':
+            console.log('[DI] Using GoogleVertexAdapter (requires GCP billing)');
+            return new GoogleVertexAdapter();
+        case 'mock':
+            console.log('[DI] Using MockLLM');
+            return new MockLLM();
+        case 'auto':
+        default:
+            // Auto-detect: prefer free options
+            if (process.env.GOOGLE_AI_API_KEY) {
+                console.log('[DI] Auto-selected GoogleAIStudioAdapter (GOOGLE_AI_API_KEY found)');
+                return new GoogleAIStudioAdapter();
+            }
+            if (process.env.HUGGINGFACE_API_KEY) {
+                console.log('[DI] Auto-selected HuggingFaceLLMAdapter (HUGGINGFACE_API_KEY found)');
+                return new HuggingFaceLLMAdapter();
+            }
+            if (process.env.GOOGLE_CLOUD_PROJECT) {
+                console.log('[DI] Auto-selected GoogleVertexAdapter (GOOGLE_CLOUD_PROJECT found)');
+                return new GoogleVertexAdapter();
+            }
+            // Fallback to mock
+            console.log('[DI] No LLM API keys found, using MockLLM. Set HUGGINGFACE_API_KEY for free LLM access.');
+            return new MockLLM();
+    }
+}
+
+export const llmProvider = selectLLMProvider();
 
 export const embeddingProvider = new GoogleEmbeddingAdapter(process.env.GOOGLE_PROJECT_ID || 'mock-project');
 
-// Services wired with strict DI
-export const vectorStore = useMocks ? new MockVectorStore() : new PineconeStore(embeddingProvider);
+// --- VECTOR STORE SELECTION ---
+// Priority: PINECONE_API_KEY → PineconeStore, else → InMemoryVectorStore
+import { InMemoryVectorStore } from '../adapters/vector/InMemoryVectorStore';
+
+function selectVectorStore() {
+    if (useMocks) {
+        console.log('[DI] Using MockVectorStore (USE_MOCKS=true)');
+        return new MockVectorStore();
+    }
+
+    if (process.env.PINECONE_API_KEY) {
+        console.log('[DI] Using PineconeStore (PINECONE_API_KEY found)');
+        return new PineconeStore(embeddingProvider);
+    }
+
+    // Local development: use in-memory store
+    console.log('[DI] Using InMemoryVectorStore (no PINECONE_API_KEY - local dev mode)');
+    return new InMemoryVectorStore();
+}
+
+export const vectorStore = selectVectorStore();
 export const emailService = useMocks ? new MockEmailService() : new ResendEmailService();
 
 // AoT needs LLM

@@ -1,5 +1,6 @@
 import { LLMPort } from '../../../core/application/ports/LLMPort';
 import { VertexAI, GenerativeModel, Part } from '@google-cloud/vertexai';
+import { JsonParser } from '../../../core/application/utils/JsonParser';
 
 export class GoogleVertexAdapter implements LLMPort {
     private vertexAI: VertexAI;
@@ -61,6 +62,7 @@ export class GoogleVertexAdapter implements LLMPort {
     }
 
     async generateJson<T>(prompt: string, schema?: any, options?: { model?: string; maxTokens?: number; temperature?: number }): Promise<T> {
+        // Use JSON mode if model supports it (Gemini 1.5 Pro does)
         const jsonModel = this.vertexAI.getGenerativeModel({
             model: options?.model || 'gemini-1.5-pro-001',
             generationConfig: {
@@ -70,22 +72,24 @@ export class GoogleVertexAdapter implements LLMPort {
             }
         });
 
+
         try {
             const result = await jsonModel.generateContent({
                 contents: [{ role: 'user', parts: [{ text: prompt }] }]
             });
 
             const text = result.response.candidates?.[0].content.parts[0].text || "{}";
-            return JSON.parse(text) as T;
+            // Even in JSON mode, we might get unexpected wrapping
+            return JsonParser.parse<T>(text);
         } catch (e) {
-            console.warn("GoogleVertexAdapter: JSON mode failed, falling back to text parsing", e);
+            console.warn("GoogleVertexAdapter: JSON mode failed or parsing error", e);
+            // Fallback: Force text mode with explicit instruction
             const text = await this.generateText(`${prompt}\n\nOutput strictly valid JSON.`, options);
             try {
-                const cleanJson = text.replace(/```json\n?|\n?```/g, '').trim();
-                return JSON.parse(cleanJson) as T;
+                return JsonParser.parse<T>(text);
             } catch (parseError) {
                 console.error("GoogleVertexAdapter: Failed to parse JSON", text);
-                throw new Error("Failed to parse JSON from LLM");
+                throw new Error("Failed to parse JSON from LLM: " + text.substring(0, 100));
             }
         }
     }

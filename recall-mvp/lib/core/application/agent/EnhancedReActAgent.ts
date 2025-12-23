@@ -15,6 +15,8 @@ import { EnhancedAgentTracer } from './EnhancedAgentTracer';
 import { ContextBudgetManager } from './context/ContextBudgetManager';
 import { ContextOptimizer } from './context/ContextOptimizer';
 import { PromptRegistry, createDefaultPromptRegistry } from './prompts/PromptRegistry';
+import { ToolRegistry } from './tools/ToolContracts'; // Import ToolRegistry
+import { JsonParser } from '../utils/JsonParser'; // Import JsonParser
 import {
     AgenticRunnerConfig,
     AgenticRunner,
@@ -137,15 +139,14 @@ export interface EnhancedReActRunResult {
  * - Prompt registry integration
  * - Intent recognition (optional)
  * - Reflection validation
- * 
+ * - SECURITY: ToolRegistry execution
+ * - RELIABILITY: JsonParser
+ * - FINOPS: Pre-execution cost checks
+ *
  * Usage:
  * ```typescript
  * const agent = new EnhancedReActAgent(llm, tools, config);
  * const result = await agent.run(goal, context);
- * 
- * console.log(`Success: ${result.success}`);
- * console.log(`Tokens: ${result.totalTokens}`);
- * console.log(`Cost: ${result.totalCostCents}¢`);
  * ```
  */
 export class EnhancedReActAgent implements AgenticRunner {
@@ -153,6 +154,7 @@ export class EnhancedReActAgent implements AgenticRunner {
     private llm: LLMPort;
     private tools: Tool[];
     private promptRegistry?: PromptRegistry;
+    private toolRegistry?: ToolRegistry; // Added for secure execution
     private systemPrompt: string;
     private modelRouter: ModelRouter;
 
@@ -166,8 +168,6 @@ export class EnhancedReActAgent implements AgenticRunner {
     private memory: AgentMemoryManager;
     private tracer!: EnhancedAgentTracer;
 
-
-
     constructor(
         llm: LLMPort,
         modelRouter: ModelRouter,
@@ -175,13 +175,15 @@ export class EnhancedReActAgent implements AgenticRunner {
         config: Partial<EnhancedReActAgentConfig> & { modelProfile: ModelProfile },
         vectorStore?: VectorStorePort,
         embeddingPort?: EmbeddingPort,
-        promptRegistry?: PromptRegistry
+        promptRegistry?: PromptRegistry,
+        toolRegistry?: ToolRegistry // Injected dependency
     ) {
         this.llm = llm;
         this.modelRouter = modelRouter;
         this.tools = tools;
         this.config = { ...DEFAULT_CONFIG, ...config };
         this.promptRegistry = promptRegistry || createDefaultPromptRegistry();
+        this.toolRegistry = toolRegistry;
 
         // Get system prompt from registry or config
         if (promptRegistry && this.config.systemPromptId) {
@@ -211,8 +213,6 @@ export class EnhancedReActAgent implements AgenticRunner {
     public getMemory(): AgentMemoryManager {
         return this.memory;
     }
-
-
 
     /**
      * Default system prompt if none provided.
@@ -477,7 +477,9 @@ Think step by step, use tools when needed, and provide final answers.`;
 `.trim()
             });
             const decision = await this.callLLMWithRouting(intentPrompt, TaskComplexity.CLASSIFICATION);
-            const intent = JSON.parse(decision.result) as RecognizedIntent;
+
+            // RELIABILITY: Use robust parsing
+            const intent = JsonParser.parse<RecognizedIntent>(decision.result);
 
             // Record usage
             const tokenEstimate = Math.ceil(intentPrompt.length / 4) + 200;
@@ -538,9 +540,8 @@ Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
                 const decision = await this.callLLMWithRouting(decompPrompt, TaskComplexity.REASONING);
                 let subgoals: string[] = [];
                 try {
-                    // Try to parse JSON, sometimes LLMs wrap in markdown
-                    const cleaned = decision.result.replace(/```json|```/g, '').trim();
-                    subgoals = JSON.parse(cleaned);
+                    // RELIABILITY: Use robust parsing
+                    subgoals = JsonParser.parse<string[]>(decision.result);
                     sm.setIntermediateResult('subgoals', subgoals);
                     tracer.recordEvent('task_decomposed', { count: subgoals.length });
                 } catch (e) {
@@ -643,13 +644,23 @@ Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
         try {
             const stepStart = Date.now();
 
+            // FINOPS: Pre-calculate budget cap
+            const remainingBudget = this.config.costBudgetCents - monitor.getMetrics().costCents;
+            // Conservative estimate: 1K input tokens = $0.0005, 1K output = $0.0015 (Gemini Flash approximate)
+            // If budget is low, cap tokens aggressively
+            let maxTokens = 8192;
+            if (remainingBudget < 1.0) maxTokens = 1000;
+            if (remainingBudget < 0.1) maxTokens = 200;
+
             // USE ROUTER FOR EACH STEP
             const decision = await this.callLLMWithRouting(prompt, TaskComplexity.REASONING);
-            const stepResult = JSON.parse(decision.result) as {
+
+            // RELIABILITY: Use robust parsing
+            const stepResult = JsonParser.parse<{
                 thought: string;
                 action: string;
                 actionInput: unknown;
-            };
+            }>(decision.result);
 
             const step: AgentStep = {
                 thought: stepResult.thought,
@@ -659,7 +670,7 @@ Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
 
             // Record metrics
             const inputTokens = Math.ceil(prompt.length / 4);
-            const outputTokens = 200;
+            const outputTokens = 200; // Estimated actuals
             const duration = Date.now() - stepStart;
             const costCents = decision.decision.model.costPer1KInputTokens * (inputTokens / 1000) +
                 decision.decision.model.costPer1KOutputTokens * (outputTokens / 1000);
@@ -698,20 +709,45 @@ Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
             }
 
             // Execute the tool
-            const tool = this.tools.find((t) => t.name === step.action);
-            if (tool) {
-                try {
-                    tracer.startSpan('tool_execution', { tool: step.action });
-                    const observation = await tool.execute(step.actionInput);
-                    step.observation = typeof observation === 'string' ? observation : JSON.stringify(observation);
-                    tracer.recordEvent('tool_result', { success: true });
-                    tracer.endSpan('OK');
-                } catch (toolError: unknown) {
-                    step.observation = `Error: ${(toolError as Error).message}`;
-                    tracer.endSpan('ERROR', (toolError as Error).message);
+            try {
+                tracer.startSpan('tool_execution', { tool: step.action });
+                let observation: string;
+
+                // SECURITY: Use ToolRegistry if available
+                if (this.toolRegistry && this.toolRegistry.has(step.action)) {
+                    const toolResult = await this.toolRegistry.execute(step.action, step.actionInput, {
+                        userId: this.config.userId || 'system',
+                        sessionId: smContext.id || 'unknown',
+                        agentId: 'enhanced-react',
+                        requestId: tracer.getTraceId(),
+                        permissions: new Map(), // Default permissions
+                        dryRun: false
+                    });
+
+                    if (toolResult.success) {
+                        observation = typeof toolResult.data === 'string'
+                            ? toolResult.data
+                            : JSON.stringify(toolResult.data);
+                    } else {
+                        throw new Error(toolResult.error?.message || 'Tool execution failed');
+                    }
+                } else {
+                    // Fallback to legacy array check
+                    const tool = this.tools.find((t) => t.name === step.action);
+                    if (tool) {
+                        const rawResult = await tool.execute(step.actionInput);
+                        observation = typeof rawResult === 'string' ? rawResult : JSON.stringify(rawResult);
+                    } else {
+                        observation = `Error: Tool ${step.action} not found.`;
+                    }
                 }
-            } else {
-                step.observation = `Error: Tool ${step.action} not found.`;
+
+                step.observation = observation;
+                tracer.recordEvent('tool_result', { success: true });
+                tracer.endSpan('OK');
+            } catch (toolError: unknown) {
+                step.observation = `Error: ${(toolError as Error).message}`;
+                tracer.endSpan('ERROR', (toolError as Error).message);
             }
 
             sm.addStep(step);

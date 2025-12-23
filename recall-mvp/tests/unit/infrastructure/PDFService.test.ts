@@ -7,7 +7,7 @@ describe('PDFService', () => {
         const chapters = [
             { title: 'Chapter 1', content: 'This is the content of chapter 1.' }
         ];
-        const photos = [];
+        const photos: any[] = [];
 
         const buffer = await service.generateBook(chapters, photos);
 

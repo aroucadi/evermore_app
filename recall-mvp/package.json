@@ -7,13 +7,20 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:e2e": "playwright test",
     "test:coverage": "vitest run --coverage",
     "seed": "tsx scripts/seed.ts",
-    "migrate": "drizzle-kit push"
+    "migrate": "drizzle-kit push",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio",
+    "docker:dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d",
+    "docker:db": "docker-compose up db -d",
+    "docker:down": "docker-compose down"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.28.0",

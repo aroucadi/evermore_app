@@ -18,6 +18,8 @@ import { AgentContext, AgentStep } from '../types';
  * Context carried through state machine transitions.
  */
 export interface StateMachineContext {
+    /** Unique ID for this execution context */
+    id?: string;
     /** Original goal */
     goal: string;
     /** Agent context */

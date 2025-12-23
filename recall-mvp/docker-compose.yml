@@ -1,3 +1,19 @@
+# Docker Compose - PRODUCTION
+#
+# ⚠️ SECURITY: This configuration is for PRODUCTION deployment.
+# For local development, use: docker-compose -f docker-compose.dev.yml up
+#
+# REQUIRED ENVIRONMENT VARIABLES:
+#   - JWT_SECRET: Strong secret for session signing (min 32 chars)
+#   - NEXTAUTH_SECRET: Same as JWT_SECRET or another strong secret
+#   - GOOGLE_AI_API_KEY: API key for LLM (or HUGGINGFACE_API_KEY)
+#
+# USAGE:
+#   export JWT_SECRET=$(openssl rand -base64 32)
+#   export NEXTAUTH_SECRET=$(openssl rand -base64 32)
+#   export GOOGLE_AI_API_KEY=your-google-ai-api-key
+#   docker-compose up
+
 services:
   app:
     build:
@@ -8,11 +24,21 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/recall_mvp
-      - USE_MOCKS=true
+      - DATABASE_URL=postgres://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/recall_mvp
+      # SECURITY: Mocks MUST be disabled in production
+      - USE_MOCKS=false
       - NODE_ENV=production
-      - NEXTAUTH_SECRET=dev_secret_key_123
-      - NEXTAUTH_URL=http://localhost:3000
+      # SECURITY: These MUST be provided via environment
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET is required for production}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required for production}
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
+      # LLM: At least one provider MUST be configured
+      - LLM_PROVIDER=${LLM_PROVIDER:-google_ai}
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY:-}
+      - HUGGINGFACE_API_KEY=${HUGGINGFACE_API_KEY:-}
+      # Observability
+      - LOG_LEVEL=warn
+      - METRICS_TOKEN=${METRICS_TOKEN:-}
     depends_on:
       db:
         condition: service_healthy
@@ -40,7 +66,7 @@ services:
     networks:
       - recall_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 5s
       timeout: 5s
       retries: 5

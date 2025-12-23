@@ -8,7 +8,7 @@ import { Chapter } from '@/lib/core/domain/entities/Chapter';
 describe('ChapterRepository Interface', () => {
   const mockChapterRepo: ChapterRepository = {
     create: vi.fn(async (chapter) => chapter),
-    findBySessionId: vi.fn(async () => []),
+    findByUserId: vi.fn(async () => []),
     findById: vi.fn(async (id) => new Chapter(id, 's-1', 'u-1', 'Title', 'Content', 'Excerpt', new Date())),
     findByEntity: vi.fn(async () => [])
   };
