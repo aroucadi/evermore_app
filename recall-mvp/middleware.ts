@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { verifySession } from '@/lib/auth/jwt';
 
 // Routes that require authentication
-const PROTECTED_ROUTES = ['/api/users', '/api/chat', '/api/cron'];
+const PROTECTED_ROUTES = ['/api/users', '/api/chat'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

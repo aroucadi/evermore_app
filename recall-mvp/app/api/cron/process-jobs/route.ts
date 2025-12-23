@@ -1,12 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateChapterUseCase, jobRepository } from '@/lib/infrastructure/di/container';
+import { timingSafeEqual } from 'crypto';
 
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
 
-  // Security: Ensure CRON_SECRET is set and matches the header
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  // Security: Ensure CRON_SECRET is set
+  if (!cronSecret) {
+    console.error('CRON_SECRET is not defined');
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+  }
+
+  // Security: Use constant-time comparison to prevent timing attacks
+  const expectedHeader = `Bearer ${cronSecret}`;
+  const inputBuffer = Buffer.from(authHeader || '');
+  const expectedBuffer = Buffer.from(expectedHeader);
+
+  let authorized = false;
+  try {
+    if (inputBuffer.length === expectedBuffer.length) {
+      authorized = timingSafeEqual(inputBuffer, expectedBuffer);
+    }
+  } catch {
+    // Ignore errors during comparison
+  }
+
+  if (!authorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -40,6 +60,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ processed: results.length, results });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Cron job execution failed:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
