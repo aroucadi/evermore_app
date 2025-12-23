@@ -527,7 +527,7 @@ Think step by step, use tools when needed, and provide final answers.`;
         try {
             // Attempt a simple decomposition for complex queries
             if (goal.length > 200) {
-                 const decompPrompt = `
+                const decompPrompt = `
 You are an expert planner. Break down the user's complex request into a list of high-level sub-goals.
 
 USER REQUEST: "${goal}"
@@ -535,17 +535,17 @@ USER REQUEST: "${goal}"
 Output a JSON array of strings representing the sub-goals in order.
 Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
 `;
-                 const decision = await this.callLLMWithRouting(decompPrompt, TaskComplexity.REASONING);
-                 let subgoals: string[] = [];
-                 try {
-                     // Try to parse JSON, sometimes LLMs wrap in markdown
-                     const cleaned = decision.result.replace(/```json|```/g, '').trim();
-                     subgoals = JSON.parse(cleaned);
-                     sm.setIntermediateResult('subgoals', subgoals);
-                     tracer.recordEvent('task_decomposed', { count: subgoals.length });
-                 } catch (e) {
-                     console.warn('Failed to parse decomposition, proceeding with monolithic goal.', e);
-                 }
+                const decision = await this.callLLMWithRouting(decompPrompt, TaskComplexity.REASONING);
+                let subgoals: string[] = [];
+                try {
+                    // Try to parse JSON, sometimes LLMs wrap in markdown
+                    const cleaned = decision.result.replace(/```json|```/g, '').trim();
+                    subgoals = JSON.parse(cleaned);
+                    sm.setIntermediateResult('subgoals', subgoals);
+                    tracer.recordEvent('task_decomposed', { count: subgoals.length });
+                } catch (e) {
+                    console.warn('Failed to parse decomposition, proceeding with monolithic goal.', e);
+                }
             }
 
             await sm.transition('TASK_DECOMPOSED');
@@ -703,7 +703,7 @@ Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
                 try {
                     tracer.startSpan('tool_execution', { tool: step.action });
                     const observation = await tool.execute(step.actionInput);
-                    step.observation = observation;
+                    step.observation = typeof observation === 'string' ? observation : JSON.stringify(observation);
                     tracer.recordEvent('tool_result', { success: true });
                     tracer.endSpan('OK');
                 } catch (toolError: unknown) {

@@ -176,7 +176,7 @@ export class ModelRouter {
         const candidates = Array.from(this.models.values()).filter(m => m.available);
 
         // Filter by quality
-        let filtered = candidates.filter(m => (m.qualityScores[task] || 0) >= (budget.minQuality || 0));
+        const filtered = candidates.filter(m => (m.qualityScores[task] || 0) >= (budget.minQuality || 0));
 
         // Budget Awareness: If budget is very low (< 5 cents), force FLASH tier if possible
         if (budget.totalCostRemaining !== undefined && budget.totalCostRemaining < 5) {

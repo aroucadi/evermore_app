@@ -5,7 +5,7 @@
  * Command: npx ts-node tests/verify_agent.ts
  */
 
-import { MockLLM } from './mocks/MockLLM';
+import { MockLLM } from '../lib/infrastructure/adapters/mocks/MockLLM';
 import { AgentOrchestrator } from '../lib/core/application/agent/orchestration/AgentOrchestrator';
 import { Tool, AgentContext } from '../lib/core/application/agent/types';
 import { IntentType } from '../lib/core/application/agent/primitives/AgentPrimitives';

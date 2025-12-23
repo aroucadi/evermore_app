@@ -1,44 +1,162 @@
 # Future Tech Recommendations
 
-**Date:** 2024-05-22
+**Date:** 2024-12-23 (Updated)  
+**Priority Framework:** Recommendations ordered by strategic impact and dependency chains.
 
-This document outlines strategic recommendations for the evolution of the Recall platform. These recommendations are **deferred** for the current MVP release to prioritize stability and speed of delivery, but should be considered for the next major milestone (V2).
+This document outlines strategic recommendations for evolving the Recall platform beyond MVP. These are **consciously deferred** to prioritize launch velocity.
 
-## 1. Technology Stack Stabilization
+---
 
-**Current State:** Next.js 16 (Canary/Beta) + React 19.
-**Risk:** Potential instability in production; breaking changes in minor updates; limited community support for edge cases.
+## Priority Matrix
 
-**Recommendation:**
-*   **Trigger:** If we encounter inexplicable rendering bugs or compiler crashes in production.
-*   **Action:** Downgrade to the latest LTS release of Next.js (v15 or v14) and React 18.
-*   **Why Deferred:** The current features (Server Actions, Compiler) are utilized in the codebase. Rewriting to remove them now would destabilize the MVP launch.
+| Priority | Category | Trigger for Action |
+|:---:|:---|:---|
+| 🔴 P0 | Security/Compliance | Legal requirement or breach |
+| 🟠 P1 | Reliability | Production incidents or scale issues |
+| 🟡 P2 | Developer Experience | Onboarding friction or tech debt cost |
+| 🟢 P3 | Future Growth | Strategic opportunity or market pressure |
 
-## 2. Authentication & Identity
+---
 
-**Current State:** Custom/MVP session handling.
-**Risk:** Maintenance burden; security complexity.
+## 🔴 P0: Security & Compliance
 
-**Recommendation:**
-*   **Trigger:** Post-MVP launch or Requirement for multi-tenancy/Social Login.
-*   **Action:** Migrate to a managed Auth provider like **Clerk**, **NextAuth.js (Auth.js)**, or **Supabase Auth**.
-*   **Benefit:** Out-of-the-box handling of MFA, Session management, and OAuth providers.
+### 1.1 Managed Authentication Provider
+**Current State:** Custom JWT with `jose` library.  
+**Risk:** Maintenance burden; security complexity for MFA/OAuth.
 
-## 3. Asynchronous Worker Architecture
+| Trigger | Action | Options |
+|:---|:---|:---|
+| Requirement for Social Login, MFA, or multi-tenancy | Migrate to managed auth | **Clerk**, Auth.js (NextAuth v5), Supabase Auth |
 
-**Current State:** Next.js API Routes + Cron.
-**Risk:** Timeout limitations on serverless functions; loss of jobs during restarts.
+**Benefits:**
+- Built-in MFA, session management, OAuth providers
+- SOC 2 compliance documentation out-of-the-box
+- Reduced attack surface
 
-**Recommendation:**
-*   **Trigger:** Long-running jobs (book generation) failing due to timeouts.
-*   **Action:** Extract worker logic to a dedicated service (e.g., Temporal.io, BullMQ on Redis, or separate Node.js worker service).
-*   **Benefit:** Reliable execution of long-running AI workflows.
+### 1.2 Full Input Validation with Zod
+**Current State:** Whitelist approach for profile updates.  
+**Risk:** Inconsistent validation; harder to maintain as API surface grows.
 
-## 4. Observability & Monitoring
+| Trigger | Action |
+|:---|:---|
+| Adding new API endpoints | Implement Zod schemas at all API boundaries |
 
-**Current State:** Structured Logs (File/Console).
-**Risk:** limited visibility into distributed traces across AI services.
+```typescript
+// Example migration pattern
+const updateProfileSchema = z.object({
+  displayName: z.string().min(2).max(50).optional(),
+  bio: z.string().max(500).optional(),
+});
+```
 
-**Recommendation:**
-*   **Trigger:** Difficulty debugging latency or failures in production.
-*   **Action:** Integrate a dedicated observability platform (Datadog, Honeycomb, or OpenTelemetry with Prometheus/Grafana).
+---
+
+## 🟠 P1: Reliability & Scale
+
+### 2.1 Asynchronous Worker Architecture
+**Current State:** Next.js API Routes + Vercel Cron (60s timeout).  
+**Risk:** Long-running AI jobs (book generation, video rendering) will timeout.
+
+| Trigger | Action | Options |
+|:---|:---|:---|
+| Timeouts on book generation | Extract to dedicated worker | **Temporal.io**, BullMQ + Redis, Inngest |
+
+```
+┌─────────────────┐     ┌──────────────┐     ┌───────────────┐
+│  Next.js API    │────▶│  Job Queue   │────▶│  Worker Pod   │
+│  (Fast Insert)  │     │  (Redis)     │     │  (No Timeout) │
+└─────────────────┘     └──────────────┘     └───────────────┘
+```
+
+### 2.2 Rate Limiting & Circuit Breakers
+**Current State:** No rate limiting on API or AI provider calls.  
+**Risk:** Cost explosion from abuse; cascading failures from provider outages.
+
+| Trigger | Action |
+|:---|:---|
+| Unexplained cost spikes or provider errors | Add rate limits + circuit breakers |
+
+**Recommended Stack:**
+- `upstash/ratelimit` for edge-compatible API rate limiting
+- `cockatiel` or `opossum` for circuit breaker pattern
+
+### 2.3 Observability Platform
+**Current State:** Structured JSON logs to stdout.  
+**Risk:** Limited visibility into distributed traces across AI services.
+
+| Trigger | Action | Options |
+|:---|:---|:---|
+| Difficulty debugging latency or silent failures | Integrate observability platform | **Datadog**, Honeycomb, OpenTelemetry + Grafana |
+
+**Key Instrumentation Targets:**
+- Agent loop execution time (`EnhancedReActAgent`)
+- LLM token usage per request
+- Voice provider latency (ElevenLabs vs HuggingFace)
+
+---
+
+## 🟡 P2: Developer Experience
+
+### 3.1 Technology Stack Stabilization
+**Current State:** Next.js 16 (Canary) + React 19.  
+**Risk:** Breaking changes; limited community support for edge cases.
+
+| Trigger | Action |
+|:---|:---|
+| Inexplicable rendering bugs or compiler crashes | Downgrade to Next.js 15 LTS + React 18 |
+
+**Why Deferred:** Server Actions and the React Compiler are actively used. Migration now would destabilize launch.
+
+### 3.2 Monorepo Tooling
+**Current State:** Single package with nested lib/ structure.  
+**Risk:** Build times grow; unclear dependency boundaries.
+
+| Trigger | Action |
+|:---|:---|
+| Team size > 3 or build > 2 minutes | Migrate to **Turborepo** or **Nx** |
+
+### 3.3 API Documentation (OpenAPI)
+**Current State:** No formal API spec.  
+**Risk:** Hard to onboard new developers; no client SDK generation.
+
+| Trigger | Action |
+|:---|:---|
+| External API consumers or mobile app | Generate OpenAPI spec with `zod-to-openapi` |
+
+---
+
+## 🟢 P3: Future Growth
+
+### 4.1 Multi-Modal Input Expansion
+**Current State:** Voice + Image triggers.  
+**Opportunity:** Video memories, document scanning, location triggers.
+
+| Trigger | Action |
+|:---|:---|
+| User demand for video memories | Add video processing pipeline (FFmpeg + Gemini Vision) |
+
+### 4.2 Personalized AI Model Fine-Tuning
+**Current State:** Zero-shot prompting with Gemini/GPT.  
+**Opportunity:** User-specific writing style through fine-tuning.
+
+| Trigger | Action |
+|:---|:---|
+| Premium tier with personalization demand | Implement LoRA fine-tuning on user data |
+
+### 4.3 Offline-First Mobile Architecture
+**Current State:** Web-only, requires connectivity.  
+**Opportunity:** Native apps with local LLM inference (MLX, llamafile).
+
+| Trigger | Action |
+|:---|:---|
+| Mobile app strategic priority | Implement React Native + on-device inference |
+
+---
+
+## Decision Log
+
+| Date | Decision | Rationale |
+|:---|:---|:---|
+| 2024-12 | Keep Next.js 16 | Server Actions flow is critical; no blockers hit |
+| 2024-12 | Custom JWT over Clerk | Faster MVP iteration; migration path clear |
+| 2024-12 | Whitelist over Zod | Time constraint; added to V2 roadmap |

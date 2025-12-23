@@ -1,6 +1,6 @@
 import { AgentEvaluator } from '../../lib/core/application/agent/evaluation/AgentEvaluator';
 import { EnhancedReActAgent } from '../../lib/core/application/agent/EnhancedReActAgent';
-import { MockLLM } from '../unit/core/application/agent/mocks/LLMPort.mock';
+import { MockLLM } from '../../lib/infrastructure/adapters/mocks/MockLLM';
 import { ModelRouter } from '../../lib/core/application/agent/routing/ModelRouter';
 
 /**

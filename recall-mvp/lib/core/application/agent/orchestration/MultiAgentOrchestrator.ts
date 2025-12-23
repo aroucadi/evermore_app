@@ -243,7 +243,7 @@ export class MultiAgentOrchestrator {
         const stageResults: AgentStageResult[] = [];
         const messages: AgentMessage[] = [];
 
-        let transferredContext: TransferredContext = {
+        const transferredContext: TransferredContext = {
             goal,
             observations: [],
             keyFacts: [],

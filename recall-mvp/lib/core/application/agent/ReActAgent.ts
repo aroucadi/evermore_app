@@ -24,8 +24,8 @@ export class ReActAgent {
     // 0. PLAN (AoT)
     let plan: AgentPlan | undefined;
     if (goal.length > 50) { // Simple heuristic: Plan for complex queries
-        plan = await this.planner.createPlan(goal, context);
-        if (tracer) tracer.logStep({ thought: "Created Plan", action: "Plan", actionInput: plan, observation: "Plan Created" });
+      plan = await this.planner.createPlan(goal, context);
+      if (tracer) tracer.logStep({ thought: "Created Plan", action: "Plan", actionInput: plan, observation: "Plan Created" });
     }
 
     const steps: AgentStep[] = [];
@@ -35,7 +35,7 @@ export class ReActAgent {
       .map((t) => `${t.name}: ${t.description} (Schema: ${JSON.stringify(t.schema)})`)
       .join('\n');
 
-    let history = `
+    const history = `
 GOAL: ${goal}
 ${plan ? `PLAN: ${JSON.stringify(plan.steps)}` : ''}
 CONTEXT SUMMARY:
@@ -83,9 +83,9 @@ OUTPUT FORMAT:
       } catch (e) {
         console.error("ReAct Agent failed to reason", e);
         return {
-           finalAnswer: "I'm sorry, I'm having trouble processing that right now.",
-           steps,
-           success: false
+          finalAnswer: "I'm sorry, I'm having trouble processing that right now.",
+          steps,
+          success: false
         };
       }
 
@@ -112,7 +112,7 @@ OUTPUT FORMAT:
       if (tool) {
         try {
           const observation = await tool.execute(step.actionInput);
-          step.observation = observation;
+          step.observation = typeof observation === 'string' ? observation : JSON.stringify(observation);
           steps.push(step);
         } catch (e: any) {
           step.observation = `Error: ${e.message}`;

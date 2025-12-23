@@ -10,7 +10,7 @@
  * @module ContextManager
  */
 
-import { AgentContext } from '../../types';
+import { AgentContext } from '../types';
 
 export interface ContextConfig {
     maxTotalTokens: number;
