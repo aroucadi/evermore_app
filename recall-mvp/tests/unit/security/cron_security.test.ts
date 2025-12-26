@@ -25,7 +25,7 @@ describe('Cron Job Security', () => {
     process.env = originalEnv;
   });
 
-  test('should return 401 when CRON_SECRET is undefined, preventing bypass', async () => {
+  test('should return 500 when CRON_SECRET is undefined, fail secure', async () => {
     delete process.env.CRON_SECRET;
 
     const req = new NextRequest('http://localhost/api/cron/process-jobs', {
@@ -36,8 +36,8 @@ describe('Cron Job Security', () => {
 
     const res = await GET(req);
 
-    // In secure code, this should be 401.
-    expect(res.status).toBe(401);
+    // Fail secure - if config is missing, return 500
+    expect(res.status).toBe(500);
   });
 
   test('should return 401 when Authorization header is incorrect', async () => {

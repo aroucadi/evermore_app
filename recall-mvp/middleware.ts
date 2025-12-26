@@ -7,6 +7,7 @@ import { verifySession } from '@/lib/auth/jwt';
 const PUBLIC_ROUTES = [
     '/api/auth/login',
     '/api/health',
+    '/api/cron',
 ];
 
 /**
