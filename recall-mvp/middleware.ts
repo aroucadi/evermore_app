@@ -7,6 +7,7 @@ import { verifySession } from '@/lib/auth/jwt';
 const PUBLIC_ROUTES = [
     '/api/auth/login',
     '/api/health',
+    '/api/cron', // Cron endpoints handle their own authentication via CRON_SECRET
 ];
 
 /**
