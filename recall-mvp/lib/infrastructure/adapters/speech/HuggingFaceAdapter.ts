@@ -40,9 +40,9 @@ export class HuggingFaceAdapter implements SpeechPort {
     async speechToText(audioBuffer: Buffer, contentType: string): Promise<SpeechToTextResult> {
         if (!this.apiKey) {
             return {
-                text: "Mock transcription from HuggingFace",
-                confidence: 1.0,
-                normalizedText: "Mock transcription from HuggingFace",
+                text: "[System Alert: Speech API Key is missing. Transcription disabled.]",
+                confidence: 0.0,
+                normalizedText: "[System Alert: Speech API Key is missing. Transcription disabled.]",
                 segments: []
             };
         }

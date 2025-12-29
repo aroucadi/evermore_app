@@ -1,10 +1,16 @@
 import { LLMPort } from '../../../core/application/ports/LLMPort';
 
 interface StorybookAtoms {
-  keyMoments: Array<{moment: string; importance: number; reasoning: string}>;
+  keyMoments: Array<{ moment: string; importance: number; reasoning: string }>;
   visualElements: string[];
-  narrativeBeats: Array<{beat: string; pageRange: string; purpose: string}>;
-  characterDetails: {name: string; age: string; physicalDescription: string; clothingStyle: string; personalityTraits: string};
+  narrativeBeats: Array<{ beat: string; pageRange: string; purpose: string }>;
+  characterDetails: { name: string; age: string; physicalDescription: string; clothingStyle: string; personalityTraits: string };
+  // S1 hardening: Explicit emotional tone preservation
+  emotionalTone: {
+    primaryEmotion: string;
+    emotionalArc: string;
+    preservationNotes: string[];
+  };
 }
 
 class AoTStorybookGenerator {
@@ -56,7 +62,7 @@ RULES:
 `;
 
     try {
-      const parsed = await this.llm.generateJson<{moments: any[]}>(prompt);
+      const parsed = await this.llm.generateJson<{ moments: any[] }>(prompt);
       return parsed.moments || [];
     } catch (e) {
       console.error("AoT identifyKeyMoments failed", e);
@@ -100,7 +106,7 @@ RULES:
 `;
 
     try {
-      const parsed = await this.llm.generateJson<{visualElements: string[]}>(prompt);
+      const parsed = await this.llm.generateJson<{ visualElements: string[] }>(prompt);
       return parsed.visualElements || [];
     } catch (e) {
       console.error("AoT extractVisualElements failed", e);
@@ -148,7 +154,7 @@ RULES:
 - Must cover entire story (no gaps)
 `;
     try {
-      const parsed = await this.llm.generateJson<{beats: any[]}>(prompt);
+      const parsed = await this.llm.generateJson<{ beats: any[] }>(prompt);
       return parsed.beats || [];
     } catch (e) {
       console.error("AoT defineNarrativeBeats failed", e);
@@ -197,11 +203,63 @@ EXAMPLE OUTPUT:
 }
 `;
     try {
-      const parsed = await this.llm.generateJson<{character: any}>(prompt);
+      const parsed = await this.llm.generateJson<{ character: any }>(prompt);
       return parsed.character || {};
     } catch (e) {
       console.error("AoT extractCharacterDetails failed", e);
       return {};
+    }
+  }
+
+  /**
+   * ATOM 5 (S1 HARDENING): Extract Emotional Tone
+   * Preserves the emotional context that can be lost across LLM transformations.
+   */
+  async extractEmotionalTone(childrensStory: string, adultChapter: string): Promise<{ primaryEmotion: string; emotionalArc: string; preservationNotes: string[] }> {
+    const prompt = `
+You are analyzing the emotional content of a story to ensure it is preserved in illustrations.
+
+ORIGINAL ADULT CHAPTER:
+${adultChapter.substring(0, 2000)}
+
+CHILDREN'S ADAPTATION:
+${childrensStory.substring(0, 2000)}
+
+TASK: Identify the emotional core that MUST be preserved in visual adaptation.
+
+OUTPUT FORMAT (JSON):
+{
+  "emotionalTone": {
+    "primaryEmotion": "the dominant feeling (e.g., 'bittersweet nostalgia', 'quiet pride', 'deep grief')",
+    "emotionalArc": "how the emotion changes through the story (e.g., 'fear to courage to relief')",
+    "preservationNotes": [
+      "MUST SHOW: specific emotional moment to preserve",
+      "AVOID: emotional interpretation that would be wrong",
+      "KEY QUOTE: verbatim text that carries emotional weight"
+    ]
+  }
+}
+
+RULES:
+- Use the ORIGINAL adult chapter as the source of truth for emotion
+- Note any places where the children's adaptation may have softened the emotion
+- Be specific about what facial expressions/body language should convey
+- Flag any emotions that could be misinterpreted visually
+`;
+    try {
+      const parsed = await this.llm.generateJson<{ emotionalTone: any }>(prompt);
+      return parsed.emotionalTone || {
+        primaryEmotion: 'not specified',
+        emotionalArc: 'not specified',
+        preservationNotes: []
+      };
+    } catch (e) {
+      console.error("AoT extractEmotionalTone failed", e);
+      return {
+        primaryEmotion: 'not specified',
+        emotionalArc: 'not specified',
+        preservationNotes: []
+      };
     }
   }
 
@@ -219,19 +277,22 @@ EXAMPLE OUTPUT:
       keyMoments,
       visualElements,
       narrativeBeats,
-      characterDetails
+      characterDetails,
+      emotionalTone
     ] = await Promise.all([
       this.identifyKeyMoments(childrensStory),
       this.extractVisualElements(childrensStory),
       this.defineNarrativeBeats(childrensStory),
-      this.extractCharacterDetails(adultChapter)
+      this.extractCharacterDetails(adultChapter),
+      this.extractEmotionalTone(childrensStory, adultChapter) // S1 hardening
     ]);
 
     return {
       keyMoments,
       visualElements,
       narrativeBeats,
-      characterDetails
+      characterDetails,
+      emotionalTone
     };
   }
 
@@ -251,7 +312,7 @@ You are creating a 6-page illustrated children's storybook using atomic story el
 ATOMIC INPUTS:
 
 KEY MOMENTS (ranked by importance):
-${atoms.keyMoments.map((m, i) => `${i+1}. ${m.moment} (importance: ${m.importance})`).join('\n')}
+${atoms.keyMoments.map((m, i) => `${i + 1}. ${m.moment} (importance: ${m.importance})`).join('\n')}
 
 VISUAL ELEMENTS TO INCLUDE:
 ${atoms.visualElements.join(', ')}
@@ -305,7 +366,7 @@ OUTPUT: JSON with exactly 6 scenes.
 `;
 
     try {
-      const parsed = await this.llm.generateJson<{scenes: any[]}>(prompt, undefined, { maxTokens: 1500 });
+      const parsed = await this.llm.generateJson<{ scenes: any[] }>(prompt, undefined, { maxTokens: 1500 });
       return parsed.scenes || [];
     } catch (e) {
       console.error("AoT synthesizeScenes failed", e);
@@ -319,7 +380,7 @@ OUTPUT: JSON with exactly 6 scenes.
   async generateStorybookScenes(
     childrensStory: string,
     adultChapter: string
-  ): Promise<{scenes: any[]; atoms: StorybookAtoms}> {
+  ): Promise<{ scenes: any[]; atoms: StorybookAtoms }> {
 
     console.log('🚀 Starting AoT Storybook Scene Generation...');
 

@@ -20,7 +20,7 @@ describe('HuggingFaceAdapter', () => {
         const result = await adapter.textToSpeech('Hello world');
 
         expect(global.fetch).toHaveBeenCalledWith(
-            expect.stringContaining('https://api-inference.huggingface.co/models/'),
+            expect.stringContaining('https://router.huggingface.co/'),
             expect.objectContaining({
                 method: 'POST',
                 body: JSON.stringify({ inputs: 'Hello world' })
@@ -37,7 +37,7 @@ describe('HuggingFaceAdapter', () => {
         const result = await adapter.speechToText(audio, 'audio/wav');
 
         expect(global.fetch).toHaveBeenCalledWith(
-            expect.stringContaining('https://api-inference.huggingface.co/models/'),
+            expect.stringContaining('https://router.huggingface.co/'),
             expect.objectContaining({
                 method: 'POST',
                 headers: expect.objectContaining({ 'Content-Type': 'audio/wav' })

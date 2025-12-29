@@ -1,5 +1,6 @@
 import { LLMPort } from '../ports/LLMPort';
 import { VoiceAgentPort } from '../ports/VoiceAgentPort';
+import { Memory } from '../../domain/value-objects/Memory';
 
 // Type definition for Memory if not available in domain/entities yet,
 // strictly it should be imported from domain.
@@ -13,7 +14,7 @@ export interface SessionContext {
     userId: string;
     sessionId: string;
     userName: string;
-    memories: any[]; // TODO: Replace with strict Memory[] type
+    memories: Memory[];
     imageContext?: string;
     topicsAvoid: string[];
     topicsLove: string[];
@@ -31,7 +32,7 @@ export class SessionGoalArchitect {
     constructor(
         private llm: LLMPort,
         private voiceAgent: VoiceAgentPort
-    ) {}
+    ) { }
 
     async determineSessionGoal(context: SessionContext) {
         const { userId, sessionId, userName, memories, imageContext, topicsAvoid, topicsLove } = context;
@@ -78,7 +79,7 @@ OUTPUT FORMAT (JSON):
         } catch (e) {
             console.error("SessionGoalArchitect Chain of Thought failed, falling back to basic prompt.", e);
             // Fallback logic if JSON parsing fails
-             const fallbackPrompt = `
+            const fallbackPrompt = `
                 You are the Director of a biography project. Subject: ${userName}.
                 Memories: ${JSON.stringify(memories.slice(0, 5))}
                 ${topicsAvoid.length > 0 ? `CRITICAL CONSTRAINT - AVOID TOPICS: ${topicsAvoid.join(', ')}` : ''}
@@ -88,11 +89,11 @@ OUTPUT FORMAT (JSON):
                 ${imageContext ? 'GOAL: Explore the story behind the photo.' : 'GOAL: Explore a specific memory in depth.'}
                 Keep it under 30 words.
              `;
-             try {
-                 goal = await this.llm.generateText(fallbackPrompt, { maxTokens: 50 });
-             } catch (fallbackError) {
-                 console.error("SessionGoalArchitect fallback also failed.", fallbackError);
-             }
+            try {
+                goal = await this.llm.generateText(fallbackPrompt, { maxTokens: 50 });
+            } catch (fallbackError) {
+                console.error("SessionGoalArchitect fallback also failed.", fallbackError);
+            }
         }
 
         // 2. Start Voice Agent with this Goal

@@ -1,21 +1,43 @@
 
-import { pgTable, uuid, varchar, text, timestamp, integer, jsonb, boolean, index } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, timestamp, integer, jsonb, boolean, index, pgEnum } from 'drizzle-orm/pg-core';
 
 import { AnyPgColumn } from 'drizzle-orm/pg-core';
+
+// SECURITY: Define role enum for type-safety at DB level
+export const userRoleEnum = pgEnum('user_role', ['senior', 'family']);
 
 // Users Table
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: varchar('name', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).notNull().unique(),
-  role: varchar('role', { length: 50 }).notNull(), // 'senior' | 'family'
+  role: userRoleEnum('role').notNull(), // Now uses enum instead of varchar
   seniorId: uuid('senior_id').references((): AnyPgColumn => users.id),
   phoneNumber: varchar('phone_number', { length: 50 }),
   preferences: jsonb('preferences').$type<{
+    // Conversation Preferences
     conversationSchedule?: string[];
     voiceTone?: string;
     topicsLove?: string[];
     topicsAvoid?: string[];
+
+    // Biographical Information (for AI context)
+    birthYear?: number;
+    gender?: 'male' | 'female' | 'other';
+    location?: string;  // City/Region
+    formerOccupation?: string;
+    aboutMe?: string;
+
+    // Family Information
+    spouseName?: string;
+    childrenCount?: number;
+    grandchildrenCount?: number;
+
+    // Memory Context
+    favoriteDecade?: string;  // e.g., "1960s", "1970s"
+    significantEvents?: string[];  // e.g., ["World War II", "Moon Landing"]
+
+    // Emergency Contact
     emergencyContact?: {
       name: string;
       phoneNumber: string;
@@ -35,8 +57,8 @@ export const users = pgTable('users', {
 // Sessions Table
 export const sessions = pgTable('sessions', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
-  transcriptRaw: text('transcript_raw'), // JSON string of Message[]
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  transcriptRaw: jsonb('transcript_raw'), // JSON array of Message[]
   audioUrl: varchar('audio_url', { length: 512 }),
   duration: integer('duration'), // seconds
   status: varchar('status', { length: 50 }).notNull(), // 'active' | 'completed' | 'failed'
@@ -58,8 +80,8 @@ export const sessions = pgTable('sessions', {
 // Chapters Table
 export const chapters = pgTable('chapters', {
   id: uuid('id').primaryKey().defaultRandom(),
-  sessionId: uuid('session_id').references(() => sessions.id).notNull(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
+  sessionId: uuid('session_id').references(() => sessions.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   title: varchar('title', { length: 512 }).notNull(),
   content: text('content').notNull(), // Markdown
   excerpt: text('excerpt').notNull(),
@@ -87,7 +109,7 @@ export const chapters = pgTable('chapters', {
 // Invitations (Conversations) Table
 export const invitations = pgTable('invitations', {
   id: uuid('id').primaryKey().defaultRandom(),
-  seniorId: uuid('senior_id').references(() => users.id).notNull(),
+  seniorId: uuid('senior_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   scheduledFor: timestamp('scheduled_for').notNull(),
   status: varchar('status', { length: 50 }).notNull().default('pending'), // 'pending' | 'sent' | 'answered' | 'missed' | 'cancelled'
   sentAt: timestamp('sent_at'),
@@ -105,8 +127,8 @@ export const invitations = pgTable('invitations', {
 // Alerts Table
 export const alerts = pgTable('alerts', {
   id: uuid('id').primaryKey().defaultRandom(),
-  seniorId: uuid('senior_id').references(() => users.id).notNull(),
-  sessionId: uuid('session_id').references(() => sessions.id),
+  seniorId: uuid('senior_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  sessionId: uuid('session_id').references(() => sessions.id, { onDelete: 'cascade' }),
   type: varchar('type', { length: 50 }).notNull(), // 'crisis' | 'decline'
   content: text('content').notNull(),
   triggerPhrase: text('trigger_phrase'),
@@ -134,5 +156,58 @@ export const jobs = pgTable('jobs', {
   return {
     statusIdx: index('jobs_status_idx').on(table.status),
     statusCreatedIdx: index('jobs_status_created_idx').on(table.status, table.createdAt),
+  }
+});
+
+// Storybooks Table - Stores generated storybooks from chapters
+export const storybooks = pgTable('storybooks', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  chapterId: uuid('chapter_id').references(() => chapters.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  title: varchar('title', { length: 255 }).notNull(),
+  childrenStory: text('children_story').notNull(),
+  atoms: jsonb('atoms').$type<{
+    keyMoments?: any[];
+    visualElements?: string[];
+    narrativeBeats?: any[];
+    characterDetails?: any;
+  }>(),
+  metadata: jsonb('metadata').$type<{
+    characterName?: string;
+    timePeriod?: string;
+    totalPages?: number;
+    style?: string;
+  }>(),
+  status: varchar('status', { length: 50 }).default('draft').notNull(), // 'draft' | 'complete' | 'exported'
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+}, (table) => {
+  return {
+    chapterIdIdx: index('storybooks_chapter_id_idx').on(table.chapterId),
+    userIdIdx: index('storybooks_user_id_idx').on(table.userId),
+  }
+});
+
+// Storybook Images Table - Stores generated images for storybook pages
+export const storybookImages = pgTable('storybook_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  storybookId: uuid('storybook_id').references(() => storybooks.id, { onDelete: 'cascade' }).notNull(),
+  pageNumber: integer('page_number').notNull(),
+  imageData: text('image_data').notNull(), // Base64 encoded image
+  mimeType: varchar('mime_type', { length: 50 }).notNull(), // 'image/png', 'image/svg+xml'
+  prompt: text('prompt').notNull(), // Original generation prompt
+  layout: varchar('layout', { length: 50 }).notNull(), // 'full-bleed', 'top-image', etc.
+  storyText: text('story_text'), // Text for this page
+  metadata: jsonb('metadata').$type<{
+    model?: string;
+    seed?: number;
+    moment?: string;
+    visualElements?: string[];
+  }>(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
+}, (table) => {
+  return {
+    storybookIdIdx: index('storybook_images_storybook_id_idx').on(table.storybookId),
+    storybookPageIdx: index('storybook_images_page_idx').on(table.storybookId, table.pageNumber),
   }
 });

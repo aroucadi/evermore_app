@@ -19,15 +19,32 @@ async function seed() {
         // Create demo Senior user
         const [seniorUser] = await db.insert(users).values({
             id: '00000000-0000-0000-0000-000000000001',
-            name: 'Arthur',
+            name: 'Arthur Pendelton',
             email: 'arthur@recall.dev',
             role: 'senior',
             phoneNumber: '+1234567890',
             preferences: {
+                // Conversation Preferences
                 voiceTone: 'Warm',
-                topicsLove: ['Childhood', 'Family vacations', 'Career milestones'],
+                topicsLove: ['Childhood', 'Family vacations', 'Career milestones', 'Gardening', 'Classic cars'],
                 topicsAvoid: ['Politics', 'Health concerns'],
-                timezone: 'America/New_York'
+                timezone: 'America/New_York',
+
+                // Biographical Information (for AI context)
+                birthYear: 1945,
+                gender: 'male',
+                location: 'Boston, Massachusetts',
+                formerOccupation: 'History Teacher',
+                aboutMe: 'A retired history teacher with a passion for gardening and classic films. Father of three, grandfather of five.',
+
+                // Family Information
+                spouseName: 'Mary',
+                childrenCount: 3,
+                grandchildrenCount: 5,
+
+                // Memory Context
+                favoriteDecade: '1960s',
+                significantEvents: ['Moon Landing', 'Woodstock', 'Civil Rights Movement']
             }
         }).onConflictDoNothing().returning();
 
@@ -125,7 +142,7 @@ async function seed() {
                     lifePeriod: 'young adult'
                 }
             }
-        ];
+        ] as any[];
 
         for (const chapter of demoChapters) {
             await db.insert(chapters).values(chapter).onConflictDoNothing();

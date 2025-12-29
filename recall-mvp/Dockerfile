@@ -12,10 +12,8 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json* pnpm-lock.yaml* ./
 
-# Install dependencies using pnpm
-# Assuming pnpm is used based on pnpm-lock.yaml
-RUN corepack enable && corepack prepare pnpm@latest --activate
-RUN pnpm i --frozen-lockfile
+# Install dependencies using npm
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -27,11 +25,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # Run build
-RUN corepack enable && corepack prepare pnpm@latest --activate
-# Skip type checking during build for speed in local dev, or enable it if strictness is required.
-# Given "Make the system runnable... No 'works on my machine' gaps", a standard build is safer.
-# However, if there are existing type errors, build might fail. I'll trust the current state or fix errors if they arise.
-RUN pnpm build
+RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner

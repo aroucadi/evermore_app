@@ -1,11 +1,14 @@
 import { UserRepository } from '../../../core/domain/repositories/UserRepository';
 import { User } from '../../../core/domain/entities/User';
+import { SeniorPreferencesSchema, FamilyPreferencesSchema } from '../../../core/application/schemas';
 import { db } from './index';
 import { users } from './schema';
 import { eq } from 'drizzle-orm';
 
 export class DrizzleUserRepository implements UserRepository {
   async create(user: User): Promise<User> {
+    this.validatePreferences(user.role, user.preferences);
+
     const [created] = await db.insert(users).values({
       id: user.id,
       name: user.name,
@@ -30,6 +33,8 @@ export class DrizzleUserRepository implements UserRepository {
   }
 
   async update(user: User): Promise<User> {
+    this.validatePreferences(user.role, user.preferences);
+
     const [updated] = await db.update(users)
       .set({
         name: user.name,
@@ -59,4 +64,19 @@ export class DrizzleUserRepository implements UserRepository {
       raw.updatedAt
     );
   }
+
+  private validatePreferences(role: string, preferences: any): void {
+    // Skip validation if preferences is undefined (new user)
+    if (!preferences) return;
+
+    // DB Integrity Check: Enforce Schema on JSONB Column
+    if (role === 'senior') {
+      const result = SeniorPreferencesSchema.safeParse(preferences);
+      if (!result.success) throw new Error(`DB Integrity Violation: Invalid Senior Preferences - ${JSON.stringify(result.error.flatten())}`);
+    } else if (role === 'family') {
+      const result = FamilyPreferencesSchema.safeParse(preferences);
+      if (!result.success) throw new Error(`DB Integrity Violation: Invalid Family Preferences - ${JSON.stringify(result.error.flatten())}`);
+    }
+  }
+
 }

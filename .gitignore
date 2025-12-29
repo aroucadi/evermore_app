@@ -1,1 +1,38 @@
 node_modules/
+
+# =========================================
+# SECRETS & CREDENTIALS - NEVER COMMIT
+# =========================================
+
+# Environment files
+.env
+.env.*
+*.env
+!.env.example
+
+# Production config files
+PROD_ENV_CONFIG.txt
+*_ENV_CONFIG.txt
+deleteLAter.md
+deleteLater.md
+
+# Google Cloud Service Accounts
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!components.json
+recall-*.json
+
+# Any file with 'secret' or 'key' in name
+*secret*
+*credential*
+
+# Vercel
+.vercel
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

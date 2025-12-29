@@ -40,7 +40,7 @@ export class StepExecutor implements IStepExecutor {
         try {
             if (tool) {
                 // Execute Tool
-                // @ts-ignore - Tool interface compatibility assumption
+                // Execute Tool
                 output = await tool.execute(step.input);
                 success = true;
             } else if (step.action === 'Final Answer') {
@@ -79,8 +79,10 @@ export class StepExecutor implements IStepExecutor {
             success,
             output: output,
             error: errorMsg,
-            tokensUsed: 0, // TODO: Hook up actual token tracking from Tool/LLM
-            costCents: 0, // TODO: Hook up cost tracking
+            // Simple heuristic estimation (4 chars ~= 1 token)
+            // Ideally, LLM/Tool response should provide this.
+            tokensUsed: Math.ceil(((JSON.stringify(step.input).length) + (JSON.stringify(output || '').length)) / 4),
+            costCents: 0, // Placeholder - requires pricing model injection
             durationMs: durationMs,
             trace: {
                 toolName,

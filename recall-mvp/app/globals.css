@@ -400,6 +400,74 @@
   animation: slide-up 0.3s ease-out forwards;
 }
 
+/* Music Bar Animation - for AI speaking indicator */
+@keyframes music-bar {
+  0%, 100% { height: 8px; }
+  50% { height: 16px; }
+}
+
+.animate-music-bar {
+  animation: music-bar 0.6s ease-in-out infinite;
+}
+
+/* Scale In Animation - for chat bubbles */
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out forwards;
+}
+
+/* Fade In Up Animation */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out forwards;
+}
+
+/* Fade In Down Animation - for toasts */
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.3s ease-out forwards;
+}
+
+/* Gentle Pulse - for thinking state */
+@keyframes pulse-gentle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 1.5s ease-in-out infinite;
+}
+
 .mask-fade-top {
   mask-image: linear-gradient(to bottom, transparent, black 20%);
 }

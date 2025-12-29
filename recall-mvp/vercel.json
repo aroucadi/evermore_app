@@ -6,13 +6,6 @@
             "schedule": "*/5 * * * *"
         }
     ],
-    "env": {
-        "DATABASE_URL": "@database-url",
-        "GOOGLE_AI_API_KEY": "@google-ai-api-key",
-        "JWT_SECRET": "@jwt-secret",
-        "NEXTAUTH_SECRET": "@nextauth-secret",
-        "CRON_SECRET": "@cron-secret"
-    },
     "framework": "nextjs",
     "buildCommand": "npm run build",
     "outputDirectory": ".next"

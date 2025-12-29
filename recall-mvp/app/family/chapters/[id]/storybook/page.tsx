@@ -59,7 +59,7 @@ export default function StorybookPage() {
                 <div className="text-center py-20 bg-amber-50 rounded-xl border-2 border-dashed border-amber-200">
                     <h2 className="text-3xl font-bold text-amber-900 mb-4">Turn this Memory into Magic ✨</h2>
                     <p className="text-amber-800 mb-8 max-w-lg mx-auto">
-                        Create a beautifully illustrated children's storybook from this chapter.
+                        Create a beautifully illustrated children's storybook from this story.
                         Perfect for sharing with grandchildren!
                     </p>
                     <Button

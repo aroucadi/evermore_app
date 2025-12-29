@@ -23,12 +23,22 @@ export class DrizzleSessionRepository implements SessionRepository {
   }
 
   async update(session: Session): Promise<void> {
+    console.log('[DrizzleSessionRepository] Updating session:', {
+      sessionId: session.id,
+      transcriptRawType: typeof session.transcriptRaw,
+      transcriptRawIsArray: Array.isArray(session.transcriptRaw),
+      transcriptRawLength: Array.isArray(session.transcriptRaw) ? session.transcriptRaw.length :
+        (typeof session.transcriptRaw === 'string' ? session.transcriptRaw.length : 0),
+    });
+
     await db.update(sessions).set({
       status: session.status,
       transcriptRaw: session.transcriptRaw,
       endedAt: session.endedAt,
       metadata: session.metadata
     }).where(eq(sessions.id, session.id));
+
+    console.log('[DrizzleSessionRepository] Update complete for session:', session.id);
   }
 
   async findByUserId(userId: string, limit: number = 2): Promise<Session[]> {
@@ -41,26 +51,26 @@ export class DrizzleSessionRepository implements SessionRepository {
   }
 
   async findLastSessions(userId: string, count: number): Promise<Session[]> {
-      return this.findByUserId(userId, count);
+    return this.findByUserId(userId, count);
   }
 
   async completeSessionTransaction(sessionId: string): Promise<void> {
     // Transaction: Update Session Status AND Insert Job
     await db.transaction(async (tx) => {
-        await tx.update(sessions)
-            .set({
-                status: 'completed',
-                endedAt: new Date()
-            })
-            .where(eq(sessions.id, sessionId));
+      await tx.update(sessions)
+        .set({
+          status: 'completed',
+          endedAt: new Date()
+        })
+        .where(eq(sessions.id, sessionId));
 
-        await tx.insert(jobs).values({
-            id: randomUUID(),
-            type: 'chapter_generation',
-            status: 'pending',
-            payload: { sessionId },
-            createdAt: new Date()
-        });
+      await tx.insert(jobs).values({
+        id: randomUUID(),
+        type: 'chapter_generation',
+        status: 'pending',
+        payload: { sessionId },
+        createdAt: new Date()
+      });
     });
   }
 

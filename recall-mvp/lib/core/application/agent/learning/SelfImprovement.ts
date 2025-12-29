@@ -183,6 +183,12 @@ export class SelfImprovementManager {
     private suggestions: ImprovementSuggestion[] = [];
     private baselines: Map<string, PerformanceBaseline> = new Map();
 
+    // M5 hardening: Limits to prevent unbounded growth
+    private readonly MAX_EXECUTIONS = 1000;
+    private readonly MAX_PATTERNS = 100;
+    private readonly MAX_SUGGESTIONS = 50;
+    private readonly MAX_AGE_DAYS = 90;
+
     // ============================================================================
     // Execution Recording
     // ============================================================================
@@ -192,6 +198,9 @@ export class SelfImprovementManager {
      */
     recordExecution(record: ExecutionRecord): void {
         this.executions.set(record.id, record);
+
+        // M5 hardening: Auto-prune to prevent unbounded growth
+        this.prune();
 
         // Update baseline
         this.updateBaseline(record);
@@ -700,5 +709,66 @@ export class SelfImprovementManager {
         this.patterns.clear();
         this.suggestions = [];
         this.baselines.clear();
+    }
+
+    /**
+     * M5 hardening: Prune old records to prevent unbounded growth.
+     * Removes records older than MAX_AGE_DAYS and caps total records.
+     */
+    prune(olderThanDays?: number): { prunedExecutions: number; prunedPatterns: number; prunedSuggestions: number } {
+        const maxAgeMs = (olderThanDays ?? this.MAX_AGE_DAYS) * 24 * 60 * 60 * 1000;
+        const cutoffTime = Date.now() - maxAgeMs;
+        let prunedExecutions = 0;
+        let prunedPatterns = 0;
+        let prunedSuggestions = 0;
+
+        // Prune old executions
+        for (const [id, record] of this.executions) {
+            if (record.timestamp < cutoffTime) {
+                this.executions.delete(id);
+                prunedExecutions++;
+            }
+        }
+
+        // Cap executions by count (keep most recent)
+        if (this.executions.size > this.MAX_EXECUTIONS) {
+            const sorted = Array.from(this.executions.entries())
+                .sort((a, b) => b[1].timestamp - a[1].timestamp);
+            const toRemove = sorted.slice(this.MAX_EXECUTIONS);
+            for (const [id] of toRemove) {
+                this.executions.delete(id);
+                prunedExecutions++;
+            }
+        }
+
+        // Prune old patterns
+        for (const [id, pattern] of this.patterns) {
+            if (pattern.updatedAt < cutoffTime) {
+                this.patterns.delete(id);
+                prunedPatterns++;
+            }
+        }
+
+        // Cap patterns by count
+        if (this.patterns.size > this.MAX_PATTERNS) {
+            const sorted = Array.from(this.patterns.entries())
+                .sort((a, b) => b[1].updatedAt - a[1].updatedAt);
+            const toRemove = sorted.slice(this.MAX_PATTERNS);
+            for (const [id] of toRemove) {
+                this.patterns.delete(id);
+                prunedPatterns++;
+            }
+        }
+
+        // Cap suggestions
+        if (this.suggestions.length > this.MAX_SUGGESTIONS) {
+            const removed = this.suggestions.length - this.MAX_SUGGESTIONS;
+            this.suggestions = this.suggestions
+                .sort((a, b) => b.priority - a.priority)
+                .slice(0, this.MAX_SUGGESTIONS);
+            prunedSuggestions = removed;
+        }
+
+        return { prunedExecutions, prunedPatterns, prunedSuggestions };
     }
 }

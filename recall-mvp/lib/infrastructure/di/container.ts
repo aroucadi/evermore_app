@@ -8,7 +8,7 @@ import { DrizzleInvitationRepository } from '../adapters/db/DrizzleInvitationRep
 import { GoogleVertexAdapter } from '../adapters/ai/GoogleVertexAdapter';
 import { GoogleEmbeddingAdapter } from '../adapters/ai/GoogleEmbeddingAdapter';
 import { ElevenLabsAdapter } from '../adapters/speech/ElevenLabsAdapter';
-import { HuggingFaceAdapter } from '../adapters/speech/HuggingFaceAdapter';
+
 import { ManualVoiceAgentAdapter } from '../adapters/speech/ManualVoiceAgentAdapter';
 import { AoTChapterGeneratorAdapter } from '../adapters/ai/AoTChapterGeneratorAdapter';
 import { PineconeStore } from '../adapters/vector/PineconeStore';
@@ -27,6 +27,7 @@ import { MockVectorStore } from '../adapters/mocks/MockVectorStore';
 import { MockEmailService } from '../adapters/mocks/MockEmailService';
 import { MockChapterGeneratorAdapter } from '../adapters/mocks/MockChapterGeneratorAdapter';
 import { MockLLM } from '../adapters/mocks/MockLLM';
+import { MockSpeechAdapter } from '../adapters/mocks/MockSpeechAdapter';
 
 // Use Cases
 import { CreateUserUseCase } from '../../core/application/use-cases/CreateUserUseCase';
@@ -53,21 +54,18 @@ export const jobRepository = new DrizzleJobRepository();
 const invitationRepository = new DrizzleInvitationRepository();
 
 // --- ADAPTERS CONFIGURATION ---
-const isHuggingFace = process.env.SPEECH_PROVIDER === 'huggingface';
-
-// Always instantiate HuggingFaceAdapter as a potential fallback or primary
-const hfAdapter = new HuggingFaceAdapter();
+import { GoogleSpeechAdapter } from '../adapters/speech/GoogleSpeechAdapter';
 
 function selectSpeechProvider() {
-    if (isHuggingFace) {
-        return hfAdapter;
-    }
     try {
-        return new ElevenLabsAdapter(hfAdapter);
+        // Use Google Cloud Speech-to-Text for STT (same billing as Vertex AI)
+        const googleSTT = new GoogleSpeechAdapter();
+        // ElevenLabs for TTS, Google for STT (fallback) and TTS (fallback)
+        return new ElevenLabsAdapter(googleSTT, googleSTT);
     } catch (e: any) {
-        console.warn('[DI] ElevenLabsAdapter failed:', e.message);
-        console.log('[DI] Falling back to HuggingFaceAdapter for speech');
-        return hfAdapter;
+        console.warn('[DI] ElevenLabsAdapter/GoogleSpeechAdapter init failed:', e.message);
+        console.warn('[DI] Falling back to MockSpeechAdapter (Safe for Build/Dev)');
+        return new MockSpeechAdapter();
     }
 }
 
@@ -121,7 +119,15 @@ function selectLLMProvider() {
             return new MockLLM();
         case 'auto':
         default:
-            // Auto-detect: try adapters in order of preference
+            // Auto-detect: try adapters in order of preference (Vertex AI first)
+            if (process.env.GOOGLE_CLOUD_PROJECT) {
+                try {
+                    console.log('[DI] Auto-selected GoogleVertexAdapter (GOOGLE_CLOUD_PROJECT found)');
+                    return new GoogleVertexAdapter();
+                } catch (e: any) {
+                    console.warn('[DI] GoogleVertexAdapter construction failed:', e.message);
+                }
+            }
             if (process.env.GOOGLE_AI_API_KEY) {
                 try {
                     console.log('[DI] Auto-selected GoogleAIStudioAdapter (GOOGLE_AI_API_KEY found)');
@@ -138,14 +144,6 @@ function selectLLMProvider() {
                     console.warn('[DI] HuggingFaceLLMAdapter construction failed:', e.message);
                 }
             }
-            if (process.env.GOOGLE_CLOUD_PROJECT) {
-                try {
-                    console.log('[DI] Auto-selected GoogleVertexAdapter (GOOGLE_CLOUD_PROJECT found)');
-                    return new GoogleVertexAdapter();
-                } catch (e: any) {
-                    console.warn('[DI] GoogleVertexAdapter construction failed:', e.message);
-                }
-            }
             // Fallback to mock
             console.log('[DI] No LLM API keys found or all adapters failed, using MockLLM.');
             return new MockLLM();
@@ -159,7 +157,7 @@ export const llmProvider = selectLLMProvider();
 export const llmGateway: LLMGateway = getLLMGateway(llmProvider);
 
 
-export const embeddingProvider = new GoogleEmbeddingAdapter(process.env.GOOGLE_PROJECT_ID || 'mock-project');
+export const embeddingProvider = new GoogleEmbeddingAdapter(process.env.GOOGLE_CLOUD_PROJECT || 'mock-project');
 
 // --- VECTOR STORE SELECTION ---
 // Priority: PINECONE_API_KEY → PineconeStore, else → InMemoryVectorStore
@@ -184,18 +182,80 @@ function selectVectorStore() {
 export const vectorStore = selectVectorStore();
 export const emailService = useMocks ? new MockEmailService() : new ResendEmailService();
 
-// AoT needs LLM
+// --- IMAGE GENERATION ---
+// Mock for local dev, Google Imagen for production
+import { ImageGenerationPort } from '../../core/application/ports/ImageGenerationPort';
+import { GoogleImagenAdapter } from '../adapters/ai/GoogleImagenAdapter';
+import { MockImageGenerator } from '../adapters/mocks/MockImageGenerator';
+
+function selectImageGenerator(): ImageGenerationPort {
+    // Only use mocks if explicitly requested
+    if (useMocks) {
+        console.log('[DI] Using MockImageGenerator (USE_MOCKS=true)');
+        return new MockImageGenerator();
+    }
+
+    // Production/Staging: try Google Imagen
+    if (process.env.GOOGLE_CLOUD_PROJECT) {
+        console.log('[DI] Using GoogleImagenAdapter (GOOGLE_CLOUD_PROJECT found)');
+        return new GoogleImagenAdapter();
+    }
+
+    // Fallback to mock if no credentials
+    console.log('[DI] Using MockImageGenerator (no GOOGLE_CLOUD_PROJECT)');
+    return new MockImageGenerator();
+}
+
+
+export const imageGenerator = selectImageGenerator();
+
+// AGENTIC Chapter Generator - Uses EnhancedReActAgent with tools
+// Replaces simple LLM wrapper with full agent orchestration
+import { AgenticChapterGenerator } from '../adapters/ai/AgenticChapterGenerator';
+
 export const chapterGenerator = useMocks
     ? new MockChapterGeneratorAdapter()
-    : new AoTChapterGeneratorAdapter(llmProvider);
+    : new AgenticChapterGenerator(llmProvider);
+
+// AGENTIC Storybook Orchestrator - Uses AoT + ReACT + CoT + VectorDB
+import { AgenticStorybookOrchestrator } from '../adapters/storybook/AgenticStorybookOrchestrator';
+export const storybookOrchestrator = new AgenticStorybookOrchestrator(
+    chapterRepository,
+    llmProvider,
+    imageGenerator,
+    vectorStore
+);
+
+// AGENTIC Narration Agent - Emotion-aware TTS preparation
+import { AgenticNarrationAgent } from '../adapters/speech/AgenticNarrationAgent';
+export const narrationAgent = new AgenticNarrationAgent(llmProvider);
+
+// AGENTIC Vision Agent - Context-aware image analysis
+import { AgenticImageAnalysisAgent } from '../adapters/vision/AgenticImageAnalysisAgent';
+export const imageAnalysisAgent = new AgenticImageAnalysisAgent(llmProvider);
 
 export const contentSafetyGuard = new ContentSafetyGuard(llmProvider, emailService, sessionRepository);
 export const pdfService = new PDFService();
 export const userProfileUpdater = new UserProfileUpdater(userRepository);
 
-const voiceAgentProvider = isHuggingFace
+import { AgentMemoryManager } from '../../core/application/agent/memory/AgentMemory';
+import { AgentMemoryPort } from '../../core/application/ports/AgentMemoryPort';
+
+export const agentMemoryFactory = (userId: string): AgentMemoryPort => {
+    return new AgentMemoryManager(
+        userId,
+        vectorStore,
+        embeddingProvider
+    );
+};
+
+export const agentMemoryManager = agentMemoryFactory("system");
+
+// VoiceAgentProvider: Use ManualVoiceAgentAdapter as fallback if ElevenLabs not available
+// SAFETY: Check if speechProvider is actually ElevenLabsAdapter before using its voice agent features
+const voiceAgentProvider = !(speechProvider instanceof ElevenLabsAdapter)
     ? new ManualVoiceAgentAdapter()
-    : (speechProvider as ElevenLabsAdapter);
+    : speechProvider;
 
 export const sessionGoalArchitect = new SessionGoalArchitect(llmProvider, voiceAgentProvider);
 export const invitationScheduler = new InvitationScheduler(userRepository, invitationRepository);
@@ -282,7 +342,9 @@ export const generateChapterUseCase = new GenerateChapterUseCase(
     userRepository,
     chapterGenerator,
     emailService,
-    llmProvider
+    llmProvider,
+    storybookOrchestrator,
+    agentMemoryFactory
 );
 
 export const analyzeSessionImageUseCase = new AnalyzeSessionImageUseCase(

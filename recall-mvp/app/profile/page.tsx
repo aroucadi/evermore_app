@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AppShell } from '@/components/layout/AppShell';
+import { Header } from '@/components/layout/Header';
 
 interface UserProfile {
     userId: string;
@@ -42,7 +43,16 @@ export default function ProfilePage() {
     const [editData, setEditData] = useState({
         displayName: '',
         aboutMe: '',
-        interests: [] as string[]
+        interests: [] as string[],
+        // Biographical fields for AI context
+        birthYear: undefined as number | undefined,
+        gender: undefined as 'male' | 'female' | 'other' | undefined,
+        location: '',
+        formerOccupation: '',
+        spouseName: '',
+        childrenCount: undefined as number | undefined,
+        grandchildrenCount: undefined as number | undefined,
+        favoriteDecade: ''
     });
 
     useEffect(() => {
@@ -81,7 +91,16 @@ export default function ProfilePage() {
                 aboutMe: profile.role === 'senior'
                     ? 'A retired history teacher with a passion for gardening and classic films. Father of three, grandfather of five.'
                     : 'A devoted family member helping to preserve our shared history for future generations.',
-                interests: profile.preferences?.topicsLove || ['Gardening', 'Photography', 'Classical Music', 'History', 'Travel']
+                interests: profile.preferences?.topicsLove || ['Gardening', 'Photography', 'Classical Music', 'History', 'Travel'],
+                // Biographical fields
+                birthYear: undefined,
+                gender: undefined,
+                location: '',
+                formerOccupation: '',
+                spouseName: '',
+                childrenCount: undefined,
+                grandchildrenCount: undefined,
+                favoriteDecade: ''
             });
         }
     }, [profile]);
@@ -212,32 +231,158 @@ export default function ProfilePage() {
                                         className="w-full px-8 py-4 rounded-2xl border-2 border-peach-main/20 focus:border-terracotta focus:outline-none bg-[#FCF8F3]/30 font-medium"
                                         placeholder="Enter your name"
                                     />
-                                    <p className="text-xs text-red-500 font-bold italic opacity-70">Please enter a valid display name.</p>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <label className="block text-sm font-black uppercase tracking-[0.2em] text-text-muted">About Me</label>
-                                    <textarea
-                                        rows={4}
-                                        value={editData.aboutMe}
-                                        onChange={(e) => setEditData({ ...editData, aboutMe: e.target.value })}
-                                        className="w-full px-8 py-5 rounded-2xl border-2 border-peach-main/20 focus:border-terracotta focus:outline-none bg-[#FCF8F3]/30 font-medium resize-none leading-relaxed"
-                                        placeholder="Tell us a bit about yourself"
-                                    />
-                                </div>
+                                {/* Senior-only fields */}
+                                {isSenior && (
+                                    <>
+                                        {/* Biographical Grid */}
+                                        <div className="grid md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-black uppercase tracking-widest text-text-muted">Birth Year</label>
+                                                <input
+                                                    type="number"
+                                                    value={editData.birthYear || ''}
+                                                    onChange={(e) => setEditData({ ...editData, birthYear: e.target.value ? parseInt(e.target.value) : undefined })}
+                                                    className="w-full px-6 py-3 rounded-xl border-2 border-peach-main/20 focus:border-terracotta focus:outline-none bg-[#FCF8F3]/30 font-medium"
+                                                    placeholder="e.g., 1945"
+                                                    min="1900"
+                                                    max={new Date().getFullYear()}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-black uppercase tracking-widest text-text-muted">Gender</label>
+                                                <select
+                                                    value={editData.gender || ''}
+                                                    onChange={(e) => setEditData({ ...editData, gender: e.target.value as 'male' | 'female' | 'other' | undefined || undefined })}
+                                                    className="w-full px-6 py-3 rounded-xl border-2 border-peach-main/20 focus:border-terracotta focus:outline-none bg-[#FCF8F3]/30 font-medium"
+                                                >
+                                                    <option value="">Select...</option>
+                                                    <option value="male">Male</option>
+                                                    <option value="female">Female</option>
+                                                    <option value="other">Other</option>
+                                                </select>
+                                            </div>
+                                        </div>
 
-                                <div className="space-y-4">
-                                    <label className="block text-sm font-black uppercase tracking-[0.2em] text-text-muted">Interests</label>
-                                    <div className="w-full px-8 py-4 rounded-2xl border-2 border-peach-main/20 bg-[#FCF8F3]/30 flex flex-wrap gap-2">
-                                        {editData.interests.map((tag, idx) => (
-                                            <span key={idx} className="px-4 py-1.5 bg-white rounded-full text-sm font-bold text-brown-main shadow-sm flex items-center gap-2 group">
-                                                {tag}
-                                                <button className="material-symbols-outlined text-sm text-text-muted hover:text-red-500">close</button>
-                                            </span>
-                                        ))}
-                                        <button className="px-4 py-1.5 border border-dashed border-peach-main/40 rounded-full text-sm font-bold text-text-muted hover:border-terracotta hover:text-terracotta transition-all">+ Add Interest</button>
+                                        <div className="grid md:grid-cols-2 gap-6">
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-black uppercase tracking-widest text-text-muted">Location</label>
+                                                <input
+                                                    type="text"
+                                                    value={editData.location}
+                                                    onChange={(e) => setEditData({ ...editData, location: e.target.value })}
+                                                    className="w-full px-6 py-3 rounded-xl border-2 border-peach-main/20 focus:border-terracotta focus:outline-none bg-[#FCF8F3]/30 font-medium"
+                                                    placeholder="City, State/Country"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="block text-xs font-black uppercase tracking-widest text-text-muted">Former Occupation</label>
+                                                <input
+                                                    type="text"
+                                                    value={editData.formerOccupation}
+                                                    onChange={(e) => setEditData({ ...editData, formerOccupation: e.target.value })}
+                                                    className="w-full px-6 py-3 rounded-xl border-2 border-peach-main/20 focus:border-terracotta focus:outline-none bg-[#FCF8F3]/30 font-medium"
+                                                    placeholder="e.g., Teacher, Engineer"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Family Section */}
+                                        <div className="space-y-4 pt-4 border-t border-peach-main/10">
+                                            <h4 className="text-sm font-black uppercase tracking-widest text-text-muted flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-lg">family_restroom</span>
+                                                Family Information
+                                            </h4>
+                                            <div className="grid md:grid-cols-3 gap-4">
+                                                <div className="space-y-2">
+                                                    <label className="block text-xs font-bold text-text-muted">Spouse Name</label>
+                                                    <input
+                                                        type="text"
+                                                        value={editData.spouseName}
+                                                        onChange={(e) => setEditData({ ...editData, spouseName: e.target.value })}
+                                                        className="w-full px-4 py-2 rounded-lg border border-peach-main/20 focus:border-terracotta focus:outline-none bg-white/50 text-sm"
+                                                        placeholder="Optional"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="block text-xs font-bold text-text-muted">Children</label>
+                                                    <input
+                                                        type="number"
+                                                        value={editData.childrenCount || ''}
+                                                        onChange={(e) => setEditData({ ...editData, childrenCount: e.target.value ? parseInt(e.target.value) : undefined })}
+                                                        className="w-full px-4 py-2 rounded-lg border border-peach-main/20 focus:border-terracotta focus:outline-none bg-white/50 text-sm"
+                                                        min="0"
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <label className="block text-xs font-bold text-text-muted">Grandchildren</label>
+                                                    <input
+                                                        type="number"
+                                                        value={editData.grandchildrenCount || ''}
+                                                        onChange={(e) => setEditData({ ...editData, grandchildrenCount: e.target.value ? parseInt(e.target.value) : undefined })}
+                                                        className="w-full px-4 py-2 rounded-lg border border-peach-main/20 focus:border-terracotta focus:outline-none bg-white/50 text-sm"
+                                                        min="0"
+                                                        placeholder="0"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Memory Context */}
+                                        <div className="space-y-2">
+                                            <label className="block text-xs font-black uppercase tracking-widest text-text-muted">Favorite Decade</label>
+                                            <select
+                                                value={editData.favoriteDecade}
+                                                onChange={(e) => setEditData({ ...editData, favoriteDecade: e.target.value })}
+                                                className="w-full px-6 py-3 rounded-xl border-2 border-peach-main/20 focus:border-terracotta focus:outline-none bg-[#FCF8F3]/30 font-medium"
+                                            >
+                                                <option value="">Select your favorite era...</option>
+                                                <option value="1940s">1940s</option>
+                                                <option value="1950s">1950s</option>
+                                                <option value="1960s">1960s</option>
+                                                <option value="1970s">1970s</option>
+                                                <option value="1980s">1980s</option>
+                                                <option value="1990s">1990s</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <label className="block text-sm font-black uppercase tracking-[0.2em] text-text-muted">About Me</label>
+                                            <textarea
+                                                rows={4}
+                                                value={editData.aboutMe}
+                                                onChange={(e) => setEditData({ ...editData, aboutMe: e.target.value })}
+                                                className="w-full px-8 py-5 rounded-2xl border-2 border-peach-main/20 focus:border-terracotta focus:outline-none bg-[#FCF8F3]/30 font-medium resize-none leading-relaxed"
+                                                placeholder="Tell us a bit about yourself"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <label className="block text-sm font-black uppercase tracking-[0.2em] text-text-muted">Interests</label>
+                                            <div className="w-full px-8 py-4 rounded-2xl border-2 border-peach-main/20 bg-[#FCF8F3]/30 flex flex-wrap gap-2">
+                                                {editData.interests.map((tag, idx) => (
+                                                    <span key={idx} className="px-4 py-1.5 bg-white rounded-full text-sm font-bold text-brown-main shadow-sm flex items-center gap-2 group">
+                                                        {tag}
+                                                        <button className="material-symbols-outlined text-sm text-text-muted hover:text-red-500">close</button>
+                                                    </span>
+                                                ))}
+                                                <button className="px-4 py-1.5 border border-dashed border-peach-main/40 rounded-full text-sm font-bold text-text-muted hover:border-terracotta hover:text-terracotta transition-all">+ Add Interest</button>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                {/* Family-only message */}
+                                {!isSenior && (
+                                    <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 text-center">
+                                        <span className="material-symbols-outlined text-blue-400 text-3xl mb-2">info</span>
+                                        <p className="text-sm text-blue-600 font-medium">
+                                            As a family member, you can update your display name. For more settings, visit the Settings page.
+                                        </p>
                                     </div>
-                                </div>
+                                )}
 
                                 <div className="pt-6 flex flex-col sm:flex-row gap-4">
                                     <button
@@ -263,26 +408,8 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-[#FCF8F3] font-sans text-text-primary overflow-x-hidden">
-            {/* Custom Header matching mockup */}
-            <header className="h-24 bg-white/40 backdrop-blur-xl flex items-center px-10 border-b border-peach-main/5">
-                <div className="container mx-auto flex justify-between items-center">
-                    <Link href="/" className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-peach-warm to-terracotta rounded-2xl flex items-center justify-center text-white shadow-lg">
-                            <span className="material-symbols-outlined text-3xl filled">mic</span>
-                        </div>
-                        <span className="text-3xl font-serif font-black text-terracotta tracking-tight">ReCall</span>
-                    </Link>
-                    <nav className="hidden lg:flex items-center gap-10">
-                        <Link href="/" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Home</Link>
-                        <Link href="/stories" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">My Stories</Link>
-                        <Link href="/dashboard" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Book Draft</Link>
-                        <div className="bg-peach-main/10 px-6 py-2 rounded-full ring-2 ring-peach-main/20">
-                            <Link href="/profile" className="font-extrabold text-terracotta">Profile</Link>
-                        </div>
-                        <Link href="/settings" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Settings</Link>
-                    </nav>
-                </div>
-            </header>
+            {/* Use shared Header for persona-aware navigation */}
+            <Header />
 
             <main className="container mx-auto py-20 px-6 max-w-7xl">
                 <div className="grid lg:grid-cols-12 gap-16 items-start">
@@ -341,7 +468,7 @@ export default function ProfilePage() {
                                             {chapters.length} <span className="text-2xl font-medium opacity-40">of {TARGET_CHAPTERS}</span>
                                         </div>
                                         <p className="text-xs font-black uppercase tracking-widest text-text-muted mt-1">
-                                            {isSenior ? "Chapters Written" : "Stories Curated"}
+                                            {isSenior ? "Stories Written" : "Stories Curated"}
                                         </p>
                                     </div>
                                 </div>

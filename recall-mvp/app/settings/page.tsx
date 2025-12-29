@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
+import { Header } from '@/components/layout/Header';
 import Link from 'next/link';
 
 interface UserProfile {
@@ -108,26 +109,8 @@ export default function SettingsPage() {
     return (
         <div className="min-h-screen bg-[#FCF8F3] font-sans text-text-primary overflow-x-hidden">
 
-            {/* Premium Header */}
-            <header className="h-24 bg-white/40 backdrop-blur-xl flex items-center px-10 border-b border-peach-main/5">
-                <div className="container mx-auto flex justify-between items-center">
-                    <Link href="/" className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-peach-warm to-terracotta rounded-2xl flex items-center justify-center text-white shadow-lg">
-                            <span className="material-symbols-outlined text-3xl filled">mic</span>
-                        </div>
-                        <span className="text-3xl font-serif font-black text-terracotta tracking-tight">ReCall</span>
-                    </Link>
-                    <nav className="hidden lg:flex items-center gap-10">
-                        <Link href="/" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Home</Link>
-                        <Link href="/stories" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">My Stories</Link>
-                        <Link href="/dashboard" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Book Draft</Link>
-                        <Link href="/profile" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Profile</Link>
-                        <div className="bg-peach-main/10 px-6 py-2 rounded-full ring-2 ring-peach-main/20">
-                            <Link href="/settings" className="font-extrabold text-terracotta">Settings</Link>
-                        </div>
-                    </nav>
-                </div>
-            </header>
+            {/* Use shared Header for persona-aware navigation */}
+            <Header />
 
             <main className="container mx-auto py-20 px-6 max-w-5xl">
 

@@ -35,13 +35,21 @@ export class DrizzleChapterRepository implements ChapterRepository {
     return found ? this.mapToEntity(found) : null;
   }
 
+  async findBySessionId(sessionId: string): Promise<Chapter[]> {
+    const found = await db.select()
+      .from(chapters)
+      .where(eq(chapters.sessionId, sessionId))
+      .orderBy(desc(chapters.createdAt));
+    return found.map(this.mapToEntity);
+  }
+
   async findByEntity(userId: string, entityType: string, entityName: string): Promise<Chapter[]> {
     const found = await db.select()
       .from(chapters)
       .where(
         and(
-            eq(chapters.userId, userId),
-            sql`${chapters.entities} @> ${JSON.stringify([{ type: entityType, name: entityName }])}::jsonb`
+          eq(chapters.userId, userId),
+          sql`${chapters.entities} @> ${JSON.stringify([{ type: entityType, name: entityName }])}::jsonb`
         )
       )
       .orderBy(desc(chapters.createdAt));
@@ -65,4 +73,17 @@ export class DrizzleChapterRepository implements ChapterRepository {
       raw.metadata
     );
   }
+
+  async update(id: string, data: Partial<Pick<Chapter, 'audioHighlightUrl' | 'audioDuration' | 'metadata'>>): Promise<Chapter | null> {
+    const [updated] = await db.update(chapters)
+      .set({
+        audioHighlightUrl: data.audioHighlightUrl,
+        audioDuration: data.audioDuration,
+        metadata: data.metadata,
+      })
+      .where(eq(chapters.id, id))
+      .returning();
+    return updated ? this.mapToEntity(updated) : null;
+  }
 }
+

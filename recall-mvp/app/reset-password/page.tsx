@@ -17,9 +17,14 @@ export default function ResetPasswordPage() {
     setError('');
 
     try {
-      // TODO: Wire to actual password reset API when available
-      // For now, simulate success after a short delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!res.ok) throw new Error('Request failed');
+
       setSuccess(true);
     } catch (err) {
       setError('Failed to send reset link. Please try again.');

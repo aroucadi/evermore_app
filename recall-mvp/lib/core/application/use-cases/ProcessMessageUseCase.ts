@@ -10,6 +10,7 @@ import { CheckSafetyTool } from '../agent/tools/CheckSafetyTool';
 import { ToolRegistry, ToolCapability, ToolPermission } from '../agent/tools/ToolContracts';
 import { ModelRouter, ModelTier, TaskComplexity, ModelProfile, DEFAULT_MODELS } from '../agent/routing/ModelRouter';
 import { HallucinationDetector, GroundTruthSource } from '../safety/HallucinationDetector';
+import { validateEmail } from '../security/InputSanitization';
 import { z } from 'zod';
 
 export class ProcessMessageUseCase {
@@ -61,19 +62,33 @@ export class ProcessMessageUseCase {
       return { text: greeting, strategy: 'greeting' };
     }
 
-    // Save user message
-    transcript.push({
+    // HARDENING: Transcript Atomicity
+    // We build the user message but DON'T save it immediately.
+    // Both user message and agent response will be saved atomically after agent completes.
+    // This prevents orphaned user messages if agent fails mid-execution.
+    const pendingUserMessage = {
       id: `msg-${Date.now()}`,
       speaker,
       text: message,
       timestamp: new Date().toISOString(),
-    });
-    session.transcriptRaw = JSON.stringify(transcript);
-    await this.sessionRepository.update(session);
+    };
+    // Note: We add to local transcript for context but don't persist yet
+    transcript.push(pendingUserMessage);
 
     if (speaker === 'user') {
       const user = await this.userRepository.findById(session.userId);
-      const emergencyContact = user?.preferences?.emergencyContact?.email;
+
+      // HARDENING: Validate emergency contact email before use
+      let emergencyContact: string | undefined;
+      const rawEmergencyEmail = user?.preferences?.emergencyContact?.email;
+      if (rawEmergencyEmail) {
+        const emailValidation = validateEmail(rawEmergencyEmail);
+        if (emailValidation.valid) {
+          emergencyContact = rawEmergencyEmail;
+        } else {
+          console.warn('[ProcessMessageUseCase] Invalid emergency contact email format, safety alerts will not be sent:', emailValidation.error);
+        }
+      }
 
       // Fast check
       const isRisky = await this.contentSafetyGuard.monitor(
@@ -171,7 +186,16 @@ export class ProcessMessageUseCase {
 
       const result = await agent.run(`User said: "${message}". Respond appropriately.`, context);
 
-      let responseText = result.success ? result.finalAnswer : "I'm listening. Please go on.";
+      // Only respond if agent generated a meaningful response
+      // Don't interrupt storytelling with useless filler messages
+      if (!result.success || !result.finalAnswer || result.finalAnswer.trim().length < 10) {
+        // HARDENING: Even for silent listen, save the user message (no agent response)
+        session.transcriptRaw = JSON.stringify(transcript);
+        await this.sessionRepository.update(session);
+        return { text: '', strategy: 'silent_listen' };
+      }
+
+      let responseText = result.finalAnswer;
 
       // 4. HALLUCINATION DETECTION: Validate response against conversation context
       let hallucinationWarning: string | undefined;
@@ -215,6 +239,9 @@ export class ProcessMessageUseCase {
         console.warn('[ProcessMessageUseCase] Hallucination check failed:', hallucinationError);
       }
 
+      // HARDENING: Atomic save - Both user message and agent response saved together
+      // The pending user message was already added to local transcript array above
+      // Now we add the agent response and save everything in one operation
       transcript.push({
         id: `msg-${Date.now() + 1}`,
         speaker: 'agent',

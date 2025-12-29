@@ -17,6 +17,7 @@
 
 import { EmbeddingPort } from '../../ports/EmbeddingPort';
 import { VectorStorePort } from '../../ports/VectorStorePort';
+import { AgentMemoryPort } from '../../ports/AgentMemoryPort';
 
 // ============================================================================
 // Types
@@ -81,6 +82,10 @@ export interface MemoryEntry {
     context?: MemoryContext;
     /** Embedding vector for semantic search */
     embedding?: number[];
+    /** Correctness confidence (0-1, reduced on user corrections) - M2 hardening */
+    correctnessConfidence: number;
+    /** ID of memory that supersedes this one (for correction chains) - A2 hardening */
+    supersededBy?: string;
 }
 
 /**
@@ -185,7 +190,7 @@ export interface MemoryStats {
  * const result = await memory.consolidate();
  * ```
  */
-export class AgentMemoryManager {
+export class AgentMemoryManager implements AgentMemoryPort {
     private userId: string;
     private memories: Map<string, MemoryEntry> = new Map();
     private workingMemory: MemoryEntry[] = [];
@@ -195,10 +200,20 @@ export class AgentMemoryManager {
 
     /** Decay rate per hour */
     private readonly DECAY_RATE = 0.05;
-    /** Working memory capacity */
+    /** Working memory capacity (max items) */
     private readonly WORKING_MEMORY_CAPACITY = 10;
+    /** Working memory size limit in bytes (prevents adversarial large inputs) */
+    private readonly WORKING_MEMORY_MAX_BYTES = 50000; // ~50KB
+    /** Current working memory size in bytes */
+    private workingMemoryBytes = 0;
     /** Forget threshold */
     private readonly FORGET_THRESHOLD = 0.1;
+    /** Maximum related memories to prevent unbounded growth - M1 hardening */
+    private readonly MAX_RELATED_MEMORIES = 20;
+    /** Maximum age in days before decay ceiling applies - M3 hardening */
+    private readonly DECAY_CEILING_AGE_DAYS = 30;
+    /** Maximum decay factor for old memories - M3 hardening */
+    private readonly DECAY_CEILING = 0.8;
 
     constructor(userId: string, vectorStore?: VectorStorePort, embeddingPort?: EmbeddingPort) {
         this.userId = userId;
@@ -213,7 +228,7 @@ export class AgentMemoryManager {
     /**
      * Store a new memory.
      */
-    async store(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'lastAccessedAt' | 'accessCount' | 'decayFactor'>): Promise<MemoryEntry> {
+    async store(entry: Omit<MemoryEntry, 'id' | 'createdAt' | 'lastAccessedAt' | 'accessCount' | 'decayFactor' | 'correctnessConfidence'>): Promise<MemoryEntry> {
         const now = Date.now();
         const memory: MemoryEntry = {
             ...entry,
@@ -222,6 +237,7 @@ export class AgentMemoryManager {
             lastAccessedAt: now,
             accessCount: 1,
             decayFactor: 1.0,
+            correctnessConfidence: 1.0, // Default confidence for new memories
             relatedMemories: entry.relatedMemories || [],
             tags: entry.tags || [],
         };
@@ -272,8 +288,11 @@ export class AgentMemoryManager {
             // Update access stats
             memory.lastAccessedAt = Date.now();
             memory.accessCount++;
-            // Refresh decay on access
-            memory.decayFactor = Math.min(1.0, memory.decayFactor + 0.1);
+            // Refresh decay on access with age-based ceiling - M3 hardening
+            const ageMs = Date.now() - memory.createdAt;
+            const ageDays = ageMs / (1000 * 60 * 60 * 24);
+            const maxDecay = ageDays > this.DECAY_CEILING_AGE_DAYS ? this.DECAY_CEILING : 1.0;
+            memory.decayFactor = Math.min(maxDecay, memory.decayFactor + 0.1);
         }
         return memory;
     }
@@ -324,6 +343,16 @@ export class AgentMemoryManager {
                             // If not in memory (cross-session), we might want to fetch or hydrate it
                             // For now, we simulate hydration from metadata if available
                             if (match.metadata && match.metadata.content) {
+                                // M4 hardening: Don't assign query embedding to hydrated memory
+                                // Re-embed the actual content asynchronously if embedding port available
+                                let hydratedEmbedding: number[] | undefined = undefined;
+                                if (this.embeddingPort) {
+                                    try {
+                                        hydratedEmbedding = await this.embeddingPort.generateEmbedding(match.metadata.content);
+                                    } catch {
+                                        // Leave undefined if re-embedding fails
+                                    }
+                                }
                                 const hydrated: MemoryEntry = {
                                     id: match.id,
                                     content: match.metadata.content,
@@ -336,7 +365,8 @@ export class AgentMemoryManager {
                                     decayFactor: 1.0,
                                     relatedMemories: [],
                                     source: 'vector-store',
-                                    embedding: queryEmbedding, // Incorrect but placeholder or re-embed
+                                    embedding: hydratedEmbedding, // M4 fix: use correct content embedding
+                                    correctnessConfidence: 1.0, // Default confidence
                                 };
                                 this.memories.set(hydrated.id, hydrated);
                                 results.push(hydrated);
@@ -427,19 +457,57 @@ export class AgentMemoryManager {
     // ============================================================================
 
     /**
-     * Add to working memory.
+     * Add to working memory with size limits.
      */
     private addToWorkingMemory(memory: MemoryEntry): void {
-        // Remove if already present
-        this.workingMemory = this.workingMemory.filter((m) => m.id !== memory.id);
+        const memorySize = this.estimateMemoryBytes(memory);
+
+        // Check if this single memory exceeds max (safety guard)
+        if (memorySize > this.WORKING_MEMORY_MAX_BYTES) {
+            console.warn(`[AgentMemory] Memory entry ${memory.id} exceeds max size (${memorySize} bytes), truncating`);
+            // Truncate content to fit within limits
+            const maxContentLength = Math.floor(this.WORKING_MEMORY_MAX_BYTES * 0.8); // 80% for content
+            memory.content = memory.content.substring(0, maxContentLength) + '... [truncated]';
+        }
+
+        // Remove if already present and adjust byte count
+        const existing = this.workingMemory.find((m) => m.id === memory.id);
+        if (existing) {
+            this.workingMemoryBytes -= this.estimateMemoryBytes(existing);
+            this.workingMemory = this.workingMemory.filter((m) => m.id !== memory.id);
+        }
 
         // Add to front
         this.workingMemory.unshift(memory);
+        this.workingMemoryBytes += this.estimateMemoryBytes(memory);
 
-        // Enforce capacity
-        if (this.workingMemory.length > this.WORKING_MEMORY_CAPACITY) {
-            this.workingMemory = this.workingMemory.slice(0, this.WORKING_MEMORY_CAPACITY);
+        // Enforce capacity (item count)
+        while (this.workingMemory.length > this.WORKING_MEMORY_CAPACITY) {
+            const removed = this.workingMemory.pop();
+            if (removed) {
+                this.workingMemoryBytes -= this.estimateMemoryBytes(removed);
+            }
         }
+
+        // Enforce byte limit (evict oldest if over limit)
+        while (this.workingMemoryBytes > this.WORKING_MEMORY_MAX_BYTES && this.workingMemory.length > 0) {
+            const removed = this.workingMemory.pop();
+            if (removed) {
+                this.workingMemoryBytes -= this.estimateMemoryBytes(removed);
+                console.warn(`[AgentMemory] Evicted memory ${removed.id} to enforce byte limit`);
+            }
+        }
+    }
+
+    /**
+     * Estimate memory entry size in bytes.
+     */
+    private estimateMemoryBytes(memory: MemoryEntry): number {
+        // Approximate: content + tags + some overhead
+        const contentBytes = new TextEncoder().encode(memory.content).length;
+        const tagsBytes = memory.tags.reduce((sum, tag) => sum + tag.length, 0);
+        const overheadBytes = 200; // Fixed overhead for other fields
+        return contentBytes + tagsBytes + overheadBytes;
     }
 
     /**
@@ -454,6 +522,7 @@ export class AgentMemoryManager {
      */
     clearWorkingMemory(): void {
         this.workingMemory = [];
+        this.workingMemoryBytes = 0;
     }
 
     /**
@@ -496,12 +565,15 @@ export class AgentMemoryManager {
                 if (word.length > 3 && newWords.has(word)) similarity += 1;
             }
 
-            // Link if similarity is high enough
+            // Link if similarity is high enough, with M1 cap on relatedMemories
             if (similarity >= 3) {
-                if (!newMemory.relatedMemories.includes(id)) {
+                // M1 hardening: Cap relatedMemories to prevent unbounded growth
+                if (!newMemory.relatedMemories.includes(id) &&
+                    newMemory.relatedMemories.length < this.MAX_RELATED_MEMORIES) {
                     newMemory.relatedMemories.push(id);
                 }
-                if (!existing.relatedMemories.includes(newMemory.id)) {
+                if (!existing.relatedMemories.includes(newMemory.id) &&
+                    existing.relatedMemories.length < this.MAX_RELATED_MEMORIES) {
                     existing.relatedMemories.push(newMemory.id);
                 }
             }

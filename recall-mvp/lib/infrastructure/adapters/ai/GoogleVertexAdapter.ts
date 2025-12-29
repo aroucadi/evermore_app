@@ -29,7 +29,7 @@ export class GoogleVertexAdapter implements LLMPort {
         this.vertexAI = new VertexAI({ project, location });
 
         this.model = this.vertexAI.getGenerativeModel({
-            model: 'gemini-2.0-flash-lite-preview-02-05',
+            model: 'gemini-2.0-flash-001',
             generationConfig: {
                 maxOutputTokens: 8192,
                 temperature: 0.7,
@@ -37,13 +37,13 @@ export class GoogleVertexAdapter implements LLMPort {
         });
 
         this.visionModel = this.vertexAI.getGenerativeModel({
-            model: 'gemini-2.0-flash-lite-preview-02-05',
+            model: 'gemini-2.0-flash-001',
         });
     }
 
     private getModel(modelId?: string): GenerativeModel {
         return this.vertexAI.getGenerativeModel({
-            model: modelId || 'gemini-2.0-flash-lite-preview-02-05',
+            model: modelId || 'gemini-2.0-flash-001',
             generationConfig: {
                 maxOutputTokens: 8192,
                 temperature: 0.7,
@@ -77,7 +77,7 @@ export class GoogleVertexAdapter implements LLMPort {
         options?: { model?: string; maxTokens?: number; temperature?: number }
     ): Promise<T> {
         const jsonModel = this.vertexAI.getGenerativeModel({
-            model: options?.model || 'gemini-2.0-flash-lite-preview-02-05',
+            model: options?.model || 'gemini-2.0-flash-001',
             generationConfig: {
                 responseMimeType: "application/json",
                 maxOutputTokens: options?.maxTokens || 8192,

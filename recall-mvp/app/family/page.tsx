@@ -13,16 +13,8 @@ interface Chapter {
    imageUrl?: string;
 }
 
-interface UserProfile {
-   userId: string;
-   role: string;
-   displayName: string;
-   seniorId?: string;
-   preferences?: {
-      topicsAvoid?: string[];
-      topicsLove?: string[];
-   };
-}
+import { UserProfileDTO } from '@/lib/core/dtos/UserProfile';
+interface UserProfile extends UserProfileDTO { }
 
 // Fallback images for chapters without images
 const FALLBACK_IMAGES = [
@@ -53,6 +45,26 @@ export default function FamilyPortalPage() {
    const [error, setError] = useState('');
    const [exporting, setExporting] = useState(false);
    const [exportStatus, setExportStatus] = useState<'idle' | 'success' | 'error'>('idle');
+   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+   // Toggle story selection for storybook creation
+   const toggleSelection = (id: string) => {
+      setSelectedIds(prev => {
+         const next = new Set(prev);
+         if (next.has(id)) {
+            next.delete(id);
+         } else {
+            next.add(id);
+         }
+         return next;
+      });
+   };
+
+   const handleCreateStorybook = () => {
+      if (selectedIds.size === 0) return;
+      const ids = Array.from(selectedIds);
+      window.location.href = `/storybook/create?ids=${ids.join(',')}`;
+   };
 
    // Export Book as PDF
    const handleExportBook = async () => {
@@ -100,6 +112,13 @@ export default function FamilyPortalPage() {
                throw new Error('Failed to fetch profile');
             }
             const profileData = await profileRes.json();
+
+            // SECURITY: Enforce Persona
+            if (profileData.role !== 'family') {
+               window.location.href = '/dashboard'; // Redirect seniors to their dashboard
+               return;
+            }
+
             setProfile(profileData);
             setTopicsToAvoid(profileData.preferences?.topicsAvoid || []);
 
@@ -219,9 +238,11 @@ export default function FamilyPortalPage() {
                   </div>
                   <div className="flex-shrink-0">
                      <button
-                        className="bg-terracotta text-white px-10 py-5 rounded-full font-bold shadow-xl shadow-terracotta/20 hover:scale-105 transition-all duration-300 active:scale-95"
+                        disabled
+                        className="bg-terracotta/50 text-white px-10 py-5 rounded-full font-bold shadow-xl shadow-terracotta/10 cursor-not-allowed opacity-70"
+                        title="Coming soon - Feature in development"
                      >
-                        Invite Family
+                        Invite Family (Coming Soon)
                      </button>
                   </div>
                </div>
@@ -247,11 +268,23 @@ export default function FamilyPortalPage() {
                      ) : (
                         <div className="space-y-6">
                            {latestUpdates.map((chapter, index) => (
-                              <Link
+                              <div
                                  key={chapter.id}
-                                 href={`/stories/${chapter.id}`}
-                                 className="group block bg-[#E8C5A4]/40 hover:bg-[#E8C5A4]/60 border border-white/50 rounded-[2rem] p-4 shadow-sm transition-all duration-300"
+                                 className={`relative bg-[#E8C5A4]/40 hover:bg-[#E8C5A4]/60 border rounded-[2rem] p-4 shadow-sm transition-all duration-300 ${selectedIds.has(chapter.id) ? 'border-terracotta ring-2 ring-terracotta/30' : 'border-white/50'}`}
                               >
+                                 {/* Selection Checkbox */}
+                                 <button
+                                    onClick={() => toggleSelection(chapter.id)}
+                                    className={`absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all ${selectedIds.has(chapter.id)
+                                       ? 'bg-terracotta text-white scale-110'
+                                       : 'bg-white/90 text-text-muted hover:bg-white'
+                                       } shadow-lg`}
+                                 >
+                                    <span className="material-symbols-outlined text-lg">
+                                       {selectedIds.has(chapter.id) ? 'check' : 'add'}
+                                    </span>
+                                 </button>
+
                                  <div className="flex items-center gap-6">
                                     <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white/50 flex-shrink-0 border-2 border-white shadow-sm">
                                        <Image
@@ -259,19 +292,35 @@ export default function FamilyPortalPage() {
                                           alt={chapter.title}
                                           width={120}
                                           height={120}
-                                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                          className="w-full h-full object-cover"
                                        />
                                     </div>
                                     <div className="flex-1">
-                                       <h3 className="text-xl font-serif font-extrabold text-text-primary group-hover:text-terracotta transition-colors mb-1">
+                                       <h3 className="text-xl font-serif font-extrabold text-text-primary mb-1">
                                           {chapter.title || 'Untitled Memory'}
                                        </h3>
-                                       <p className="text-sm font-bold text-text-muted uppercase tracking-widest opacity-70">
+                                       <p className="text-sm font-bold text-text-muted uppercase tracking-widest opacity-70 mb-3">
                                           {formatRelativeDate(chapter.createdAt)}
                                        </p>
+                                       <div className="flex gap-3">
+                                          <Link
+                                             href={`/stories/${chapter.id}`}
+                                             className="inline-flex items-center gap-1 text-xs font-bold text-terracotta hover:underline"
+                                          >
+                                             <span className="material-symbols-outlined text-sm">visibility</span>
+                                             Read Story
+                                          </Link>
+                                          <Link
+                                             href={`/storybook/${chapter.id}`}
+                                             className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 hover:underline"
+                                          >
+                                             <span className="material-symbols-outlined text-sm">auto_stories</span>
+                                             View as Storybook
+                                          </Link>
+                                       </div>
                                     </div>
                                  </div>
-                              </Link>
+                              </div>
                            ))}
                         </div>
                      )}
@@ -295,20 +344,10 @@ export default function FamilyPortalPage() {
                            )}
                         </div>
 
-                        {/* Fake Add Topic Bar */}
-                        <div className="flex items-center gap-4">
-                           <div className="flex-1 h-14 bg-white/80 rounded-full border-4 border-peach-main/20 flex items-center px-6 shadow-inner-soft">
-                              <input
-                                 type="text"
-                                 placeholder="Add a topic..."
-                                 className="w-full bg-transparent outline-none text-text-primary font-medium placeholder:text-text-muted/60"
-                                 readOnly
-                              />
-                           </div>
-                           <button className="w-14 h-14 bg-[#D68D5B]/70 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-terracotta transition-colors">
-                              <span className="material-symbols-outlined text-2xl">add</span>
-                           </button>
-                        </div>
+                        {/* Info: Topics managed by senior */}
+                        <p className="text-xs text-text-muted italic opacity-60 mt-4">
+                           Topics are managed by the storyteller in their settings.
+                        </p>
                      </div>
                   </section>
 
@@ -324,7 +363,7 @@ export default function FamilyPortalPage() {
                         <div className="flex items-baseline justify-center gap-4 mb-8">
                            <span className="text-[120px] font-serif font-extrabold text-[#D5B59C] leading-none">{bookProgress.current}</span>
                            <div className="text-left">
-                              <span className="block text-xl font-bold text-text-primary">of {bookProgress.target} chapters</span>
+                              <span className="block text-xl font-bold text-text-primary">of {bookProgress.target} stories</span>
                               <span className="text-2xl font-extrabold text-text-primary">{bookProgress.percentage}%</span>
                            </div>
                         </div>
@@ -378,6 +417,30 @@ export default function FamilyPortalPage() {
             </div>
 
          </main>
+
+         {/* Floating Storybook Action Bar - Family Only Feature */}
+         {selectedIds.size > 0 && (
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
+               <div className="bg-white rounded-full shadow-2xl shadow-black/20 border border-peach-main/20 px-8 py-4 flex items-center gap-6">
+                  <span className="text-sm font-bold text-text-primary">
+                     {selectedIds.size} {selectedIds.size === 1 ? 'story' : 'stories'} selected
+                  </span>
+                  <button
+                     onClick={() => setSelectedIds(new Set())}
+                     className="text-text-muted hover:text-text-primary transition-colors"
+                  >
+                     <span className="material-symbols-outlined">close</span>
+                  </button>
+                  <button
+                     onClick={handleCreateStorybook}
+                     className="bg-gradient-to-r from-terracotta to-peach-warm text-white px-8 py-3 rounded-full font-bold flex items-center gap-2 hover:opacity-90 transition-all"
+                  >
+                     <span className="material-symbols-outlined">auto_stories</span>
+                     Create Storybook
+                  </button>
+               </div>
+            </div>
+         )}
 
          {/* Footer */}
          <footer className="py-20 bg-white/40 border-t border-peach-main/10 mt-32">

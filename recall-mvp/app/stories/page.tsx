@@ -34,6 +34,8 @@ export default function StoriesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Senior-focused: Simple story viewing, no storybook creation
+
   useEffect(() => {
     async function fetchStories() {
       try {
@@ -52,8 +54,14 @@ export default function StoriesPage() {
         }
         const profile = await profileRes.json();
 
+        // SECURITY: Enforce Persona - Only seniors can access stories page
+        if (profile.role !== 'senior') {
+          window.location.href = '/family'; // Redirect family members to their dashboard
+          return;
+        }
+
         // Fetch chapters for this user
-        const chaptersRes = await fetch(`/api/users/${profile.id}/chapters`);
+        const chaptersRes = await fetch(`/api/users/${profile.userId}/chapters`);
         if (!chaptersRes.ok) {
           throw new Error('Failed to fetch chapters');
         }
@@ -102,7 +110,7 @@ export default function StoriesPage() {
             <div className="bg-peach-main/10 px-6 py-2 rounded-full ring-2 ring-peach-main/20">
               <Link href="/stories" className="font-extrabold text-terracotta">My Stories</Link>
             </div>
-            <Link href="/dashboard" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Book Draft</Link>
+            <Link href="/conversation" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Conversation</Link>
             <Link href="/profile" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Profile</Link>
             <Link href="/settings" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Settings</Link>
           </nav>
@@ -182,17 +190,18 @@ export default function StoriesPage() {
             </p>
             <Link href="/conversation" className="inline-flex items-center gap-4 bg-[#D4A373] hover:bg-[#C18E5E] text-white px-12 py-5 rounded-full font-bold shadow-2xl shadow-peach-warm/30 hover:scale-105 transition-all">
               <span className="material-symbols-outlined text-2xl">mic</span>
-              Begin Your First Chapter
+              Begin Your First Story
             </Link>
           </div>
         )}
 
-        {/* Stories Grid */}
+
+        {/* Stories Grid - Senior View (Simple) */}
         {!loading && !error && stories.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 animate-fade-in [animation-delay:0.2s]">
             {stories.map((story) => (
               <Link href={`/stories/${story.id}`} key={story.id} className="h-full group">
-                <div className="bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-peach-warm/5 border border-peach-main/5 h-full flex flex-col hover:-translate-y-2 transition-transform duration-500">
+                <div className="bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-peach-warm/5 border border-peach-main/5 h-full flex flex-col hover:-translate-y-2 transition-all duration-500">
                   <div className="aspect-[16/10] overflow-hidden relative">
                     <img src={story.imageUrl} alt={story.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>

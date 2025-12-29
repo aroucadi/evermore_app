@@ -700,7 +700,10 @@ Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
 
             // Check if this is a final answer
             if (step.action === 'Final Answer') {
-                sm.setFinalAnswer(step.actionInput as string);
+                const finalAnswerText = typeof step.actionInput === 'string'
+                    ? step.actionInput
+                    : String(step.actionInput ?? '');
+                sm.setFinalAnswer(finalAnswerText);
                 sm.addStep(step);
                 sm.setIntermediateResult('currentStep', step);
                 await sm.transition('STEP_COMPLETE');
@@ -716,12 +719,17 @@ Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
 
                 // SECURITY: Use ToolRegistry if available
                 if (this.toolRegistry && this.toolRegistry.has(step.action)) {
+                    // Default permissions: allow all registered tools (they are whitelisted by registration)
+                    const defaultPermissions = new Map<string, import('./tools/ToolContracts').ToolPermission>();
+                    // All tools in registry are implicitly allowed - restricted tools should not be registered
+                    defaultPermissions.set(step.action, 'ALLOWED' as import('./tools/ToolContracts').ToolPermission);
+
                     const toolResult = await this.toolRegistry.execute(step.action, step.actionInput, {
                         userId: this.config.userId || 'system',
                         sessionId: smContext.id || 'unknown',
                         agentId: 'enhanced-react',
                         requestId: tracer.getTraceId(),
-                        permissions: new Map(), // Default permissions
+                        permissions: defaultPermissions,
                         dryRun: false
                     });
 

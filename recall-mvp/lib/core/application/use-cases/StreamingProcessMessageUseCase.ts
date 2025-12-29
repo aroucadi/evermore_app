@@ -50,6 +50,7 @@ export class StreamingProcessMessageUseCase {
         try {
             // State: Listening
             callbacks.onStateChange('listening', 'Received your message');
+            console.log(`[StreamingProcessMessage] Starting for session ${sessionId}, message: ${message.substring(0, 30)}...`);
 
             const session = await this.sessionRepository.findById(sessionId);
             if (!session) {
@@ -57,7 +58,23 @@ export class StreamingProcessMessageUseCase {
                 return;
             }
 
-            const transcript = JSON.parse(session.transcriptRaw || '[]');
+            // Handle transcriptRaw being either a JSON string OR already an object/array
+            let transcript: any[] = [];
+            const raw = session.transcriptRaw;
+            if (!raw) {
+                transcript = [];
+            } else if (Array.isArray(raw)) {
+                transcript = raw;
+            } else if (typeof raw === 'object') {
+                transcript = Array.isArray((raw as any).messages) ? (raw as any).messages : [];
+            } else if (typeof raw === 'string') {
+                try {
+                    transcript = JSON.parse(raw.trim()) || [];
+                } catch {
+                    transcript = [];
+                }
+            }
+            console.log(`[StreamingProcessMessage] Parsed transcript, length: ${transcript.length}`);
 
             // Handle conversation initialization
             if (message === '__init__' && speaker === 'user') {
@@ -79,7 +96,7 @@ export class StreamingProcessMessageUseCase {
                     text: greeting,
                     timestamp: new Date().toISOString(),
                 });
-                session.transcriptRaw = JSON.stringify(transcript);
+                session.transcriptRaw = transcript; // Store as array, DB handles JSON
                 await this.sessionRepository.update(session);
 
                 callbacks.onComplete({ text: greeting, strategy: 'greeting' });
@@ -96,7 +113,12 @@ export class StreamingProcessMessageUseCase {
                 text: message,
                 timestamp: new Date().toISOString(),
             });
-            session.transcriptRaw = JSON.stringify(transcript);
+            session.transcriptRaw = transcript; // Store as array, DB handles JSON
+            console.log('[StreamingProcessMessage] Saving user message to session:', {
+                sessionId,
+                messagePreview: message.substring(0, 50),
+                transcriptLength: transcript.length,
+            });
             await this.sessionRepository.update(session);
 
             if (speaker !== 'user') {
@@ -210,7 +232,16 @@ export class StreamingProcessMessageUseCase {
             callbacks.onStateChange('reasoning', 'Processing thoughts');
 
             const result = await agent.run(`User said: "${message}". Respond appropriately.`, context);
-            let responseText = result.success ? result.finalAnswer : "I'm listening. Please go on.";
+
+            // Only respond if agent generated a meaningful response
+            // Don't interrupt storytelling with useless filler messages
+            if (!result.success || !result.finalAnswer || result.finalAnswer.trim().length < 10) {
+                // Silent acknowledgment - transcript is saved, but no interruption
+                callbacks.onComplete({ text: '', strategy: 'silent_listen' });
+                return;
+            }
+
+            const responseText = result.finalAnswer;
 
             // State: Responding - Stream the response
             callbacks.onStateChange('responding', 'Sharing thoughts');
@@ -230,7 +261,7 @@ export class StreamingProcessMessageUseCase {
                 timestamp: new Date().toISOString(),
                 strategy: 'agentic',
             });
-            session.transcriptRaw = JSON.stringify(transcript);
+            session.transcriptRaw = transcript; // Store as array, DB handles JSON
             await this.sessionRepository.update(session);
 
             callbacks.onComplete({ text: responseText, strategy: 'agentic' });

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect, use, useRef } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { AppShell } from '@/components/layout/AppShell';
@@ -13,6 +13,29 @@ interface ChapterData {
   audioUrl?: string;
 }
 
+/**
+ * Strip markdown and prepare text for natural TTS reading
+ */
+function prepareTextForTTS(content: string): string {
+  return content
+    // Remove markdown headers, convert to natural pauses
+    .replace(/^#{1,6}\s+(.+)$/gm, '$1.')
+    // Remove emphasis markers but keep the text
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    // Remove links, keep text
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+    // Replace em-dashes and special punctuation for better flow
+    .replace(/–/g, ', ')
+    .replace(/—/g, '... ')
+    // Add slight pauses for ellipsis
+    .replace(/\.\.\./g, '... ')
+    // Clean up extra whitespace
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export default function StoryImmersionPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const [story, setStory] = useState<ChapterData | null>(null);
@@ -20,6 +43,11 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
   const [error, setError] = useState('');
   const [isPlaying, setIsPlaying] = useState(false);
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'error'>('idle');
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
 
   // Share Story Handler
   const handleShare = async () => {
@@ -53,11 +81,118 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
     }
   };
 
+  // Audio Playback Handler with Web Speech API fallback
+  const handlePlayAudio = async () => {
+    if (!story?.content) return;
+
+    // If already playing, pause
+    if (isPlaying && audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+      return;
+    }
+
+    // Stop any browser speech synthesis
+    if (isPlaying && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
+    }
+
+    // If we have cached audio, resume
+    if (audioRef.current && audioUrlRef.current) {
+      audioRef.current.play();
+      setIsPlaying(true);
+      return;
+    }
+
+    // Generate TTS audio
+    setAudioLoading(true);
+    const cleanText = prepareTextForTTS(story.content).substring(0, 4000);
+
+    try {
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: cleanText }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Server TTS failed');
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      audioUrlRef.current = audioUrl;
+
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onloadedmetadata = () => {
+        setAudioDuration(audio.duration);
+      };
+
+      audio.ontimeupdate = () => {
+        setAudioProgress(audio.currentTime);
+      };
+
+      audio.onended = () => {
+        setIsPlaying(false);
+        setAudioProgress(0);
+      };
+
+      await audio.play();
+      setIsPlaying(true);
+    } catch (err) {
+      console.warn('Server TTS failed, falling back to browser speech:', err);
+
+      // Fallback to browser's Web Speech API (works without credentials)
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
+
+        // Try to use a nicer voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const preferredVoice = voices.find(v =>
+          v.name.includes('Google') || v.name.includes('Microsoft') || v.lang.startsWith('en')
+        );
+        if (preferredVoice) utterance.voice = preferredVoice;
+
+        utterance.onend = () => {
+          setIsPlaying(false);
+          setAudioProgress(0);
+        };
+
+        window.speechSynthesis.speak(utterance);
+        setIsPlaying(true);
+        setAudioDuration(story.content.length / 15); // Rough estimate: 15 chars/sec
+      } else {
+        console.error('No TTS available');
+      }
+    } finally {
+      setAudioLoading(false);
+    }
+  };
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+        audioUrlRef.current = null;
+      }
+    };
+  }, []);
   useEffect(() => {
     async function fetchChapter() {
       try {
         // Fetch chapter by ID
-        const res = await fetch(`/api/chapters/${resolvedParams.id}`);
+        const res = await fetch(`/api/chapters/detail/${resolvedParams.id}`);
         if (!res.ok) {
           throw new Error('Chapter not found');
         }
@@ -147,7 +282,7 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
             {story.title || 'Untitled Memory'}
           </h1>
           <p className="text-2xl text-text-secondary font-serif opacity-70">
-            Grandpa Joe, <span className="italic">narrated by Sarah</span>
+            A memory from <span className="italic">{formattedDate}</span>
           </p>
         </div>
 
@@ -162,21 +297,31 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsPlaying(!isPlaying)}
-                  className="w-20 h-20 bg-[#FDE2D0] rounded-full flex items-center justify-center text-terracotta shadow-lg transition-all"
+                  onClick={handlePlayAudio}
+                  disabled={audioLoading}
+                  className="w-20 h-20 bg-[#FDE2D0] rounded-full flex items-center justify-center text-terracotta shadow-lg transition-all disabled:opacity-50"
                 >
                   <span className="material-symbols-outlined text-4xl filled">
-                    {isPlaying ? 'pause' : 'play_arrow'}
+                    {audioLoading ? 'hourglass_empty' : isPlaying ? 'pause' : 'play_arrow'}
                   </span>
                 </motion.button>
 
                 <div className="flex-1 space-y-4">
                   <div className="flex justify-between items-center px-1">
-                    <span className="text-sm font-bold text-terracotta">0:00</span>
-                    <span className="text-sm font-bold text-text-muted opacity-60">14:32</span>
+                    <span className="text-sm font-bold text-terracotta">
+                      {Math.floor(audioProgress / 60)}:{String(Math.floor(audioProgress % 60)).padStart(2, '0')}
+                    </span>
+                    <span className="text-sm font-bold text-text-muted opacity-60">
+                      {audioDuration > 0
+                        ? `${Math.floor(audioDuration / 60)}:${String(Math.floor(audioDuration % 60)).padStart(2, '0')}`
+                        : '--:--'}
+                    </span>
                   </div>
                   <div className="relative h-2 bg-[#FDE2D0]/40 rounded-full overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-peach-warm to-terracotta rounded-full w-[45%]"></div>
+                    <div
+                      className="absolute inset-0 bg-gradient-to-r from-peach-warm to-terracotta rounded-full transition-all"
+                      style={{ width: audioDuration > 0 ? `${(audioProgress / audioDuration) * 100}%` : '0%' }}
+                    />
                   </div>
                 </div>
 
@@ -217,9 +362,12 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
                 <span className="material-symbols-outlined text-xl">share</span>
                 Share Story
               </button>
-              <button className="w-full py-4 bg-[#FDE2D0]/40 border-2 border-[#FDE2D0]/60 rounded-2xl font-bold text-brown-main hover:bg-[#FDE2D0]/60 transition-all flex items-center justify-center gap-3 shadow-sm">
-                <span className="material-symbols-outlined text-xl">book_2</span>
-                Generate Book Page
+              <button
+                onClick={() => window.location.href = `/storybook/${resolvedParams.id}`}
+                className="w-full py-4 bg-[#FDE2D0]/40 border-2 border-[#FDE2D0]/60 rounded-2xl font-bold text-brown-main hover:bg-[#FDE2D0]/60 transition-all flex items-center justify-center gap-3 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-xl">auto_stories</span>
+                View Storybook
               </button>
               <button className="w-full py-4 bg-gradient-to-r from-peach-warm/60 to-terracotta/40 border-b-4 border-terracotta/20 rounded-2xl font-bold text-text-primary hover:from-peach-warm hover:to-terracotta hover:text-white transition-all flex items-center justify-center gap-3 shadow-md">
                 <span className="material-symbols-outlined text-xl">favorite</span>

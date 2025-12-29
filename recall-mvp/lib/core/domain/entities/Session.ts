@@ -1,3 +1,4 @@
+import { Message } from '../value-objects/Message';
 export type SessionStatus = 'active' | 'completed' | 'failed';
 
 export interface Alert {
@@ -19,14 +20,14 @@ export class Session {
   constructor(
     public id: string,
     public userId: string,
-    public transcriptRaw: string, // JSON string
+    public transcriptRaw: Message[] | any, // JSON object/array (from DB jsonb)
     public status: SessionStatus,
     public startedAt: Date,
     public audioUrl?: string,
     public duration?: number,
     public endedAt?: Date,
     public metadata: SessionMetadata = {}
-  ) {}
+  ) { }
 
   addAlert(severity: string, reason: string, message: string): void {
     if (!this.metadata) {

@@ -22,7 +22,8 @@ export type HallucinationCheckType =
     | 'DATE_CONSISTENCY'    // Check date/time consistency
     | 'QUOTE_ACCURACY'      // Check quote accuracy
     | 'RELATIONSHIP'        // Check relationships between entities
-    | 'TEMPORAL_ORDER';     // Check event ordering
+    | 'TEMPORAL_ORDER'      // Check event ordering
+    | 'CROSS_CHAPTER_CONSISTENCY'; // S2 hardening: Check consistency across chapters
 
 /**
  * A ground truth source for validation.
@@ -442,6 +443,16 @@ INSTRUCTIONS:
 - Extract the sequence of events described
 - Verify the order matches the sources
 - Flag any events that are out of order or never happened`;
+
+            // S2 hardening: Cross-chapter consistency check
+            case 'CROSS_CHAPTER_CONSISTENCY':
+                return `
+INSTRUCTIONS:
+- This check compares facts across multiple chapters in a storybook
+- Look for contradictory facts: same person with different ages, same event with different dates, etc.
+- Flag any facts that conflict between the generated text and the sources
+- Pay special attention to: birth dates, family relationships, place names, event sequences
+- This is critical for maintaining narrative integrity over time`;
 
             default:
                 return '';

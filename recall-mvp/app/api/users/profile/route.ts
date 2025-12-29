@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { userProfileUpdater } from '@/lib/infrastructure/di/container';
 import { logger } from '@/lib/core/application/Logger';
+import { UserProfileDTO } from '@/lib/core/dtos/UserProfile';
+import { UpdateProfileSchema } from '@/lib/core/application/schemas';
 
 // Allowed fields for senior updates (whitelist)
 const SENIOR_ALLOWED_FIELDS = [
@@ -55,14 +57,16 @@ export async function GET(req: NextRequest) {
     }
 
     // Return full profile with preferences
-    return NextResponse.json({
+    const profile: UserProfileDTO = {
       userId: user.id,
       role: user.role,
       displayName: user.name || (userRole === 'senior' ? 'Friend' : 'Family Member'),
       currentDate: new Date().toISOString(),
       seniorId: user.seniorId,
       preferences: user.preferences || {},
-    });
+    };
+
+    return NextResponse.json(profile);
   } catch (error: any) {
     logger.error('Error fetching profile', { error: error.message });
     return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
@@ -80,35 +84,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized: Missing User Context' }, { status: 401 });
     }
 
-    const { updates, type } = await req.json();
+    const body = await req.json();
+    const result = UpdateProfileSchema.safeParse(body);
 
-    if (!updates) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!result.success) {
+      return NextResponse.json({ error: 'Validation Failed', details: result.error.flatten() }, { status: 400 });
     }
 
-    // Security: Input validation to prevent Mass Assignment
-    let sanitizedUpdates;
+    const { type, updates } = result.data;
+    const targetId = userId;
     let updatedUser;
 
-    // Use the authenticated ID, ignore any ID in the body
-    const targetId = userId;
-
-    // Validate that the user is updating their own profile type
-    // (A senior can't update as family, etc.)
     if (type === 'senior') {
       if (userRole !== 'senior') {
         return NextResponse.json({ error: 'Forbidden: Role Mismatch' }, { status: 403 });
       }
-      sanitizedUpdates = sanitizeUpdates(updates, SENIOR_ALLOWED_FIELDS);
-      updatedUser = await userProfileUpdater.updateSeniorProfile(targetId, sanitizedUpdates);
+      updatedUser = await userProfileUpdater.updateSeniorProfile(targetId, updates);
     } else if (type === 'family') {
       if (userRole !== 'family') {
         return NextResponse.json({ error: 'Forbidden: Role Mismatch' }, { status: 403 });
       }
-      sanitizedUpdates = sanitizeUpdates(updates, FAMILY_ALLOWED_FIELDS);
-      updatedUser = await userProfileUpdater.updateFamilyProfile(targetId, sanitizedUpdates);
-    } else {
-      return NextResponse.json({ error: 'Invalid user type' }, { status: 400 });
+      updatedUser = await userProfileUpdater.updateFamilyProfile(targetId, updates);
     }
 
     return NextResponse.json(updatedUser);

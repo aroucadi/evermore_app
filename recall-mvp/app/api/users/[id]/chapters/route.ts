@@ -17,6 +17,13 @@ export async function GET(
             userId = `${userId.slice(0, 8)}-${userId.slice(8, 12)}-${userId.slice(12, 16)}-${userId.slice(16, 20)}-${userId.slice(20, 32)}`;
         }
 
+        // SECURITY: Enforce Ownership
+        const authenticatedUserId = req.headers.get('x-user-id');
+        if (!authenticatedUserId || authenticatedUserId !== userId) {
+            console.warn(`[SECURITY] IDOR Attempt blocked used ${authenticatedUserId} tried to access ${userId}`);
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
         const chapters = await getChaptersUseCase.execute(userId);
         return NextResponse.json(chapters); // Reverted to Array to match contract
     } catch (error) {

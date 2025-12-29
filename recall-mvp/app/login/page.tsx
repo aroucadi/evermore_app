@@ -11,7 +11,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleLogin = async (userId: string, role: string, email?: string) => {
+    const handleLogin = async (userId?: string, role?: string, email?: string) => {
         setLoading(true);
         setError('');
         try {
@@ -47,7 +47,7 @@ export default function LoginPage() {
         e.preventDefault();
         // Since we don't have password logic yet, passing email acts as "Login with this email"
         // We pass a placeholder userId/role that might be overridden by the backend lookup
-        handleLogin('', '', email);
+        handleLogin(undefined, undefined, email);
     };
 
     return (

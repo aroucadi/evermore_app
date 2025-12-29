@@ -10,7 +10,9 @@ describe('ChapterRepository Interface', () => {
     create: vi.fn(async (chapter) => chapter),
     findByUserId: vi.fn(async () => []),
     findById: vi.fn(async (id) => new Chapter(id, 's-1', 'u-1', 'Title', 'Content', 'Excerpt', new Date())),
-    findByEntity: vi.fn(async () => [])
+    findBySessionId: vi.fn(async () => []),
+    findByEntity: vi.fn(async () => []),
+    update: vi.fn(async (id, data) => new Chapter(id, 's-1', 'u-1', 'Title', 'Content', 'Excerpt', new Date(), data.audioHighlightUrl, data.audioDuration))
   };
 
   it('should be able to mock create chapter', async () => {

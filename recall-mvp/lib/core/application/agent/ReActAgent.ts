@@ -100,8 +100,11 @@ OUTPUT FORMAT:
 
       if (step.action === 'Final Answer') {
         steps.push(step);
+        const finalAnswerText = typeof step.actionInput === 'string'
+          ? step.actionInput
+          : String(step.actionInput ?? '');
         return {
-          finalAnswer: step.actionInput,
+          finalAnswer: finalAnswerText,
           steps,
           success: true,
         };

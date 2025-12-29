@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AppShell } from '@/components/layout/AppShell';
+import { Header } from '@/components/layout/Header';
 
 interface Chapter {
    id: string;
@@ -24,6 +25,13 @@ export default function DashboardPage() {
             const profileRes = await fetch('/api/users/profile');
             if (!profileRes.ok) throw new Error('Failed to fetch profile');
             const profileData = await profileRes.json();
+
+            // SECURITY: Enforce Persona
+            if (profileData.role !== 'senior') {
+               window.location.href = '/family'; // Redirect family members to their portal
+               return;
+            }
+
             setUser(profileData);
 
             const chaptersRes = await fetch(`/api/users/${profileData.userId}/chapters`);
@@ -57,26 +65,7 @@ export default function DashboardPage() {
    return (
       <div className="min-h-screen bg-[#FCF8F3] font-sans text-text-primary overflow-x-hidden">
 
-         {/* Premium Header */}
-         <header className="h-24 bg-white/40 backdrop-blur-xl flex items-center px-10 border-b border-peach-main/5">
-            <div className="container mx-auto flex justify-between items-center">
-               <Link href="/" className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-peach-warm to-terracotta rounded-2xl flex items-center justify-center text-white shadow-lg">
-                     <span className="material-symbols-outlined text-3xl filled">mic</span>
-                  </div>
-                  <span className="text-3xl font-serif font-black text-terracotta tracking-tight">ReCall</span>
-               </Link>
-               <nav className="hidden lg:flex items-center gap-10">
-                  <Link href="/" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Home</Link>
-                  <Link href="/stories" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">My Stories</Link>
-                  <div className="bg-peach-main/10 px-6 py-2 rounded-full ring-2 ring-peach-main/20">
-                     <Link href="/dashboard" className="font-extrabold text-terracotta">Dashboard</Link>
-                  </div>
-                  <Link href="/profile" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Profile</Link>
-                  <Link href="/settings" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Settings</Link>
-               </nav>
-            </div>
-         </header>
+
 
          <main className="max-w-7xl mx-auto pt-20 pb-12 min-h-[80vh] flex flex-col justify-center px-6">
 
@@ -190,16 +179,7 @@ export default function DashboardPage() {
          </main>
 
          {/* Footer */}
-         <footer className="py-20 bg-white/40 border-t border-peach-main/10 mt-16">
-            <div className="container mx-auto px-10 max-w-7xl flex flex-col md:flex-row justify-between items-center gap-10">
-               <p className="text-sm font-bold text-text-muted opacity-60">© 2024 ReCall. Immortalizing Stories.</p>
-               <div className="flex gap-10 text-sm font-bold text-text-muted opacity-60">
-                  <Link href="#" className="hover:text-terracotta transition-colors">About</Link>
-                  <Link href="#" className="hover:text-terracotta transition-colors">Help</Link>
-                  <Link href="#" className="hover:text-terracotta transition-colors">Privacy</Link>
-               </div>
-            </div>
-         </footer>
+
       </div>
    );
 }
