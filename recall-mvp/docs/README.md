@@ -4,49 +4,47 @@ Welcome to the comprehensive documentation for **Recall**, the Agentic AI Biogra
 
 ## 📚 Documentation Map
 
-### 🏗️ [Architecture](./ARCHITECTURE/README.md)
+### 🏗️ [Architecture](./ARCHITECTURE/)
 Deep dive into how the system is built.
-- **[System Design](./ARCHITECTURE/SYSTEM_DESIGN.md)** - High-level diagrams, Cognitive Architecture (AoT), and Service layers.
-- **[Algorithms & AoT](./ARCHITECTURE/ALGORITHMS_AOT.md)** - Detailed explanation of the "Atom of Thought" pattern used for Chapter and Storybook generation.
-- **[Data Model](./ARCHITECTURE/DATA_MODEL.md)** - Entity relationships, Schema design (Users, Storybooks, Sessions).
+- **[System Design](./ARCHITECTURE/01_system_design.md)** - High-level diagrams and service layers.
+- **[Algorithms & AoT](./ARCHITECTURE/02_algorithms_aot.md)** - "Atom of Thought" pattern for story generation.
+- **[Cognitive Architecture](./ARCHITECTURE/03_cognitive_architecture.md)** - FSM, ReAct, CoT, AoT patterns.
+- **[Data Model](./ARCHITECTURE/04_data_model.md)** - Entity relationships and schema design.
+- **[Security & Safety](./ARCHITECTURE/05_security_and_safety.md)** - Threat model and Wellbeing Guard.
+- **[FinOps & Costs](./ARCHITECTURE/06_finops_and_costs.md)** - Unit economics and model routing.
+- **[System Guarantees](./ARCHITECTURE/07_system_guarantees.md)** - Reliability and consistency.
+- **[Authority & Confidence](./ARCHITECTURE/08_authority_confidence.md)** - Source tracking and scoring.
 
-### 🛠️ [Technical Guide](./TECHNICAL/README.md)
+### 🛠️ [Technical Guide](./TECHNICAL/)
 For developers building and maintaining Recall.
-- **[Tech Stack](./TECHNICAL/TECH_STACK.md)** - Next.js 14, Drizzle ORM, Tailwind, etc.
-- **[External Services](./TECHNICAL/EXTERNAL_SERVICES.md)** - Setup guides for **Google Vertex AI** (Gemini), **ElevenLabs** (Voice), and **Pinecone** (Memory).
-- **[Prompt Engineering](./TECHNICAL/PROMPTING_GUIDE.md)** - The secret sauce: Personas, recursive prompts, and story transformation techniques.
+- **[Tech Stack](./TECHNICAL/01_tech_stack.md)** - Next.js 14, Drizzle ORM, Tailwind, etc.
+- **[External Services](./TECHNICAL/02_external_services.md)** - Google Vertex AI, ElevenLabs, Pinecone setup.
+- **[Prompt Engineering](./TECHNICAL/03_prompting_guide.md)** - Personas, recursive prompts, story techniques.
+- **[Latency & Performance](./TECHNICAL/04_latency_and_performance.md)** - Optimization strategies.
+- **[Observability](./TECHNICAL/05_observability_and_trace.md)** - Logging and tracing.
+- **[Multimodal Pipeline](./TECHNICAL/06_multimodal_pipeline.md)** - Audio capture, VAD, vision analysis.
 
-### 🚀 [Deployment](./DEPLOYMENT/README.md)
+### 🚀 [Deployment](./DEPLOYMENT/)
 Getting Recall from localhost to production.
-- **[Vercel Deployment](./DEPLOYMENT/VERCEL.md)** - Production deployment guide (Serverless).
-- **[Docker Staging](./DEPLOYMENT/DOCKER.md)** - Running the containerized staging environment.
-- **[Production Readiness](./DEPLOYMENT/PRODUCTION_CHECKLIST.md)** - Security, observability, and launch checklist.
+- **[Vercel Deployment](./DEPLOYMENT/01_vercel.md)** - Production deployment guide.
+- **[Docker Staging](./DEPLOYMENT/02_docker.md)** - Containerized staging environment.
+- **[CI/CD Workflow](./DEPLOYMENT/03_cicd_workflow.md)** - Testing strategy and pipeline.
+- **[Production Checklist](./DEPLOYMENT/04_production_checklist.md)** - Security and launch checklist.
 
-### 📖 [Guides](./GUIDES/README.md)
+### 📖 [Guides](./GUIDES/)
 Step-by-step instructions.
-- **[Local Setup](./GUIDES/SETUP_LOCAL.md)** - fast track to `npm run dev`.
-- **[Database Management](./GUIDES/DATABASE.md)** - Migrations, seeding, and CockroachDB setup.
+- **[Local Setup](./GUIDES/01_setup_local.md)** - Fast track to `npm run dev`.
+- **[Database Management](./GUIDES/02_database.md)** - Migrations, seeding, CockroachDB.
+
+### 🎯 [Product](./PRODUCT/)
+Product strategy, vision, and user research.
+- **[Strategy & Vision](./PRODUCT/01_strategy_vision/)** - Business model, lean canvas, north star.
+- **[Empathy Research](./PRODUCT/02_empathy_research/)** - Personas, journey maps, JTBD.
+- **[Opportunity Definition](./PRODUCT/03_opportunity_definition/)** - Value proposition, assumptions.
+- **[Execution](./PRODUCT/04_execution_tactical/)** - User stories, experiments.
+- **[Launch & Growth](./PRODUCT/05_launch_growth/)** - GTM, retention strategies.
+- **[Future Roadmap](./PRODUCT/06_future_roadmap.md)** - Evolution and upcoming features.
 
 ---
 
----
-
-## 🧠 Strategic Architecture
-
-For the comprehensive breakdown of how Recall works, see the **[ARCHITECTURE](./ARCHITECTURE/README.md)** folder:
-
-- **[Cognitive Architecture](./ARCHITECTURE/COGNITIVE_ARCHITECTURE.md)** - Deep dive into patterns (FSM, ReAct, CoT, AoT).
-- **[Algorithm of Thought](./ARCHITECTURE/ALGORITHMS_AOT.md)** - How we generate coherent books.
-- **[Security & Safety](./ARCHITECTURE/SECURITY_AND_SAFETY.md)** - Threat model and Wellbeing Guard.
-- **[FinOps & Costs](./ARCHITECTURE/FINOPS_AND_COSTS.md)** - Unit economics and model routing.
-
----
-
-## 🎯 Product Vision
-Recall is an **empathetic AI biographer** that helps seniors preserve their life stories through natural voice conversations. It is **Agentic**, meaning it plans, interviews, and compiles stories autonomously.
-
-For detailed Product Strategy (Vision, User Research, GTM), see the **[PRODUCT](./PRODUCT/README.md)** folder.
-
----
-
-*Documentation Version: 2.1 (December 2024)*
+*Documentation Version: 2.3 (December 2024)*

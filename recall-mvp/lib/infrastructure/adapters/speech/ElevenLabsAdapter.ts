@@ -1,24 +1,25 @@
 import { SpeechPort, SpeechToTextResult, SpeechOptions } from '../../../core/application/ports/SpeechPort';
 import { VoiceAgentPort } from '../../../core/application/ports/VoiceAgentPort';
 import { ElevenLabsClient } from '@elevenlabs/elevenlabs-js';
-
 import { Readable } from 'stream';
-import { normalizeSpeech } from '../../../core/application/services/SpeechNormalizer';
 
 /**
  * ElevenLabs Adapter - Production speech synthesis and recognition.
+ * 
+ * SILENT FALLBACK: Provider switches are completely invisible to users.
+ * When ElevenLabs quota is exhausted or fails, falls back to Google TTS silently.
  * 
  * Configuration:
  * - ELEVENLABS_API_KEY: Required for TTS
  * - ELEVENLABS_VOICE_ID: Voice ID for TTS
  * - ELEVENLABS_AGENT_ID: Agent ID for conversations
- * - OPENAI_API_KEY: Required for STT (Whisper)
+ * 
+ * Fallback Chain: ElevenLabs → Google Cloud TTS (silent)
  * 
  * @module ElevenLabsAdapter
  */
 export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
     private client: ElevenLabsClient;
-
     private sttFallback: SpeechPort | null = null;
     private ttsFallback: SpeechPort | null = null;
 
@@ -27,9 +28,7 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
 
     constructor(sttFallback?: SpeechPort, ttsFallback?: SpeechPort) {
         const apiKey = process.env.ELEVENLABS_API_KEY;
-        if (!apiKey) {
-            console.warn('ElevenLabsAdapter: ELEVENLABS_API_KEY is missing. TTS/Conversations will fail at runtime.');
-        }
+        // Silent initialization - no user-facing warnings
 
         this.client = new ElevenLabsClient({ apiKey: apiKey || 'dummy-key-for-build' });
 
@@ -60,26 +59,21 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
             }
             return Buffer.concat(chunks);
         } catch (error: any) {
-            // Check for quota exceeded - cache this to avoid repeated failures
+            // SILENT FALLBACK: Check for quota exceeded - switch silently to fallback
             const isQuotaError = error?.body?.detail?.status === 'quota_exceeded' ||
                 error?.statusCode === 401 ||
                 error?.message?.toLowerCase().includes('quota');
 
             if (isQuotaError) {
-                console.warn('ElevenLabs quota exhausted - switching to fallback for remainder of session');
+                // Silent switch - user doesn't need to know
                 ElevenLabsAdapter.quotaExhausted = true;
-            } else {
-                console.error('ElevenLabs TTS failed', error);
             }
+            // No console.error - keep failures silent to users
 
             // Fallback to secondary provider if configured (e.g. Google Cloud TTS)
             if (this.ttsFallback) {
-                try {
-                    return await this.ttsFallback.textToSpeech(text, options);
-                } catch (fallbackError) {
-                    console.error('ElevenLabsAdapter: TTS fallback also failed', fallbackError);
-                    throw fallbackError;
-                }
+                // Silent fallback - no user-facing error
+                return await this.ttsFallback.textToSpeech(text, options);
             }
 
             throw error;
@@ -87,16 +81,10 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
     }
 
     async speechToText(audioBuffer: Buffer, contentType: string): Promise<SpeechToTextResult> {
-        // 1. Try OpenAI Whisper if configured
-
-
-        // 2. Use injected fallback STT provider
+        // Use injected fallback STT provider (Google Cloud Speech)
         if (this.sttFallback) {
-            try {
-                return await this.sttFallback.speechToText(audioBuffer, contentType);
-            } catch (e) {
-                console.error('ElevenLabsAdapter: STT fallback failed', e);
-            }
+            // Silent fallback - no user-facing error
+            return await this.sttFallback.speechToText(audioBuffer, contentType);
         }
 
         throw new Error('Speech to text failed: No working provider available');
@@ -124,7 +112,7 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
         }
 
         try {
-            // Fallback to REST API since SDK method seems missing in this version
+            // REST API for conversation initiation
             const response = await fetch(
                 `https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id=${agentId}`,
                 {
@@ -147,6 +135,7 @@ export class ElevenLabsAdapter implements SpeechPort, VoiceAgentPort {
                 wsUrl: data.signed_url
             };
         } catch (error) {
+            // Keep error logging for critical conversation failures
             console.error('ElevenLabs startConversation failed', error);
             throw error;
         }

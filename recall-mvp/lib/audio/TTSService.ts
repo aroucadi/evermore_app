@@ -2,6 +2,11 @@
  * Text-to-Speech (TTS) Service Interface
  * 
  * Defines the contract for TTS providers (ElevenLabs, Google, Web Speech API)
+ * 
+ * Note: The main TTS provider chain is configured in the DI container:
+ * ElevenLabs → Google Cloud TTS (silent fallback when quota exhausted)
+ * 
+ * This module provides browser-side TTS for client components.
  */
 
 export interface TTSVoice {
@@ -54,11 +59,11 @@ export interface TTSService {
  * Server-side TTS Service - fallback for Node.js environments
  * Returns a no-op implementation that gracefully degrades
  */
-class ServerTTSService implements TTSService {
+export class ServerTTSService implements TTSService {
     readonly providerName = 'Server Fallback (No Audio)';
 
     async isAvailable(): Promise<boolean> {
-        return true; // Always "available" but returns empty audio
+        return true;
     }
 
     async getVoices(): Promise<TTSVoice[]> {
@@ -71,7 +76,6 @@ class ServerTTSService implements TTSService {
     }
 
     async synthesize(text: string, options?: TTSOptions): Promise<TTSResult> {
-        // Estimate duration based on text length
         const wordCount = text.split(/\s+/).length;
         const wordsPerSecond = (options?.speed || 1) * 2.5;
         const estimatedDuration = wordCount / wordsPerSecond;
@@ -86,24 +90,21 @@ class ServerTTSService implements TTSService {
 }
 
 /**
- * TTS Service Factory - Returns best available provider
+ * TTS Service Factory - Returns best available browser-side provider
  * 
- * Priority order:
- * 1. ElevenLabs (if API key configured) - Not yet implemented
- * 2. Google Cloud TTS (if API key configured) - Not yet implemented
- * 3. Browser Web Speech API (client-side fallback)
- * 4. Server fallback (graceful degradation for SSR)
+ * For server-side TTS, use the speechProvider from the DI container which
+ * provides ElevenLabs → Google Cloud TTS fallback chain.
+ * 
+ * This factory is for client-side usage only.
  */
 export function createTTSService(): TTSService {
     // Check if we're in a browser environment
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        // Dynamic import would be ideal, but for simplicity we use require pattern
-        // In production, this would be properly code-split
         const { WebSpeechTTS } = require('./WebSpeechTTS');
         return new WebSpeechTTS();
     }
 
-    // Server-side or no browser speech available - use fallback
+    // Server-side - use fallback (actual TTS handled by DI speechProvider)
     return new ServerTTSService();
 }
 
@@ -115,10 +116,8 @@ export async function createTTSServiceAsync(): Promise<TTSService> {
     const available = await service.isAvailable();
 
     if (!available) {
-        console.warn('[TTS] Primary service unavailable, using server fallback');
         return new ServerTTSService();
     }
 
     return service;
 }
-
