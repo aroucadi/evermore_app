@@ -1,9 +1,26 @@
 import "./globals.css"
 import { MSWInitializer } from '@/components/common/MSWInitializer';
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  interactiveWidget: 'resizes-content',
+};
+
 export const metadata = {
-  title: 'Recall - Legacy Recorder',
+  title: 'Evermore — Where stories live forever',
   description: 'Preserve your family\'s priceless stories through voice conversations.',
+  icons: {
+    icon: '/favicon.svg',
+    apple: '/evermore-icon-terracotta.svg', // Fallback to SVG for now, ideally PNG
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Evermore',
+  },
 };
 
 /**

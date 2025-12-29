@@ -25,7 +25,7 @@ export function FamilySidebar() {
           <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
             <Link
               href="/portal"
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-white ${pathname === "/portal" ? 'bg-neutral-800 text-white': ''}`}
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-white ${pathname === "/portal" ? 'bg-neutral-800 text-white' : ''}`}
             >
               📖 Chapters
             </Link>
@@ -33,7 +33,7 @@ export function FamilySidebar() {
               href="#"
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-white"
             >
-             👥 People
+              👥 People
             </Link>
             <Link
               href="#"
@@ -48,7 +48,7 @@ export function FamilySidebar() {
               🏷️ Topics
             </Link>
             <div className="my-4 h-px bg-neutral-800" />
-             <Link
+            <Link
               href="#"
               className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-white"
             >
@@ -69,7 +69,7 @@ export function FamilySidebar() {
 
 export function MobileFamilySidebar() {
   const pathname = usePathname();
-  return(
+  return (
     <Sheet>
       <SheetTrigger asChild>
         <Button
@@ -85,11 +85,11 @@ export function MobileFamilySidebar() {
             href="#"
             className="flex items-center gap-2 text-lg font-semibold"
           >
-            Recall
+            Evermore
           </Link>
           <Link
             href="/portal"
-            className={`mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground ${pathname.includes("portal") ? 'bg-muted text-primary': ''}`}
+            className={`mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground ${pathname.includes("portal") ? 'bg-muted text-primary' : ''}`}
           >
             Chapters
           </Link>

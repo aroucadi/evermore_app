@@ -25,10 +25,10 @@ export function Navbar() {
         >
             <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#E07A5F]/10 flex items-center justify-center text-[#E07A5F] border border-[#E07A5F]/20">
-                        <span className="material-symbols-outlined text-[24px]">local_library</span>
+                    <div className="w-10 h-10 rounded-full bg-[#E07A5F]/10 flex items-center justify-center border border-[#E07A5F]/20 p-2">
+                        <img src="/evermore-icon-only.svg" alt="Evermore Logo" className="w-full h-full object-contain filter drop-shadow-sm" />
                     </div>
-                    <span className="text-xl font-bold font-display leading-tight tracking-tight text-[#3D3430]">Recall</span>
+                    <span className="text-xl font-bold font-display leading-tight tracking-tight text-[#3D3430]">Evermore</span>
                 </div>
 
                 <div className="flex items-center gap-4">

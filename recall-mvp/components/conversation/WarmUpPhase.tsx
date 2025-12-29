@@ -133,7 +133,7 @@ export function WarmUpPhase({ userName, sessionId, onComplete, onError }: WarmUp
                             />
                         ))}
                     </div>
-                    <span className="text-sm font-bold text-terracotta">🔊 Recall is speaking</span>
+                    <span className="text-sm font-bold text-terracotta">🔊 Evermore is speaking</span>
                 </div>
             );
         }
@@ -198,7 +198,7 @@ export function WarmUpPhase({ userName, sessionId, onComplete, onError }: WarmUp
                         <div className="w-16 h-16 rounded-full bg-peach-main/20 flex items-center justify-center mb-4 animate-pulse">
                             <span className="material-symbols-outlined text-3xl text-terracotta">mic</span>
                         </div>
-                        <p className="text-lg font-medium text-text-secondary">Connecting to Recall...</p>
+                        <p className="text-lg font-medium text-text-secondary">Connecting to Evermore...</p>
                         <p className="text-sm text-text-muted mt-2">Get ready to have a quick chat!</p>
                     </div>
                 )}
@@ -206,7 +206,7 @@ export function WarmUpPhase({ userName, sessionId, onComplete, onError }: WarmUp
                 {transcript.map((msg, i) => (
                     <div key={i} className={`flex flex-col ${msg.speaker === 'agent' ? 'items-start' : 'items-end'} animate-fade-in-up`}>
                         <span className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-2 px-1">
-                            {msg.speaker === 'agent' ? 'Recall' : 'You'} • {formatTime()}
+                            {msg.speaker === 'agent' ? 'Evermore' : 'You'} • {formatTime()}
                         </span>
                         <div className="flex items-end gap-3 max-w-[80%]">
                             {msg.speaker === 'agent' && (
@@ -260,8 +260,8 @@ export function WarmUpPhase({ userName, sessionId, onComplete, onError }: WarmUp
                     <div className="text-center py-4">
                         <p className="text-text-secondary">
                             {phase === 'active'
-                                ? "Chat with Recall, then click the button when you're ready to begin your story."
-                                : "Connecting to Recall..."}
+                                ? "Chat with Evermore, then click the button when you're ready to begin your story."
+                                : "Connecting to Evermore..."}
                         </p>
                     </div>
                 )}

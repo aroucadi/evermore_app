@@ -22,7 +22,7 @@ const config = {
     extend: {
       colors: {
         /* ============================================
-           ReCall Design System Colors
+           Evermore Design System Colors
            Based on target design specification
            ============================================ */
 

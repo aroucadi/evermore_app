@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 
 export function FloatingPillHeader() {
@@ -17,9 +18,9 @@ export function FloatingPillHeader() {
                 {/* Logo Area */}
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#E07A5F]/10 flex items-center justify-center text-[#E07A5F] border border-[#E07A5F]/20">
-                        <span className="material-symbols-outlined text-[18px]">local_library</span>
+                        <Image src="/evermore-icon-terracotta.svg" alt="Evermore Logo" width={18} height={18} className="object-contain" />
                     </div>
-                    <span className="text-[#3D3430] font-bold text-lg font-display tracking-tight">LegacyApp</span>
+                    <span className="text-[#3D3430] font-bold text-lg font-display tracking-tight">Evermore</span>
                 </div>
 
                 {/* Actions */}

@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
           <div className="w-12 h-12 bg-gradient-to-br from-gold to-terracotta rounded-2xl flex items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform duration-500">
             <span className="material-symbols-outlined text-white text-2xl">history_edu</span>
           </div>
-          <span className="text-3xl font-serif font-bold text-text-primary tracking-tight">ReCall</span>
+          <span className="text-3xl font-serif font-bold text-text-primary tracking-tight">Evermore</span>
         </Link>
       </header>
 
@@ -125,7 +125,7 @@ export default function ResetPasswordPage() {
                 Check Your Inbox
               </h1>
               <p className="text-text-secondary font-medium mb-12 leading-relaxed max-w-sm mx-auto">
-                If <span className="text-text-primary font-bold">{email}</span> is registered with ReCall, instructions to reset your password are on their way.
+                If <span className="text-text-primary font-bold">{email}</span> is registered with Evermore, instructions to reset your password are on their way.
               </p>
               <div className="space-y-4">
                 <Link href="/login" className="block w-full bg-background-cream hover:bg-gold/5 text-text-primary border border-gold/10 font-bold text-lg py-4 px-8 rounded-2xl transition-all">
@@ -145,7 +145,7 @@ export default function ResetPasswordPage() {
         <Link href="#" className="hover:text-terracotta transition-colors">Legacy Terms</Link>
         <Link href="#" className="hover:text-terracotta transition-colors">Contact Support</Link>
         <span className="text-gold/30 opacity-50">•</span>
-        <span>© 2024 ReCall Legacy Inc.</span>
+        <span>© 2024 Evermore Legacy Inc.</span>
       </footer>
 
     </div>

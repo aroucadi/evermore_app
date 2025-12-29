@@ -1,17 +1,6 @@
 import { LLMPort } from '../../../core/application/ports/LLMPort';
+import { StorybookAtoms } from '../../../core/application/ports/StorybookGeneratorPort';
 
-interface StorybookAtoms {
-  keyMoments: Array<{ moment: string; importance: number; reasoning: string }>;
-  visualElements: string[];
-  narrativeBeats: Array<{ beat: string; pageRange: string; purpose: string }>;
-  characterDetails: { name: string; age: string; physicalDescription: string; clothingStyle: string; personalityTraits: string };
-  // S1 hardening: Explicit emotional tone preservation
-  emotionalTone: {
-    primaryEmotion: string;
-    emotionalArc: string;
-    preservationNotes: string[];
-  };
-}
 
 class AoTStorybookGenerator {
   private llm: LLMPort;

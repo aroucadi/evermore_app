@@ -1,42 +1,69 @@
-import { Tool } from '../types';
-import { VectorStorePort } from '../../ports/VectorStorePort';
+import { z } from 'zod';
+import {
+  ToolContract,
+  ToolResult,
+  ToolExecutionContext,
+  ToolMetadata,
+  ToolCapability,
+  ToolPermission
+} from './ToolContracts';
+import { AgentMemoryPort } from '../../ports/AgentMemoryPort';
+import { MemoryType } from '../memory/AgentMemory';
 
-export class RetrieveMemoriesTool implements Tool {
-  name = 'RetrieveMemories';
-  description = 'Search for past memories or conversations based on a query.';
-  schema = {
-    type: 'object',
-    properties: {
-      query: { type: 'string', description: 'The search query' },
-    },
-    required: ['query'],
+/**
+ * Tool for retrieving relevant memories from past interactions.
+ */
+export class RetrieveMemoriesTool implements ToolContract<{ query: string }, any[]> {
+  public metadata: ToolMetadata = {
+    id: 'retrieve-memories',
+    name: 'Retrieve Memories',
+    description: 'Retrieve relevant memories from past interactions to provide personalized context.',
+    usageHint: 'Use this when you need to recall specific facts the user mentioned before, like family names, past events, or preferences.',
+    version: '1.0.0',
+    capabilities: [ToolCapability.READ],
+    defaultPermission: ToolPermission.ALLOWED,
+    estimatedCostCents: 0.1,
+    estimatedLatencyMs: 500,
+    enabled: true,
   };
 
-  constructor(private vectorStore: VectorStorePort, private userId: string) {}
+  public inputSchema = z.object({
+    query: z.string().min(1).describe('The search query or topic to recall memories about'),
+  });
 
-  async execute(input: any): Promise<string> {
-    if (!input.query) return 'Error: Missing query.';
+  public outputSchema = z.array(z.any());
+
+  constructor(private memoryPortFactory: (userId: string) => AgentMemoryPort) { }
+
+  async execute(input: { query: string }, context: ToolExecutionContext): Promise<ToolResult<any[]>> {
+    const startTime = Date.now();
     try {
-        // The vector store requires vector embedding first, but for now we assume
-        // the agent or orchestrator should handle embedding if using raw VectorStorePort.
-        // However, RetrieveMemoriesTool usually implies a higher level service.
-        // Given the error, VectorStorePort doesn't have retrieveContext.
+      // Get user-specific memory manager
+      const memoryManager = this.memoryPortFactory(context.userId);
 
-        // We probably need an EmbeddingPort here to convert query to vector.
-        // But to fix the build quickly, we should update this tool to use the correct method signatures
-        // OR rely on a `MemoryService` instead of raw `VectorStorePort`.
+      // Query memories
+      const memories = await memoryManager.query({
+        query: input.query,
+        limit: 5,
+        types: [MemoryType.EPISODIC, MemoryType.SEMANTIC, MemoryType.LONG_TERM],
+        includeRelated: true
+      });
 
-        // Since I can't easily inject EmbeddingPort here without changing constructor signature in many places,
-        // I will assume for now that we can't implement this properly without refactoring.
-        // But wait, the Memory system I implemented (AgentMemoryManager) handles this!
-
-        // But this tool is using raw VectorStorePort.
-        // Let's Stub it for now or try to use query() if we had a vector.
-
-        return "Memory retrieval not fully implemented in this tool version. Please use AgentMemoryManager.";
-
-    } catch (e: any) {
-        return `Error retrieving memories: ${e.message}`;
+      return {
+        success: true,
+        data: memories,
+        durationMs: Date.now() - startTime
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          code: 'RETRIEVAL_FAILED',
+          message: `Failed to retrieve memories: ${(error as Error).message}`,
+          retryable: true,
+        },
+        durationMs: Date.now() - startTime
+      };
     }
   }
 }

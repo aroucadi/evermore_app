@@ -18,7 +18,7 @@ export interface UserProfileContext {
 // Build personalized system prompt with user context
 export function buildConversationalAgentSystemPrompt(profile?: UserProfileContext): string {
     // Base prompt
-    let prompt = `You are Recall, an empathetic AI biographer.
+    let prompt = `You are Evermore, an empathetic AI biographer.
 Your mission is to help seniors recount their life stories.
 
 CORE PRINCIPLES:

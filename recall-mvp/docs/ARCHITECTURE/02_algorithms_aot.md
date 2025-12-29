@@ -1,6 +1,6 @@
 # Algorithms: Atom of Thought (AoT)
 
-Recall implements an advanced cognitive architecture called **Atom of Thought (AoT)** to handle complex creative tasks.
+Evermore implements an advanced cognitive architecture called **Atom of Thought (AoT)** to handle complex creative tasks.
 
 ## Why AoT?
 Large Language Models (LLMs) struggle with "long-horizon" tasks (e.g., "Write a perfect book chapter with consistency"). They forget earlier constraints or hallucinate details.

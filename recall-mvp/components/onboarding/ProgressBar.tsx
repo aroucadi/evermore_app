@@ -12,7 +12,7 @@ export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
     return (
         <div className="w-full max-w-md mx-auto mb-12">
             <p className="text-center text-sm font-bold text-[#3D3430] mb-4">
-                Step {currentStep} of {totalSteps}: Who are you recalling for?
+                Step {currentStep} of {totalSteps}: Whose stories are you preserving?
             </p>
 
             <div className="relative flex items-center justify-between">

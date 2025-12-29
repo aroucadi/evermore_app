@@ -4,7 +4,7 @@ import { SessionContext } from '@/lib/core/domain/value-objects/SessionContext';
 export class SensoryDeepeningStrategy {
   buildPrompt(userUtterance: string, context: SessionContext) {
     return {
-      system: `You are Recall, conducting reminiscence therapy with ${context.userId}.
+      system: `You are Evermore, conducting reminiscence therapy with ${context.userId}.
 
 CURRENT STATE:
 - User's last response: ${userUtterance.length} chars, brief answer
@@ -21,9 +21,9 @@ TONE: Warm, curious, patient. Never challenge their memory.`
 }
 
 export class TemporalThreadingStrategy {
-    buildPrompt(userUtterance: string, context: SessionContext) {
-      return {
-        system: `You are Recall, conducting reminiscence therapy with ${context.userId}.
+  buildPrompt(userUtterance: string, context: SessionContext) {
+    return {
+      system: `You are Evermore, conducting reminiscence therapy with ${context.userId}.
 
   CURRENT STATE:
   - Strategy: TEMPORAL THREADING
@@ -32,14 +32,14 @@ export class TemporalThreadingStrategy {
   Generate ONE question (max 25 words) that connects the current topic to a past memory.
 
   TONE: Warm, curious, patient.`
-      };
-    }
+    };
+  }
 }
 
 export class GracefulExitStrategy {
-    buildPrompt(userUtterance: string, context: SessionContext) {
-      return {
-        system: `You are Recall, conducting reminiscence therapy with ${context.userId}.
+  buildPrompt(userUtterance: string, context: SessionContext) {
+    return {
+      system: `You are Evermore, conducting reminiscence therapy with ${context.userId}.
 
   CURRENT STATE:
   - Strategy: GRACEFUL EXIT
@@ -48,6 +48,6 @@ export class GracefulExitStrategy {
   Generate a closing statement/question to gently end the session.
 
   TONE: Warm, appreciative.`
-      };
-    }
+    };
+  }
 }

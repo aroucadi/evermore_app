@@ -46,7 +46,7 @@ export default function MarketingPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#FCF8F3] font-sans selection:bg-gold/30">
+        <div className="min-h-[100dvh] bg-[#FCF8F3] font-sans selection:bg-gold/30 flex flex-col">
             <MarketingHeader />
 
             <main>

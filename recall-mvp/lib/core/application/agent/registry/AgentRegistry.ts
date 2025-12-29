@@ -8,12 +8,12 @@
  */
 
 import { AgenticRunnerConfig, AgenticRunner, HaltReason } from '../primitives/AgentPrimitives';
-import { AgentContext } from '../types';
+import { AgentContext, Tool } from '../types';
 import { SupervisorAgent } from '../orchestration/SupervisorAgent';
 import { ModelRouter, ModelProfile, ModelConfig } from '../routing/ModelRouter';
 import { LLMPort } from '../../ports/LLMPort';
 import { EnhancedReActAgent } from '../EnhancedReActAgent';
-import { Tool } from '../types';
+import { ToolRegistry as SecureToolRegistry } from '../tools/ToolContracts';
 
 // ============================================================================
 // Imports
@@ -97,10 +97,6 @@ export interface AgentConfig {
  * Partial configuration for overriding defaults.
  */
 export type AgentConfigOverride = Partial<Omit<AgentConfig, 'id' | 'role'>>;
-
-// ============================================================================
-// Default Configurations
-// ============================================================================
 
 // ============================================================================
 // Default Configurations
@@ -224,7 +220,8 @@ export type AgentFactory = (
     llm: LLMPort,
     modelRouter: ModelRouter,
     vectorStore?: VectorStorePort,
-    embeddingPort?: EmbeddingPort
+    embeddingPort?: EmbeddingPort,
+    toolRegistry?: SecureToolRegistry
 ) => AgenticRunner;
 
 /**
@@ -234,7 +231,7 @@ export type AgentFactory = (
  * ```typescript
  * const registry = new AgentRegistry();
  * registry.register(myAgentConfig);
- * const runner = registry.create('my-agent', context);
+ * const runner = registry.create('my-agent', context, llm, router);
  * const result = await runner.run(goal, context);
  * ```
  */
@@ -294,7 +291,8 @@ export class AgentRegistry {
         llm: LLMPort,
         modelRouter: ModelRouter,
         vectorStore?: VectorStorePort,
-        embeddingPort?: EmbeddingPort
+        embeddingPort?: EmbeddingPort,
+        toolRegistry?: SecureToolRegistry
     ): AgenticRunner {
         const config = this.getOrThrow(id);
 
@@ -308,7 +306,7 @@ export class AgentRegistry {
             throw new Error(`[AgentRegistry] No factory for role: ${config.role}`);
         }
 
-        return factory(config, context, llm, modelRouter, vectorStore, embeddingPort);
+        return factory(config, context, llm, modelRouter, vectorStore, embeddingPort, toolRegistry);
     }
 
     /**
@@ -319,7 +317,8 @@ export class AgentRegistry {
         context: AgentContext,
         llm: LLMPort,
         modelRouter: ModelRouter,
-        overrides: AgentConfigOverride
+        overrides: AgentConfigOverride,
+        toolRegistry?: SecureToolRegistry
     ): AgenticRunner {
         const baseConfig = this.getOrThrow(id);
         const mergedConfig: AgentConfig = {
@@ -333,7 +332,7 @@ export class AgentRegistry {
             throw new Error(`[AgentRegistry] No factory for role: ${mergedConfig.role}`);
         }
 
-        return factory(mergedConfig, context, llm, modelRouter);
+        return factory(mergedConfig, context, llm, modelRouter, undefined, undefined, toolRegistry);
     }
 
     /**
@@ -344,7 +343,8 @@ export class AgentRegistry {
         context: AgentContext,
         llm: LLMPort,
         modelRouter: ModelRouter,
-        overrides?: AgentConfigOverride
+        overrides?: AgentConfigOverride,
+        toolRegistry?: SecureToolRegistry
     ): AgenticRunner {
         const defaults = DEFAULT_CONFIGS[role];
         const config: AgentConfig = {
@@ -364,7 +364,7 @@ export class AgentRegistry {
             throw new Error(`[AgentRegistry] No factory for role: ${role}`);
         }
 
-        return factory(config, context, llm, modelRouter);
+        return factory(config, context, llm, modelRouter, undefined, undefined, toolRegistry);
     }
 
     /**
@@ -551,7 +551,8 @@ export function createDefaultRegistry(
     llm: LLMPort,
     modelRouter: ModelRouter,
     vectorStore?: VectorStorePort,
-    embeddingPort?: EmbeddingPort
+    embeddingPort?: EmbeddingPort,
+    toolRegistry?: SecureToolRegistry
 ): AgentRegistry {
     const registry = new AgentRegistry();
 
@@ -564,13 +565,13 @@ export function createDefaultRegistry(
     registry.register(createCriticAgentConfig());
 
     // Register generic factory
-    registry.setDefaultFactory((config, context, l, r, v, e) => {
-        return new EnhancedReActAgent(l, r, [], config as any, v, e);
+    registry.setDefaultFactory((config, context, l, r, v, e, tr) => {
+        return new EnhancedReActAgent(l, r, [], { ...config, userId: context.userId } as any, v, e, undefined, tr || toolRegistry);
     });
 
     // Register supervisor factory
-    registry.registerFactory(AgentRole.SUPERVISOR, (config, context, l, r, v, e) => {
-        return new SupervisorAgent(l, r, [], config as any, v, e);
+    registry.registerFactory(AgentRole.SUPERVISOR, (config, context, l, r, v, e, tr) => {
+        return new SupervisorAgent(l, r, [], { ...config, userId: context.userId } as any, v, e, undefined, tr || toolRegistry);
     });
 
     return registry;

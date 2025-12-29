@@ -155,7 +155,7 @@ function substituteVariables(template: string, variables: Record<string, string>
  * 
  * const composed = registry.compose(
  *   ['system-biographer', 'task-interview'],
- *   { agent_name: 'Recall', topic: 'childhood' }
+ *   { agent_name: 'Evermore', topic: 'childhood' }
  * );
  * ```
  */
@@ -537,7 +537,7 @@ export function createDefaultPromptRegistry(): PromptRegistry {
         name: 'Conversational Agent System Prompt',
         description: 'System prompt for the Director agent in voice conversations',
         category: PromptCategory.SYSTEM,
-        template: `You are Recall, an empathetic AI biographer.
+        template: `You are Evermore, an empathetic AI biographer.
 Your mission is to help seniors recount their life stories.
 
 CORE PRINCIPLES:
@@ -555,7 +555,7 @@ REACT PROTOCOL:
         variables: [],
         tokenEstimate: 200,
         tags: ['core', 'voice', 'empathy'],
-        author: 'Recall Team',
+        author: 'Evermore Team',
         createdAt: '2025-01-01',
         updatedAt: '2025-01-01',
     });
@@ -593,7 +593,7 @@ OUTPUT JSON:
         variables: ['user_input', 'context'],
         tokenEstimate: 150,
         tags: ['intent', 'classification'],
-        author: 'Recall Team',
+        author: 'Evermore Team',
         createdAt: '2025-01-01',
         updatedAt: '2025-01-01',
     });
@@ -618,7 +618,7 @@ Output JSON:
         variables: ['text'],
         tokenEstimate: 50,
         tags: ['safety', 'guardrail'],
-        author: 'Recall Team',
+        author: 'Evermore Team',
         createdAt: '2025-01-01',
         updatedAt: '2025-01-01',
     });
@@ -656,7 +656,7 @@ OUTPUT JSON:
         variables: ['goal', 'observations'],
         tokenEstimate: 150,
         tags: ['reflection', 'validation'],
-        author: 'Recall Team',
+        author: 'Evermore Team',
         createdAt: '2025-01-01',
         updatedAt: '2025-01-01',
     });
@@ -691,7 +691,7 @@ OUTPUT JSON:
         variables: ['goal', 'context'],
         tokenEstimate: 200,
         tags: ['planning', 'decomposition'],
-        author: 'Recall Team',
+        author: 'Evermore Team',
         createdAt: '2025-01-01',
         updatedAt: '2025-01-01',
     });
@@ -731,7 +731,7 @@ OUTPUT FORMAT:
         variables: ['system_prompt', 'tools', 'context', 'goal', 'past_steps'],
         tokenEstimate: 300,
         tags: ['react', 'execution', 'core'],
-        author: 'Recall Team',
+        author: 'Evermore Team',
         createdAt: '2025-01-01',
         updatedAt: '2025-01-01',
     });

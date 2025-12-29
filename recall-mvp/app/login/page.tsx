@@ -60,7 +60,7 @@ export default function LoginPage() {
                         <div className="w-10 h-10 bg-gradient-to-br from-peach-warm to-terracotta rounded-xl flex items-center justify-center shadow-sm">
                             <span className="material-symbols-outlined text-white text-2xl filled">mic</span>
                         </div>
-                        <span className="text-2xl font-serif font-extrabold text-terracotta tracking-tight">ReCall</span>
+                        <span className="text-2xl font-serif font-extrabold text-terracotta tracking-tight">Evermore</span>
                     </Link>
                     <nav className="flex items-center gap-8">
                         <Link href="/" className="text-sm font-bold text-text-secondary hover:text-terracotta transition-colors">Home</Link>
@@ -74,7 +74,7 @@ export default function LoginPage() {
 
                 <div className="text-center mb-16 animate-fade-in max-w-2xl px-4">
                     <h1 className="text-5xl md:text-7xl font-serif font-extrabold text-text-primary mb-6 leading-tight">
-                        Welcome back to <span className="text-terracotta italic">ReCall</span>
+                        Welcome back to <span className="text-terracotta italic">Evermore</span>
                     </h1>
                     <p className="text-xl text-text-secondary font-medium leading-relaxed opacity-70">
                         Your family's stories are waiting for you. Choose your path to continue your legacy journey.
@@ -150,7 +150,7 @@ export default function LoginPage() {
                                         placeholder="Enter your email..."
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full bg-peach-main/10 border-2 border-transparent focus:border-terracotta rounded-full px-8 py-5 text-text-primary shadow-inner focus:outline-none transition-all placeholder:text-text-muted/40 font-medium"
+                                        className="w-full bg-peach-main/10 border-2 border-transparent focus:border-terracotta rounded-full px-8 py-5 text-base text-text-primary shadow-inner focus:outline-none transition-all placeholder:text-text-muted/40 font-medium"
                                     />
                                 </div>
                                 <button
@@ -164,7 +164,7 @@ export default function LoginPage() {
 
                             <div className="mt-16 text-center">
                                 <p className="text-text-secondary font-medium">
-                                    New to ReCall? <Link href="/onboarding" className="text-terracotta font-extrabold underline underline-offset-8 decoration-2 hover:text-sienna transition-colors ml-1">Start your legacy here</Link>
+                                    New to Evermore? <Link href="/onboarding" className="text-terracotta font-extrabold underline underline-offset-8 decoration-2 hover:text-sienna transition-colors ml-1">Start your legacy here</Link>
                                 </p>
                             </div>
 

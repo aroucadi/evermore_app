@@ -23,7 +23,10 @@ import { RetrieveMemoriesTool } from '../agent/tools/RetrieveMemoriesTool';
 import { CheckSafetyTool } from '../agent/tools/CheckSafetyTool';
 import { ToolRegistry, ToolCapability, ToolPermission } from '../agent/tools/ToolContracts';
 import { ModelRouter, ModelProfile, DEFAULT_MODELS } from '../agent/routing/ModelRouter';
+import { logger } from '../Logger';
 import { z } from 'zod';
+import { AgentMemoryPort } from '../ports/AgentMemoryPort';
+import { Message } from '../../domain/value-objects/Message';
 
 export interface StreamingCallbacks {
     onStateChange: (state: string, details?: string) => void;
@@ -38,7 +41,8 @@ export class StreamingProcessMessageUseCase {
         private userRepository: UserRepository,
         private llm: LLMPort,
         private vectorStore: VectorStorePort,
-        private contentSafetyGuard: ContentSafetyGuard
+        private contentSafetyGuard: ContentSafetyGuard,
+        private memoryFactory: (userId: string) => AgentMemoryPort
     ) { }
 
     async executeStreaming(
@@ -50,7 +54,7 @@ export class StreamingProcessMessageUseCase {
         try {
             // State: Listening
             callbacks.onStateChange('listening', 'Received your message');
-            console.log(`[StreamingProcessMessage] Starting for session ${sessionId}, message: ${message.substring(0, 30)}...`);
+            logger.info('[StreamingProcessMessage] Starting streaming message processing', { sessionId, messagePreview: message.substring(0, 30) });
 
             const session = await this.sessionRepository.findById(sessionId);
             if (!session) {
@@ -58,30 +62,27 @@ export class StreamingProcessMessageUseCase {
                 return;
             }
 
-            // Handle transcriptRaw being either a JSON string OR already an object/array
-            let transcript: any[] = [];
+            // Standardize transcript parsing
+            let transcript: Message[] = [];
             const raw = session.transcriptRaw;
-            if (!raw) {
-                transcript = [];
-            } else if (Array.isArray(raw)) {
+            if (Array.isArray(raw)) {
                 transcript = raw;
-            } else if (typeof raw === 'object') {
-                transcript = Array.isArray((raw as any).messages) ? (raw as any).messages : [];
-            } else if (typeof raw === 'string') {
+            } else if (typeof raw === 'string' && raw.trim().length > 0) {
                 try {
-                    transcript = JSON.parse(raw.trim()) || [];
-                } catch {
+                    transcript = JSON.parse(raw);
+                } catch (e) {
+                    logger.error('[StreamingProcessMessage] Failed to parse transcript string', { sessionId, error: e });
                     transcript = [];
                 }
             }
-            console.log(`[StreamingProcessMessage] Parsed transcript, length: ${transcript.length}`);
+            logger.info('[StreamingProcessMessage] Parsed transcript', { sessionId, transcriptLength: transcript.length });
 
             // Handle conversation initialization
             if (message === '__init__' && speaker === 'user') {
                 callbacks.onStateChange('responding', 'Preparing greeting');
                 const user = await this.userRepository.findById(session.userId);
                 const userName = user?.name || 'there';
-                const greeting = `Hello${userName !== 'there' ? `, ${userName.split(' ')[0]}` : ''}! I'm Recall, your memory companion. What story would you like to share with me today?`;
+                const greeting = `Hello${userName !== 'there' ? `, ${userName.split(' ')[0]}` : ''}! I'm Evermore, your story companion. What story would you like to share with me today?`;
 
                 // Stream the greeting tokens for effect
                 for (const word of greeting.split(' ')) {
@@ -113,8 +114,8 @@ export class StreamingProcessMessageUseCase {
                 text: message,
                 timestamp: new Date().toISOString(),
             });
-            session.transcriptRaw = transcript; // Store as array, DB handles JSON
-            console.log('[StreamingProcessMessage] Saving user message to session:', {
+            session.transcriptRaw = transcript;
+            logger.info('[StreamingProcessMessage] Saving user message to session', {
                 sessionId,
                 messagePreview: message.substring(0, 50),
                 transcriptLength: transcript.length,
@@ -142,64 +143,15 @@ export class StreamingProcessMessageUseCase {
             }
 
             // State: Recalling
-            callbacks.onStateChange('recalling', 'Searching memories');
+            callbacks.onStateChange('recalling', 'Connecting to your stories');
 
             // Set up tools
             const toolRegistry = new ToolRegistry();
-            const memoriesTool = new RetrieveMemoriesTool(this.vectorStore, session.userId);
-            const safetyTool = new CheckSafetyTool(this.contentSafetyGuard, session.userId, sessionId, emergencyContact);
+            const memoriesTool = new RetrieveMemoriesTool(this.memoryFactory);
+            const safetyTool = new CheckSafetyTool(this.contentSafetyGuard, emergencyContact);
 
-            toolRegistry.register({
-                metadata: {
-                    id: 'RetrieveMemories',
-                    name: 'Retrieve Memories',
-                    description: 'Search for past memories or conversations based on a query.',
-                    usageHint: 'Use when user asks about past events or memories.',
-                    version: '1.0.0',
-                    capabilities: [ToolCapability.READ],
-                    defaultPermission: ToolPermission.ALLOWED,
-                    estimatedCostCents: 0.01,
-                    estimatedLatencyMs: 500,
-                    enabled: true,
-                },
-                inputSchema: z.object({ query: z.string() }),
-                outputSchema: z.string(),
-                execute: async (input: { query: string }) => {
-                    const startTime = Date.now();
-                    try {
-                        const result = await memoriesTool.execute(input);
-                        return { success: true, data: result, durationMs: Date.now() - startTime };
-                    } catch (e: any) {
-                        return { success: false, error: { code: 'TOOL_ERROR', message: e.message, retryable: false }, durationMs: Date.now() - startTime };
-                    }
-                }
-            });
-
-            toolRegistry.register({
-                metadata: {
-                    id: 'CheckSafety',
-                    name: 'Check Safety',
-                    description: 'Check if the user input or intended response is safe.',
-                    usageHint: 'Use when checking content for safety concerns.',
-                    version: '1.0.0',
-                    capabilities: [ToolCapability.PURE],
-                    defaultPermission: ToolPermission.ALLOWED,
-                    estimatedCostCents: 0.05,
-                    estimatedLatencyMs: 1000,
-                    enabled: true,
-                },
-                inputSchema: z.object({ text: z.string() }),
-                outputSchema: z.string(),
-                execute: async (input: { text: string }) => {
-                    const startTime = Date.now();
-                    try {
-                        const result = await safetyTool.execute(input);
-                        return { success: true, data: result, durationMs: Date.now() - startTime };
-                    } catch (e: any) {
-                        return { success: false, error: { code: 'TOOL_ERROR', message: e.message, retryable: false }, durationMs: Date.now() - startTime };
-                    }
-                }
-            });
+            toolRegistry.register(memoriesTool);
+            toolRegistry.register(safetyTool);
 
             // State: Thinking
             callbacks.onStateChange('thinking', 'Considering response');
@@ -260,8 +212,13 @@ export class StreamingProcessMessageUseCase {
                 text: responseText,
                 timestamp: new Date().toISOString(),
                 strategy: 'agentic',
+                metadata: {
+                    traceId: sessionId,
+                    reasoning: result.steps.map(s => s.thought).join(' -> '),
+                    cost: result.totalCostCents,
+                }
             });
-            session.transcriptRaw = transcript; // Store as array, DB handles JSON
+            session.transcriptRaw = transcript;
             await this.sessionRepository.update(session);
 
             callbacks.onComplete({ text: responseText, strategy: 'agentic' });

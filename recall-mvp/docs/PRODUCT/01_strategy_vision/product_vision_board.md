@@ -1,4 +1,4 @@
-# Recall Product Vision Board
+# Evermore Product Vision Board
 
 ---
 
@@ -85,13 +85,13 @@ We envision a world where no life story is lost to time, memory, or isolation. W
 |------|--------|
 | Scale acquisition | 50,000 active senior users |
 | Sustainable unit economics | LTV:CAC > 3:1 |
-| Enterprise partnerships | 10 senior care facilities using Recall |
+| Enterprise partnerships | 10 senior care facilities using Evermore |
 
 ---
 
 ## Strategic Differentiation
 
-| Dimension | Recall | Generic Voice Assistants |
+| Dimension | Evermore | Generic Voice Assistants |
 |-----------|--------|-------------------------|
 | Purpose | Biography and legacy | Tasks and information |
 | Memory | Persistent, growing knowledge | Session-bound |

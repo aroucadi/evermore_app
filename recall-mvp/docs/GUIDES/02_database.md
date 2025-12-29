@@ -1,6 +1,6 @@
 # Database Guide
 
-Recall is database-agnostic but optimized for PostgreSQL.
+Evermore is database-agnostic but optimized for PostgreSQL.
 
 ## Drizzle ORM
 We do not write raw SQL. We use [Drizzle ORM](https://orm.drizzle.team).

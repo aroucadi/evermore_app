@@ -1,4 +1,4 @@
-# Recall Experiment Canvas
+# Evermore Experiment Canvas
 
 > Validation experiments for critical assumptions.
 

@@ -37,7 +37,7 @@ export class ElevenLabsClient {
     const memories = await this.memoryService.retrieveContext(config.userId);
 
     // 2. Build system prompt with injected memories
-    const systemPrompt = `You are Recall, conducting reminiscence therapy with ${config.userName}.
+    const systemPrompt = `You are Evermore, conducting reminiscence therapy with ${config.userName}.
 
 MEMORY CONTEXT:
 ${memories.map((m) => `- ${m.text}`).join('\n') || 'No previous conversations'}
@@ -66,9 +66,9 @@ RULES:
 
     console.log("Mocking startConversation call due to SDK mismatch in this env");
     const conversation = {
-        conversationId: 'mock-conv-id',
-        websocketUrl: 'wss://api.elevenlabs.io/v1/conv-ai/...',
-        agentId: process.env.ELEVENLABS_AGENT_ID!
+      conversationId: 'mock-conv-id',
+      websocketUrl: 'wss://api.elevenlabs.io/v1/conv-ai/...',
+      agentId: process.env.ELEVENLABS_AGENT_ID!
     };
 
     return {

@@ -1,3 +1,16 @@
+export interface StorybookAtoms {
+    keyMoments: Array<{ moment: string; importance: number; reasoning: string }>;
+    visualElements: string[];
+    narrativeBeats: Array<{ beat: string; pageRange: string; purpose: string }>;
+    characterDetails: { name: string; age: string; physicalDescription: string; clothingStyle?: string; personalityTraits?: string };
+    emotionalTone?: {
+        primaryEmotion: string;
+        emotionalArc: string;
+        preservationNotes: string[];
+    };
+    emotionalArc?: string; // Legacy support for transition
+}
+
 export interface StorybookData {
     id: string;
     chapterId: string;

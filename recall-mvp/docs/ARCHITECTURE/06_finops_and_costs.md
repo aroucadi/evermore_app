@@ -1,6 +1,6 @@
 # FinOps & Cost Management
 
-Recall implements a strict financial operating model to ensure economic sustainability.
+Evermore implements a strict financial operating model to ensure economic sustainability.
 
 ## 💰 Unit Economics
 

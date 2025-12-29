@@ -9,6 +9,8 @@ import { MockLLM } from '../lib/infrastructure/adapters/mocks/MockLLM';
 import { AgentOrchestrator } from '../lib/core/application/agent/orchestration/AgentOrchestrator';
 import { Tool, AgentContext } from '../lib/core/application/agent/types';
 import { IntentType } from '../lib/core/application/agent/primitives/AgentPrimitives';
+import { z } from 'zod';
+import { ToolCapability, ToolPermission } from '../lib/core/application/agent/tools/ToolContracts';
 
 async function runVerification() {
     console.log("=== STARTING AGENT VERIFICATION ===");
@@ -16,12 +18,27 @@ async function runVerification() {
     // 1. Setup
     const mockLLM = new MockLLM();
     const tools: Tool[] = [{
-        name: 'RetrieveMemoriesTool',
-        description: 'Searches memories',
-        schema: {},
+        metadata: {
+            id: 'RetrieveMemoriesTool',
+            name: 'Retrieve Memories',
+            description: 'Searches memories',
+            usageHint: 'mock',
+            version: '1.0.0',
+            capabilities: [ToolCapability.READ],
+            defaultPermission: ToolPermission.ALLOWED,
+            estimatedCostCents: 0,
+            estimatedLatencyMs: 0,
+            enabled: true
+        },
+        inputSchema: z.object({ query: z.string() }),
+        outputSchema: z.string(),
         execute: async (input: any) => {
             console.log(`[Tool] RetrieveMemoriesTool called with:`, input);
-            return "Memory: Best friend is Bob, met in 1990.";
+            return {
+                success: true,
+                data: "Memory: Best friend is Bob, met in 1990.",
+                durationMs: 10
+            };
         }
     }];
 

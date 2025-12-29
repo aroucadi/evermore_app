@@ -17,7 +17,7 @@ export class MockAIService implements AIServicePort {
     return {
       themes: ["Memory", "Childhood", "Technology"],
       sentiment: "positive",
-      key_entities: ["Recall", "AI"],
+      key_entities: ["Evermore", "AI"],
     };
   }
 

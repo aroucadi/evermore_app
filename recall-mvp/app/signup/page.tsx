@@ -83,7 +83,7 @@ function SignupContent() {
                         <div className="w-10 h-10 bg-gradient-to-br from-peach-warm to-terracotta rounded-xl flex items-center justify-center shadow-sm">
                             <span className="material-symbols-outlined text-white text-2xl filled">mic</span>
                         </div>
-                        <span className="text-2xl font-serif font-extrabold text-terracotta tracking-tight">ReCall</span>
+                        <span className="text-2xl font-serif font-extrabold text-terracotta tracking-tight">Evermore</span>
                     </Link>
 
                     {/* Progress Indicator */}
@@ -119,7 +119,7 @@ function SignupContent() {
                                     Start Your Journey
                                 </h1>
                                 <p className="text-lg text-text-secondary font-medium opacity-70">
-                                    Join ReCall to preserve and share your family's priceless legacy.
+                                    Join Evermore to preserve and share your family's priceless legacy.
                                 </p>
                             </div>
 

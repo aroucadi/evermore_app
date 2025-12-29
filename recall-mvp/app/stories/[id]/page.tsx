@@ -10,7 +10,7 @@ interface ChapterData {
   title: string;
   content: string;
   createdAt: string;
-  audioUrl?: string;
+  audioHighlightUrl?: string; // Mapped from backend 'audio_highlight_url'
 }
 
 /**
@@ -54,7 +54,7 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
     if (!story) return;
 
     const shareUrl = window.location.href;
-    const shareText = `${story.title || 'A Family Memory'} - ReCall`;
+    const shareText = `${story.title || 'A Family Memory'} - Evermore`;
 
     // Try native share first (mobile-friendly)
     if (navigator.share) {
@@ -82,6 +82,26 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
   };
 
   // Audio Playback Handler with Web Speech API fallback
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  // Check if favorite on load (simulated or passed via props if available)
+  // Ideally, we fetch this state. For MVP, we'll let it sync on first click or ignored for local state until reload.
+  // Better: Fetch user profile to check favorites? Or assume false initially.
+
+  const handleAddToFavorites = async () => {
+    if (!story) return;
+    try {
+      const res = await fetch(`/api/chapters/${story.id}/favorite`, { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setIsFavorite(data.isFavorite);
+        // Show toast or updated visual
+      }
+    } catch (err) {
+      console.error("Failed to toggle favorite", err);
+    }
+  };
+
   const handlePlayAudio = async () => {
     if (!story?.content) return;
 
@@ -104,6 +124,12 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
       audioRef.current.play();
       setIsPlaying(true);
       return;
+    }
+
+    // Check if story has pre-generated audio url from backend
+    if (story.audioHighlightUrl && !audioUrlRef.current) {
+      console.log('Playing pre-generated audio:', story.audioHighlightUrl);
+      // TODO: Implement playing from remote URL if needed, for now we generate TTS
     }
 
     // Generate TTS audio
@@ -250,29 +276,14 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
   });
 
   return (
-    <div className="min-h-screen bg-[#FCF8F3] font-sans text-text-primary overflow-x-hidden">
-
-      {/* Minimalist Header */}
-      <header className="h-20 bg-white/60 backdrop-blur-xl border-b border-peach-main/10 flex items-center px-10">
-        <div className="container mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-peach-warm to-terracotta rounded-lg flex items-center justify-center text-white shadow-sm">
-              <span className="material-symbols-outlined text-xl filled">mic</span>
-            </div>
-            <span className="text-xl font-serif font-black text-terracotta tracking-tight">ReCall</span>
-            <span className="h-6 w-px bg-peach-main/20 mx-2"></span>
-            <span className="text-sm font-bold text-text-primary opacity-60">Story Immersion View</span>
-          </div>
-        </div>
-      </header>
-
-      <main className="container mx-auto py-16 px-6 max-w-6xl">
+    <AppShell userType="family" showNav={true}>
+      <main className="container mx-auto py-10 px-0 max-w-6xl">
 
         {/* Navigation */}
         <div className="mb-12 animate-fade-in">
           <Link href="/stories" className="inline-flex items-center text-brown-main/60 hover:text-terracotta transition-colors group font-bold">
             <span className="material-symbols-outlined text-2xl mr-2 group-hover:-translate-x-1 transition-transform">arrow_back</span>
-            Back to Stories Archive
+            Back to Stories Collection
           </Link>
         </div>
 
@@ -357,10 +368,10 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
             <div className="space-y-4">
               <button
                 onClick={handleShare}
-                className="w-full py-4 bg-white border-2 border-peach-main/10 rounded-2xl font-bold text-text-primary hover:bg-peach-main/5 transition-all flex items-center justify-center gap-3 shadow-sm"
+                className={`w-full py-4 border-2 rounded-2xl font-bold transition-all flex items-center justify-center gap-3 shadow-sm ${shareStatus === 'copied' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-peach-main/10 text-text-primary hover:bg-peach-main/5'}`}
               >
-                <span className="material-symbols-outlined text-xl">share</span>
-                Share Story
+                <span className="material-symbols-outlined text-xl">{shareStatus === 'copied' ? 'check' : 'share'}</span>
+                {shareStatus === 'copied' ? 'Link Copied!' : 'Share Story'}
               </button>
               <button
                 onClick={() => window.location.href = `/storybook/${resolvedParams.id}`}
@@ -369,9 +380,33 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
                 <span className="material-symbols-outlined text-xl">auto_stories</span>
                 View Storybook
               </button>
-              <button className="w-full py-4 bg-gradient-to-r from-peach-warm/60 to-terracotta/40 border-b-4 border-terracotta/20 rounded-2xl font-bold text-text-primary hover:from-peach-warm hover:to-terracotta hover:text-white transition-all flex items-center justify-center gap-3 shadow-md">
+              <button
+                onClick={handleAddToFavorites}
+                className="w-full py-4 bg-gradient-to-r from-peach-warm/60 to-terracotta/40 border-b-4 border-terracotta/20 rounded-2xl font-bold text-text-primary hover:from-peach-warm hover:to-terracotta hover:text-white transition-all flex items-center justify-center gap-3 shadow-md"
+              >
                 <span className="material-symbols-outlined text-xl">favorite</span>
                 Add to Favorites
+              </button>
+              <button
+                onClick={async () => {
+                  if (confirm('Are you sure you want to delete this story? This action cannot be undone.')) {
+                    try {
+                      const res = await fetch(`/api/chapters/detail/${story.id}`, { method: 'DELETE' });
+                      if (res.ok) {
+                        window.location.href = '/stories';
+                      } else {
+                        alert('Failed to delete story');
+                      }
+                    } catch (e) {
+                      console.error(e);
+                      alert('An error occurred');
+                    }
+                  }
+                }}
+                className="w-full py-4 bg-red-50 border-2 border-red-100 rounded-2xl font-bold text-red-500 hover:bg-red-100/50 transition-all flex items-center justify-center gap-3 shadow-sm"
+              >
+                <span className="material-symbols-outlined text-xl">delete</span>
+                Delete Story
               </button>
             </div>
 
@@ -382,19 +417,11 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
               <div className="space-y-6">
                 <div>
                   <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-2">Recorded</p>
-                  <p className="text-lg font-sans font-bold text-text-secondary">July 24, 2023</p>
+                  <p className="text-lg font-sans font-bold text-text-secondary">{formattedDate}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-2">Duration</p>
-                  <p className="text-lg font-sans font-bold text-text-secondary">14 minutes</p>
-                </div>
-                <div>
-                  <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-2">Tags</p>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    <span className="px-5 py-2 bg-white border border-peach-main/10 rounded-full text-xs font-bold text-brown-main opacity-80">Family</span>
-                    <span className="px-5 py-2 bg-white border border-peach-main/10 rounded-full text-xs font-bold text-brown-main opacity-80">Adventure</span>
-                    <span className="px-5 py-2 bg-white border border-peach-main/10 rounded-full text-xs font-bold text-brown-main opacity-80">Childhood</span>
-                  </div>
+                  <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-2">Character Count</p>
+                  <p className="text-lg font-sans font-bold text-text-secondary">{story.content?.length || 0} characters</p>
                 </div>
               </div>
             </div>
@@ -402,18 +429,6 @@ export default function StoryImmersionPage({ params }: { params: Promise<{ id: s
           </aside>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="py-20 bg-white/40 border-t border-peach-main/10 mt-32">
-        <div className="container mx-auto px-10 max-w-6xl flex flex-col md:flex-row justify-between items-center gap-10">
-          <p className="text-sm font-bold text-text-muted opacity-60">© 2024 ReCall. Immortalizing Stories.</p>
-          <div className="flex gap-10 text-sm font-bold text-text-muted opacity-60">
-            <Link href="#" className="hover:text-terracotta transition-colors">About</Link>
-            <Link href="#" className="hover:text-terracotta transition-colors">Help</Link>
-            <Link href="#" className="hover:text-terracotta transition-colors">Privacy</Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </AppShell>
   );
 }

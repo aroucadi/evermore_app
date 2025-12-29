@@ -16,7 +16,7 @@ export function SettingsLayout({ children }: SettingsLayoutProps) {
                         <span className="material-symbols-outlined text-2xl">arrow_back</span>
                     </Link>
                     <h1 className="text-3xl md:text-4xl font-bold font-serif text-[#3D3430]">
-                        ReCall <span className="font-sans text-[#5C4D44] font-medium">Personalized Settings</span>
+                        Evermore <span className="font-sans text-[#5C4D44] font-medium">Personalized Settings</span>
                     </h1>
                 </header>
 

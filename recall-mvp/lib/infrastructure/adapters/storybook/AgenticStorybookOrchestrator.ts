@@ -23,20 +23,13 @@ import {
     ToolPermission
 } from '../../../core/application/agent/tools/ToolContracts';
 import { z } from 'zod';
-import { StorybookData, StorybookContext } from '../../../core/application/ports/StorybookGeneratorPort';
+import { StorybookData, StorybookContext, StorybookAtoms } from '../../../core/application/ports/StorybookGeneratorPort';
 import { StorybookGeneratorPort } from '../../../core/application/ports/StorybookGeneratorPort';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-interface StorybookAtoms {
-    keyMoments: Array<{ moment: string; importance: number; reasoning: string }>;
-    visualElements: string[];
-    narrativeBeats: Array<{ beat: string; pageRange: string; purpose: string }>;
-    characterDetails: { name: string; age: string; physicalDescription: string };
-    emotionalArc: string;
-}
 
 interface Scene {
     pageNumber: number;
@@ -361,7 +354,11 @@ TIME PERIOD: ${context.timePeriod}
             characterDetails: (characterResult.data as any)?.character || { name: 'Our Hero', age: 'varies', physicalDescription: '' },
             visualElements: ['warm tones', 'nostalgic setting'],
             narrativeBeats: [],
-            emotionalArc: 'hopeful'
+            emotionalTone: {
+                primaryEmotion: 'hopeful',
+                emotionalArc: 'discovery to warmth',
+                preservationNotes: ['maintain cozy atmosphere']
+            }
         };
         console.log(`   │  ✓ Atoms: ${atoms.keyMoments.length} moments, character: ${atoms.characterDetails.name}`);
 

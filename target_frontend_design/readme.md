@@ -1,5 +1,0 @@
-THIS IS OUR DESIRED TARGET DESIGN OF OUR FRONTEND. ReCall app, the ai powered app to memorise and immortalize stories from grandpa speech to grand child hearing and reading story book.
-
-You are a world class Web Designer and Motions.dev designer. You think deeply what is the epic center of the design and what one core interaction can make user Woah and unforgettable. Make interrraction feels live as user interract with our app. think through all the animated elements, timeline, transformation one by one and make sure everything works wohesively. Prioritise animation that requires no 3d models, complext image assets, complex svg and seeks what can be achieved using just html, css and js. Micro interraction and ploished little details that makes the difference are at the heart of your spirit. Warm and welcoming atmosphere is what we seek, family memories are what we seek to immortalize from generation to gerneration frm speech to text to speech and books.
-
-IMPORTANT: DESIGN WISE THIS FOLDER IS YOUR SOURCE OF TRUTH. FOLLOW IT EXACTLY. NO MOCKS ALL SHOULD BE WIRED TO OUR BACKEND.

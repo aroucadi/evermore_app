@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetClose } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
 
 interface UserProfile {
     userId: string;
@@ -36,14 +38,26 @@ const LOGGED_OUT_NAV_LINKS: NavLink[] = [
     { name: 'Get Started', href: '/onboarding', icon: 'arrow_forward' },
 ];
 
-export function Header() {
+export function Header({ userProfile }: { userProfile?: UserProfile | null }) {
     const router = useRouter();
     const pathname = usePathname();
-    const [profile, setProfile] = useState<UserProfile | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [profile, setProfile] = useState<UserProfile | null>(userProfile || null);
+    const [loading, setLoading] = useState(!userProfile);
+    const [isAuthenticated, setIsAuthenticated] = useState(!!userProfile);
+
+    // Update local state if prop changes
+    useEffect(() => {
+        if (userProfile) {
+            setProfile(userProfile);
+            setIsAuthenticated(true);
+            setLoading(false);
+        }
+    }, [userProfile]);
 
     useEffect(() => {
+        // Only fetch if no profile provided via props
+        if (userProfile !== undefined) return;
+
         async function fetchProfile() {
             try {
                 const res = await fetch('/api/users/profile');
@@ -103,10 +117,10 @@ export function Header() {
                     <div className="flex items-center gap-6">
                         <Link href="/" className="flex items-center gap-2 group transition-transform active:scale-95">
                             <div className="w-10 h-10 bg-gradient-to-br from-peach-warm to-terracotta rounded-xl flex items-center justify-center shadow-sm transform group-hover:rotate-6 transition-transform">
-                                <span className="material-symbols-outlined text-white text-2xl filled">mic</span>
+                                <Image src="/evermore-icon-white.svg" alt="Evermore Logo" width={24} height={24} className="object-contain" />
                             </div>
                             <div className="flex flex-col -gap-1">
-                                <span className="text-2xl font-serif font-extrabold text-terracotta tracking-tight">ReCall</span>
+                                <span className="text-2xl font-serif font-extrabold text-terracotta tracking-tight">Evermore</span>
                                 {/* Persona Badge */}
                                 {isAuthenticated && (
                                     <span className={`text-[10px] font-bold uppercase tracking-tighter -mt-1 ${isFamily ? 'text-blue-500' : 'text-terracotta'
@@ -142,10 +156,12 @@ export function Header() {
                         </nav>
                     </div>
 
-                    {/* User Profile Area - Only show when authenticated */}
+                    {/* Right Side: Profile & Mobile Menu */}
                     <div className="flex items-center gap-4">
+
+                        {/* Desktop Profile Display */}
                         {!loading && isAuthenticated && profile && (
-                            <>
+                            <div className="hidden lg:flex items-center gap-4">
                                 <Link href="/profile" className="flex items-center gap-3 bg-white/40 border border-peach-main/20 pl-2 pr-4 py-1.5 rounded-full group hover:bg-white/60 transition-all shadow-sm">
                                     <div className="w-8 h-8 rounded-full overflow-hidden border border-peach-main/20 shadow-inner">
                                         <Image
@@ -175,12 +191,12 @@ export function Header() {
                                 >
                                     <span className="material-symbols-outlined text-xl">logout</span>
                                 </button>
-                            </>
+                            </div>
                         )}
 
-                        {/* Mobile Menu Button (when not authenticated) */}
+                        {/* Login Button (Logged Out) */}
                         {!loading && !isAuthenticated && (
-                            <div className="lg:hidden flex items-center gap-2">
+                            <div className="flex items-center gap-2">
                                 <Link
                                     href="/login"
                                     className="px-4 py-2 rounded-full text-sm font-bold text-text-secondary hover:bg-peach-main/20"
@@ -189,11 +205,59 @@ export function Header() {
                                 </Link>
                             </div>
                         )}
+
+                        {/* Mobile Menu (Authenticated) */}
+                        {!loading && isAuthenticated && (
+                            <div className="lg:hidden ml-2">
+                                <Sheet>
+                                    <SheetTrigger asChild>
+                                        <Button variant="ghost" size="icon" className="w-12 h-12 text-terracotta hover:bg-peach-main/20 rounded-full">
+                                            <span className="material-symbols-outlined text-3xl">menu</span>
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent side="right" className="bg-[#FCF8F3] border-l border-peach-main/20 w-[85%] sm:w-[400px]">
+                                        <SheetHeader className="text-left mb-8 pt-4">
+                                            <SheetTitle className="font-serif font-extrabold text-2xl text-terracotta">Menu</SheetTitle>
+                                        </SheetHeader>
+
+                                        <nav className="flex flex-col gap-3">
+                                            {navLinks.map((link) => {
+                                                const isActive = pathname === link.href;
+                                                return (
+                                                    <SheetClose asChild key={link.href}>
+                                                        <Link
+                                                            href={link.href}
+                                                            className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-lg font-bold transition-all ${isActive
+                                                                ? 'bg-peach-main text-text-primary shadow-sm'
+                                                                : 'text-text-secondary hover:bg-peach-main/10'
+                                                                }`}
+                                                        >
+                                                            <span className={`material-symbols-outlined text-2xl ${isActive ? 'filled' : ''}`}>{link.icon}</span>
+                                                            {link.name}
+                                                        </Link>
+                                                    </SheetClose>
+                                                );
+                                            })}
+
+                                            <div className="h-px bg-peach-main/20 my-4" />
+
+                                            <SheetClose asChild>
+                                                <button
+                                                    onClick={handleLogout}
+                                                    className="flex items-center gap-4 px-4 py-3 rounded-2xl text-lg font-bold text-red-500 hover:bg-red-50 transition-all text-left w-full"
+                                                >
+                                                    <span className="material-symbols-outlined text-2xl">logout</span>
+                                                    Log Out
+                                                </button>
+                                            </SheetClose>
+                                        </nav>
+                                    </SheetContent>
+                                </Sheet>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
         </header>
     );
 }
-
-

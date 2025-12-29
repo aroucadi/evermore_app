@@ -179,10 +179,10 @@ describe('PromptRegistry', () => {
         it('should compose multiple prompts in order', () => {
             const composed = registry.compose(
                 ['system-base', 'task-instruction', 'format-json'],
-                { agent_name: 'Recall', task: 'memory recall' }
+                { agent_name: 'Evermore', task: 'memory recall' }
             );
 
-            expect(composed.text).toContain('You are Recall');
+            expect(composed.text).toContain('You are Evermore');
             expect(composed.text).toContain('help with memory recall');
             expect(composed.text).toContain('JSON format');
             expect(composed.sourceIds).toHaveLength(3);
@@ -200,7 +200,7 @@ describe('PromptRegistry', () => {
         it('should track variables in composition', () => {
             const composed = registry.compose(
                 ['system-base', 'task-instruction'],
-                { agent_name: 'Recall' }
+                { agent_name: 'Evermore' }
             );
 
             // Verify composition returns expected structure

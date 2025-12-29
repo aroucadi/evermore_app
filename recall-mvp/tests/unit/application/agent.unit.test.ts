@@ -16,6 +16,7 @@ import { AnswerSynthesizer } from '../../../lib/core/application/agent/execution
 import { IntentType, PlannedStep, ProcessedObservation, ReflectionResult, ExecutionContext, ObservationType } from '../../../lib/core/application/agent/primitives/AgentPrimitives';
 import { AgentContext, Tool } from '../../../lib/core/application/agent/types';
 import { LLMPort } from '../../../lib/core/application/ports/LLMPort';
+import { z } from 'zod';
 
 // ============================================================================
 // Mock LLM
@@ -64,10 +65,25 @@ const createTestContext = (): AgentContext => ({
 });
 
 const createMockTool = (name: string, returnValue: unknown): Tool => ({
-    name,
-    description: `Mock ${name} tool`,
-    schema: {},
-    execute: vi.fn().mockResolvedValue(returnValue)
+    metadata: {
+        id: name,
+        name,
+        description: `Mock ${name} tool`,
+        usageHint: 'mock hint',
+        version: '1.0.0',
+        capabilities: [],
+        defaultPermission: 'ALLOWED' as any,
+        estimatedCostCents: 0,
+        estimatedLatencyMs: 0,
+        enabled: true
+    },
+    inputSchema: z.any() as any,
+    outputSchema: z.any() as any,
+    execute: vi.fn().mockResolvedValue({
+        success: true,
+        data: returnValue,
+        durationMs: 0
+    })
 });
 
 const createExecutionContext = (): ExecutionContext => ({
@@ -239,9 +255,20 @@ describe('StepExecutor', () => {
 
         it('should handle tool execution errors', async () => {
             const failingTool: Tool = {
-                name: 'FailingTool',
-                description: 'A tool that fails',
-                schema: {},
+                metadata: {
+                    id: 'FailingTool',
+                    name: 'FailingTool',
+                    description: 'A tool that fails',
+                    usageHint: 'mock hint',
+                    version: '1.0.0',
+                    capabilities: [],
+                    defaultPermission: 'ALLOWED' as any,
+                    estimatedCostCents: 0,
+                    estimatedLatencyMs: 0,
+                    enabled: true
+                },
+                inputSchema: z.any() as any,
+                outputSchema: z.any() as any,
                 execute: vi.fn().mockRejectedValue(new Error('Tool crashed'))
             };
 
@@ -285,11 +312,26 @@ describe('StepExecutor', () => {
 
         it('should track execution duration', async () => {
             const slowTool: Tool = {
-                name: 'SlowTool',
-                description: 'Slow tool',
-                schema: {},
+                metadata: {
+                    id: 'SlowTool',
+                    name: 'SlowTool',
+                    description: 'Slow tool',
+                    usageHint: 'mock hint',
+                    version: '1.0.0',
+                    capabilities: [],
+                    defaultPermission: 'ALLOWED' as any,
+                    estimatedCostCents: 0,
+                    estimatedLatencyMs: 0,
+                    enabled: true
+                },
+                inputSchema: z.any() as any,
+                outputSchema: z.any() as any,
                 execute: vi.fn().mockImplementation(() =>
-                    new Promise(resolve => setTimeout(() => resolve('done'), 50))
+                    new Promise(resolve => setTimeout(() => resolve({
+                        success: true,
+                        data: 'done',
+                        durationMs: 50
+                    }), 50))
                 )
             };
 

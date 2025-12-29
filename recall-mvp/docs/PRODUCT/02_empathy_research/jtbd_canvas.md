@@ -1,4 +1,4 @@
-# Recall Jobs To Be Done Canvas
+# Evermore Jobs To Be Done Canvas
 
 ---
 
@@ -107,7 +107,7 @@
 
 ## Hiring Criteria
 
-When would a user "hire" Recall?
+When would a user "hire" Evermore?
 
 ### Senior
 
@@ -132,9 +132,9 @@ When would a user "hire" Recall?
 
 Jobs that compete for attention:
 
-| Competing Job | Competitor | When Recall Wins |
+| Competing Job | Competitor | When Evermore Wins |
 |---------------|-----------|------------------|
 | Be entertained | TV, radio | When user wants engagement, not passivity |
 | Talk to family | Phone call | When family is unavailable |
 | Write memoir | Journal, apps | When writing is too difficult |
-| Nothing | Isolation | When Recall is proactive |
+| Nothing | Isolation | When Evermore is proactive |

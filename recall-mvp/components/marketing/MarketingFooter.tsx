@@ -13,7 +13,7 @@ export function MarketingFooter() {
                             <div className="w-10 h-10 bg-gradient-to-br from-peach-warm to-terracotta rounded-xl flex items-center justify-center shadow-sm transform group-hover:rotate-6 transition-transform">
                                 <span className="material-symbols-outlined text-white text-2xl filled">heart_plus</span>
                             </div>
-                            <span className="text-2xl font-serif font-extrabold text-text-primary tracking-tight">ReCall</span>
+                            <span className="text-2xl font-serif font-extrabold text-text-primary tracking-tight">Evermore</span>
                         </Link>
                         <p className="text-text-secondary text-sm font-medium leading-relaxed max-w-xs">
                             Immortalizing family stories, one conversation at a time. We help you preserve legacies for future generations in beautiful, physical books.
@@ -27,7 +27,7 @@ export function MarketingFooter() {
                             <li><Link href="/" className="text-text-primary font-bold hover:text-terracotta transition-all text-sm">Home</Link></li>
                             <li><Link href="#how-it-works" className="text-text-primary font-bold hover:text-terracotta transition-all text-sm">How It Works</Link></li>
                             <li><Link href="#pricing" className="text-text-primary font-bold hover:text-terracotta transition-all text-sm">Pricing</Link></li>
-                            <li><Link href="#about" className="text-text-primary font-bold hover:text-terracotta transition-all text-sm">About ReCall</Link></li>
+                            <li><Link href="#about" className="text-text-primary font-bold hover:text-terracotta transition-all text-sm">About Evermore</Link></li>
                         </ul>
                     </div>
 
@@ -59,7 +59,7 @@ export function MarketingFooter() {
                         <div>
                             <h4 className="text-[11px] font-bold text-terracotta uppercase tracking-[0.2em] mb-6">Copyright</h4>
                             <p className="text-text-secondary text-xs font-bold leading-relaxed">
-                                © 2024 ReCall Legacy Inc. <br />
+                                © 2024 Evermore Legacy Inc. <br />
                                 All Rights Reserved
                             </p>
                         </div>

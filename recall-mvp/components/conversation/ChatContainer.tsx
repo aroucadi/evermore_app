@@ -11,9 +11,9 @@ interface ChatContainerProps {
 export function ChatContainer({ children, agentState }: ChatContainerProps) {
     const getThinkingText = () => {
         switch (agentState) {
-            case 'thinking': return 'ReCall is thinking...';
+            case 'thinking': return 'Evermore is thinking...';
             case 'listening': return 'Listening...';
-            case 'speaking': return 'ReCall is speaking...';
+            case 'speaking': return 'Evermore is speaking...';
             default: return '';
         }
     };

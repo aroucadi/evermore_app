@@ -1,4 +1,4 @@
-# Recall Product Canvas
+# Evermore Product Canvas
 
 > Current MVP scope and feature definition.
 
@@ -8,7 +8,7 @@
 
 | Dimension | Value |
 |-----------|-------|
-| Name | Recall |
+| Name | Evermore |
 | Version | MVP (v1.0) |
 | Category | AI-powered voice biographer |
 | Primary platform | Web (responsive), voice-first |
@@ -45,7 +45,7 @@ An empathetic AI companion that engages seniors in patient voice conversations, 
 |-----------|-------------|
 | Semantic memory | Vector-indexed facts about user's life |
 | Episodic memory | Summaries of significant interactions |
-| Context retrieval | RAG-powered recall of relevant past stories |
+| Context retrieval | RAG-powered Evermore of relevant past stories |
 | Memory growth | Knowledge base expands with every session |
 
 ### 3. Photo Trigger System
@@ -119,7 +119,7 @@ An empathetic AI companion that engages seniors in patient voice conversations, 
 ### Senior: First Session
 
 1. Onboarding: simple voice-guided setup
-2. Greeting: Recall introduces itself
+2. Greeting: Evermore introduces itself
 3. Opening question: gentle, open-ended prompt
 4. Story capture: patient listening, follow-ups
 5. Closure: summary, preview of next time

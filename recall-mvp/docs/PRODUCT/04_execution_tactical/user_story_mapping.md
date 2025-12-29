@@ -1,4 +1,4 @@
-# Recall User Story Mapping
+# Evermore User Story Mapping
 
 > Feature prioritization by release, organized around user activities.
 
@@ -10,8 +10,8 @@
 ┌──────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
 │   DISCOVER   │   ONBOARD    │    CONVERSE  │   REMEMBER   │    SHARE     │
 │              │              │              │              │              │
-│  Learn about │  Set up and  │  Have voice  │  Recall past │  Know family │
-│    Recall    │  first use   │ conversations│   stories    │  received it │
+│  Learn about │  Set up and  │  Have voice  │  Evermore past │  Know family │
+│   Evermore   │  first use   │ conversations│   stories    │  received it │
 └──────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
 ```
 
@@ -23,10 +23,10 @@ The minimum viable path through all activities:
 
 | Activity | Story |
 |----------|-------|
-| Discover | As a senior, I receive Recall as a gift from my family |
+| Discover | As a senior, I receive Evermore as a gift from my family |
 | Onboard | As a senior, I complete voice-guided setup in under 5 minutes |
 | Converse | As a senior, I have a 10+ minute conversation where I share a story |
-| Remember | As a senior, Recall references something I said in a previous session |
+| Remember | As a senior, Evermore references something I said in a previous session |
 | Share | As a senior, I know my family can see my stories in their dashboard |
 
 ---
@@ -37,7 +37,7 @@ The minimum viable path through all activities:
 
 | Priority | Story |
 |----------|-------|
-| P0 | Family member purchases and gifts Recall subscription |
+| P0 | Family member purchases and gifts Evermore subscription |
 | P0 | Senior receives welcome email/message from family |
 
 ### Onboard
@@ -45,7 +45,7 @@ The minimum viable path through all activities:
 | Priority | Story |
 |----------|-------|
 | P0 | Senior completes voice-guided onboarding (name, preferences) |
-| P0 | Senior hears Recall's introduction and personality |
+| P0 | Senior hears Evermore's introduction and personality |
 | P1 | Senior sets preferred time of day for prompts |
 
 ### Converse
@@ -53,8 +53,8 @@ The minimum viable path through all activities:
 | Priority | Story |
 |----------|-------|
 | P0 | Senior initiates conversation via voice command |
-| P0 | Recall asks open-ended, patient questions |
-| P0 | Recall responds empathetically to emotional content |
+| P0 | Evermore asks open-ended, patient questions |
+| P0 | Evermore responds empathetically to emotional content |
 | P0 | Session is transcribed and stored |
 | P1 | Session includes natural pacing and pauses |
 | P1 | Senior can pause and resume mid-session |
@@ -63,8 +63,8 @@ The minimum viable path through all activities:
 
 | Priority | Story |
 |----------|-------|
-| P0 | Recall stores facts in semantic memory |
-| P0 | Recall references past stories in new conversations |
+| P0 | Evermore stores facts in semantic memory |
+| P0 | Evermore references past stories in new conversations |
 | P1 | Senior can ask "What have I told you about my mother?" |
 
 ### Share
@@ -75,13 +75,21 @@ The minimum viable path through all activities:
 | P0 | Family sees engagement activity (sessions, duration) |
 | P1 | Family receives weekly digest email |
 
+### Story Management (Refinements)
+
+| Priority | Story |
+|----------|-------|
+| P0 | Senior can delete a story they don't want to keep |
+| P0 | Senior can mark a story as a Favorite for quick access |
+| P0 | Senior can view a filtered list of Favorite stories |
+
 ### Safety
 
 | Priority | Story |
 |----------|-------|
-| P0 | Recall detects potential scam language and warns senior |
-| P0 | Recall detects crisis/distress markers and responds appropriately |
-| P0 | Recall never provides medical advice |
+| P0 | Evermore detects potential scam language and warns senior |
+| P0 | Evermore detects crisis/distress markers and responds appropriately |
+| P0 | Evermore never provides medical advice |
 
 ---
 
@@ -93,7 +101,7 @@ The minimum viable path through all activities:
 |----------|-------|
 | P0 | Family uploads photos that trigger senior's next session |
 | P0 | Senior sees family-contributed photo and tells related story |
-| P1 | Family suggests topics for Recall to explore |
+| P1 | Family suggests topics for Evermore to explore |
 | P1 | Family adds context/notes to captured stories |
 
 ### Enhanced Dashboard
@@ -110,7 +118,7 @@ The minimum viable path through all activities:
 |----------|-------|
 | P1 | Senior receives gentle daily prompt if inactive |
 | P1 | Family receives "New story" notification |
-| P2 | Family sends audio message to senior via Recall |
+| P2 | Family sends audio message to senior via Evermore |
 
 ---
 
@@ -136,8 +144,8 @@ The minimum viable path through all activities:
 
 | Priority | Story |
 |----------|-------|
-| P1 | Recall connects related stories across sessions |
-| P1 | Recall notices gaps and proactively asks filling questions |
+| P1 | Evermore connects related stories across sessions |
+| P1 | Evermore notices gaps and proactively asks filling questions |
 | P2 | Senior reviews and corrects stored facts |
 
 ---

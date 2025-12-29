@@ -85,5 +85,8 @@ export class DrizzleChapterRepository implements ChapterRepository {
       .returning();
     return updated ? this.mapToEntity(updated) : null;
   }
+  async delete(id: string): Promise<void> {
+    await db.delete(chapters).where(eq(chapters.id, id));
+  }
 }
 

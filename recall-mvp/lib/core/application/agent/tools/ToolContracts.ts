@@ -123,7 +123,7 @@ export interface ToolContract<TInput, TOutput> {
     /** Output schema */
     outputSchema: ZodSchema<TOutput>;
     /** Execute the tool */
-    execute(input: TInput): Promise<ToolResult<TOutput>>;
+    execute(input: TInput, context: ToolExecutionContext): Promise<ToolResult<TOutput>>;
 }
 
 /**
@@ -296,7 +296,7 @@ export class ToolRegistry {
 
         // Execute
         try {
-            const result = await contract.execute(input);
+            const result = await contract.execute(input, context);
 
             // Validate output
             if (result.success && result.data) {

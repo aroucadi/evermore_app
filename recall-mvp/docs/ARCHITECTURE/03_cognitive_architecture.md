@@ -1,6 +1,6 @@
 # Cognitive Architecture
 
-Recall operates as a **Stateful, Context-Aware Agentic System**. It moves beyond simple "chatbot" mechanics by implementing a sophisticated cognitive hierarchy.
+Evermore operates as a **Stateful, Context-Aware Agentic System**. It moves beyond simple "chatbot" mechanics by implementing a sophisticated cognitive hierarchy.
 
 ## 🧠 The Agentic Hierarchy
 
@@ -50,7 +50,7 @@ This loop allows the agent to "act" (query DB, save memory) before "speaking".
 ## 3. Context Awareness & Vector Memory (RAG)
 **"The Hippocampus"**
 
-Recall possesses **Semantic Episodic Memory** via Pinecone.
+Evermore possesses **Semantic Episodic Memory** via Pinecone.
 
 ### Architecture
 - **Short-Term Context**: Last 10 conversation turns (Raw tokens).
@@ -64,7 +64,7 @@ Recall possesses **Semantic Episodic Memory** via Pinecone.
 Before every response, the `ContextManager`:
 1. Embeds the user's latest message.
 2. Queries Pinecone for top-3 relevant past memories.
-3. Injects them into the System Prompt as `[RECALLED_MEMORIES]`.
+3. Injects them into the System Prompt as `[EvermoreED_MEMORIES]`.
 
 ---
 

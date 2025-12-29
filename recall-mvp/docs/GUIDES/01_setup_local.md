@@ -1,6 +1,6 @@
 # Local Development Setup
 
-Get Recall running on your machine in 5 minutes.
+Get Evermore running on your machine in 5 minutes.
 
 ## Prerequisites
 - Node.js 18+
@@ -9,8 +9,8 @@ Get Recall running on your machine in 5 minutes.
 
 ## 1. Clone & Install
 ```bash
-git clone https://github.com/your-org/recall.git
-cd recall-mvp
+git clone https://github.com/your-org/Evermore.git
+cd Evermore-mvp
 npm install
 ```
 

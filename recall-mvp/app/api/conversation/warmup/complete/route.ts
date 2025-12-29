@@ -35,10 +35,10 @@ export async function POST(req: NextRequest) {
         if (transcript.length > 0) {
             try {
                 const conversationText = transcript
-                    .map(t => `${t.speaker === 'agent' ? 'Recall' : 'User'}: ${t.text}`)
+                    .map(t => `${t.speaker === 'agent' ? 'Evermore' : 'User'}: ${t.text}`)
                     .join('\n');
 
-                const prompt = `Analyze this warm-up conversation between a user and an AI assistant named Recall. The user is about to tell a personal story or memory.
+                const prompt = `Analyze this warm-up conversation between a user and an AI assistant named Evermore. The user is about to tell a personal story or memory.
 
 Extract the MAIN TOPIC or MEMORY the user wants to share. Be specific but concise (max 10 words).
 

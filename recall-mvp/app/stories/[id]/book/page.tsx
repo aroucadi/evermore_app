@@ -142,7 +142,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                     {/* Footer */}
                     <div className="mt-24 text-center border-t border-stone-200 pt-12">
                         <p className="text-stone-400 font-serif text-sm">
-                            A treasured memory preserved by ReCall
+                            A treasured memory preserved by Evermore
                         </p>
                         <div className="flex justify-center mt-4">
                             <div className="w-16 h-1 bg-stone-200 rounded-full" />

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { speechProvider } from '@/lib/infrastructure/di/container';
+import { logger } from '@/lib/core/application/Logger';
 
 export async function POST(request: NextRequest) {
     try {
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
         });
 
     } catch (error: any) {
-        console.error("TTS failed:", error);
+        logger.error('[TTS] TTS failed', { error: error.message });
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

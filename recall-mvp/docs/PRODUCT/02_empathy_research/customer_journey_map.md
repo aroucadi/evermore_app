@@ -1,4 +1,4 @@
-# Recall Customer Journey Map
+# Evermore Customer Journey Map
 
 ---
 
@@ -17,9 +17,9 @@ Two parallel journeys that intersect:
 
 | Dimension | Description |
 |-----------|-------------|
-| **Trigger** | Family member gifts Recall, senior center demo, care manager recommendation |
+| **Trigger** | Family member gifts Evermore, senior center demo, care manager recommendation |
 | **Touchpoints** | Physical device setup, family assistance, first voice interaction |
-| **Actions** | Listens to introduction, says first words to Recall |
+| **Actions** | Listens to introduction, says first words to Evermore |
 | **Thoughts** | "Will this be complicated?" "Can I really just talk?" |
 | **Emotions** | Skeptical, curious, slightly anxious |
 | **Pain points** | Fear of technology, embarrassment about needing help |
@@ -30,7 +30,7 @@ Two parallel journeys that intersect:
 | Dimension | Description |
 |-----------|-------------|
 | **Trigger** | Device is ready, senior is alone |
-| **Touchpoints** | Voice prompt, Recall initiates |
+| **Touchpoints** | Voice prompt, Evermore initiates |
 | **Actions** | Responds to gentle opening question, tells first story |
 | **Thoughts** | "This is actually easy." "It's listening to me." |
 | **Emotions** | Surprised, pleased, engaged |
@@ -41,7 +41,7 @@ Two parallel journeys that intersect:
 
 | Dimension | Description |
 |-----------|-------------|
-| **Trigger** | Recall references previous conversation |
+| **Trigger** | Evermore references previous conversation |
 | **Touchpoints** | Daily prompts, memory callbacks |
 | **Actions** | Returns for more sessions, shares deeper stories |
 | **Thoughts** | "It remembers what I said." "Maybe I can share more." |
@@ -145,7 +145,7 @@ Two parallel journeys that intersect:
 |--------|---------------|---------------|-------------|
 | Photo trigger | Sees photo, tells story | Sends photo | Real-time connection |
 | Story capture | Tells a meaningful story | Receives notification | Immediate feedback |
-| Safety event | Recall intervenes | Alert received | Peace of mind |
+| Safety event | Evermore intervenes | Alert received | Peace of mind |
 | Milestone | 50th story captured | Celebration notification | Shared accomplishment |
 
 ---

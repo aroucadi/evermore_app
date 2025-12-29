@@ -30,7 +30,7 @@ export class StepExecutor implements IStepExecutor {
 
         // 1. Identify Tool
         const toolName = step.tool || step.action; // Fallback to action if tool not explicit
-        const tool = this.tools.find(t => t.name === toolName);
+        const tool = this.tools.find(t => t.metadata.id === toolName || t.metadata.name === toolName);
 
         // 2. Execution Logic
         let output: unknown;
@@ -39,17 +39,34 @@ export class StepExecutor implements IStepExecutor {
 
         try {
             if (tool) {
+                // Bridge to ToolExecutionContext
+                const toolContext = {
+                    userId: context.agentContext.userId || 'system',
+                    sessionId: context.agentContext.sessionId || 'unknown',
+                    agentId: 'step-executor',
+                    requestId: `exec-${Date.now()}`,
+                    permissions: new Map(), // Default empty, can be enhanced
+                    dryRun: false
+                };
+
                 // Execute Tool
-                // Execute Tool
-                output = await tool.execute(step.input);
-                success = true;
+                const toolResult = await tool.execute(step.input, toolContext);
+
+                if (toolResult.success) {
+                    output = toolResult.data;
+                    success = true;
+                } else {
+                    success = false;
+                    errorMsg = toolResult.error?.message || 'Tool execution failed';
+                    output = null;
+                }
             } else if (step.action === 'Final Answer') {
                 // Special case for Final Answer execution (just pass through)
                 output = step.input;
                 success = true;
             } else {
                 // Tool Not Found
-                errorMsg = `Tool '${toolName}' not found. Available tools: ${this.tools.map(t => t.name).join(', ')}`;
+                errorMsg = `Tool '${toolName}' not found. Available tools: ${this.tools.map(t => t.metadata.name).join(', ')}`;
                 success = false;
             }
         } catch (error: any) {

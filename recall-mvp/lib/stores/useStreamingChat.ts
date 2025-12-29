@@ -211,7 +211,7 @@ export function getAgentStateLabel(state: AgentState): string {
         case 'listening': return 'Listening...';
         case 'understanding': return 'Understanding...';
         case 'checking': return 'Checking safety...';
-        case 'recalling': return 'Recalling memories...';
+        case 'recalling': return 'Accessing stories...';
         case 'thinking': return 'Thinking...';
         case 'reasoning': return 'Reasoning...';
         case 'responding': return 'Responding...';
@@ -230,7 +230,7 @@ export function getAgentStateIcon(state: AgentState): string {
         case 'listening': return 'hearing';
         case 'understanding': return 'psychology';
         case 'checking': return 'shield';
-        case 'recalling': return 'search';
+        case 'recalling': return 'accessing';
         case 'thinking': return 'psychology';
         case 'reasoning': return 'lightbulb';
         case 'responding': return 'chat';

@@ -1,4 +1,4 @@
-# Recall Value Proposition Canvas
+# Evermore Value Proposition Canvas
 
 ---
 
@@ -59,11 +59,11 @@
 
 | Pain | Reliever |
 |------|----------|
-| No one to listen | Recall is always available, never rushed |
+| No one to listen | Evermore is always available, never rushed |
 | Technology complexity | Voice-only interface; no apps, passwords, or typing |
-| Fear of forgetting | Memory assists and prompts help recall |
+| Fear of forgetting | Memory assists and prompts help Evermore |
 | Fear of exploitation | Scam detection and safety guardrails |
-| Feeling invisible | Recall treats every story as valuable |
+| Feeling invisible | Evermore treats every story as valuable |
 
 #### Gain Creators
 
@@ -133,7 +133,7 @@
 |------|----------|
 | No systematic capture | Automatic story preservation from every session |
 | Worry about isolation | Engagement tracking and proactive alerts |
-| Rushed phone calls | Recall handles daily conversation; calls become quality time |
+| Rushed phone calls | Evermore handles daily conversation; calls become quality time |
 | Regret about deceased relatives | Capture stories while there's time |
 | Guilt about distance | Know parent is engaged even when you can't be there |
 
@@ -153,11 +153,11 @@
 
 ### For Seniors
 
-> Recall is a patient AI companion that listens to your stories, remembers everything you share, and helps you create a lasting legacy for your family—all through simple conversation, no typing required.
+> Evermore is a patient AI companion that listens to your stories, remembers everything you share, and helps you create a lasting legacy for your family—all through simple conversation, no typing required.
 
 ### For Families
 
-> Recall captures your parent's life stories through daily voice conversations, giving you a window into their experiences and a preserved archive for future generations.
+> Evermore captures your parent's life stories through daily voice conversations, giving you a window into their experiences and a preserved archive for future generations.
 
 ---
 

@@ -24,9 +24,11 @@ import {
     ProcessedObservation,
     ObservationType,
     PlannedStep,
-    ExecutionContext
+    ExecutionContext,
+    SubTaskType
 } from '../primitives/AgentPrimitives';
 
+import { logger } from '../../Logger';
 import { ContextManager } from '../context/ContextManager';
 import { AgentLoopMonitor } from '../monitoring/AgentLoopMonitor';
 import { IntentRecognizer } from '../recognition/IntentRecognizer';
@@ -71,7 +73,8 @@ export class AgentOrchestrator implements AgenticRunner {
             tokenCount: 0,
             costCents: 0,
             startTime: 0,
-            isHalted: false
+            isHalted: false,
+            traceId: `trace-${Date.now()}` // Default traceId
         };
     }
 
@@ -84,20 +87,19 @@ export class AgentOrchestrator implements AgenticRunner {
         try {
             // 1. INTENT RECOGNITION
             this.updatePhase(AgentPhase.RECOGNIZING_INTENT);
-            console.log(`[Orchestrator] Recognizing intent for: "${goal}"`);
+            logger.info('[AgentOrchestrator] Recognizing intent', { traceId: runId, goal });
             const intent = await this.intentRecognizer.recognize(goal, context);
-            console.log(`[Orchestrator] Intent: ${intent.primaryIntent} (${intent.confidence})`);
+            logger.info('[AgentOrchestrator] Intent recognized', { traceId: runId, intent: intent.primaryIntent, confidence: intent.confidence });
 
             // Short-circuit for Greetings / End Session
             if (intent.primaryIntent === IntentType.GREETING || intent.primaryIntent === IntentType.END_SESSION) {
-                // @ts-ignore
                 const reply = await this.synthesizer.synthesizeSimpleReply(goal, intent, context);
-                return this.buildResult(true, reply, [], [], undefined, startTime);
+                return this.buildResult(true, reply, [], [], undefined, startTime, runId);
             }
 
             // 2. PLANNING (AoT)
             this.updatePhase(AgentPhase.PLANNING);
-            console.log(`[Orchestrator] Generating plan...`);
+            logger.info('[AgentOrchestrator] Generating plan', { traceId: runId });
             let plan: ExecutionPlan;
 
             // Simple logic: if simple query, make simple plan. If share memory, make verification plan.
@@ -109,16 +111,16 @@ export class AgentOrchestrator implements AgenticRunner {
                     subTasks: [{
                         id: 'main',
                         description: goal,
-                        type: 'GENERATION' as any,
-                        complexity: 'medium' as any,
+                        type: SubTaskType.GENERATION,
+                        complexity: 'medium' as const,
                         optional: false
                     }],
-                    dependencies: new Map(),
-                    estimatedComplexity: 'medium' as any
+                    dependencies: new Map<string, string[]>(),
+                    estimatedComplexity: 'medium' as const
                 };
                 plan = await this.planner.generate(decomposition, { maxSteps: 10 });
             }
-            console.log(`[Orchestrator] Plan generated with ${plan.steps.length} steps.`);
+            logger.info('[AgentOrchestrator] Plan generated', { traceId: runId, stepCount: plan.steps.length });
 
             // 3. EXECUTION LOOP
             this.updatePhase(AgentPhase.EXECUTING);
@@ -150,7 +152,7 @@ export class AgentOrchestrator implements AgenticRunner {
                 }
 
                 this.state.stepCount++;
-                console.log(`[Orchestrator] Executing Step ${step.order}: ${step.action}`);
+                logger.info('[AgentOrchestrator] Executing step', { traceId: runId, step: step.order, action: step.action });
 
                 // EXECUTE
                 const result = await this.stepExecutor.execute(step, executionContext);
@@ -195,14 +197,14 @@ export class AgentOrchestrator implements AgenticRunner {
                 const reflection = await this.reflector.validate(observations, goal);
 
                 if (reflection.goalAchieved && reflection.readyForUser) {
-                    console.log(`[Orchestrator] Goal achieved!`);
+                    logger.info('[AgentOrchestrator] Goal achieved', { traceId: runId });
                     finalReflection = reflection;
                     break; // Done!
                 }
 
                 // Break loop if error and not recoverable (simplified)
                 if (!result.success && step.onFailure === 'abort') {
-                    console.error(`[Orchestrator] Critical step failed.`);
+                    logger.error('[AgentOrchestrator] Critical step failed', { traceId: runId, stepId: step.id });
                     break;
                 }
             }
@@ -222,12 +224,12 @@ export class AgentOrchestrator implements AgenticRunner {
             }
 
             this.updatePhase(AgentPhase.DONE);
-            return this.buildResult(true, finalAnswer, stepsTaken, observations, finalReflection, startTime);
+            return this.buildResult(true, finalAnswer, stepsTaken, observations, finalReflection, startTime, runId);
 
         } catch (error: any) {
-            console.error("[Orchestrator] Fatal Error:", error);
+            logger.error('[AgentOrchestrator] Fatal Error', { traceId: runId, error: error.message });
             this.updatePhase(AgentPhase.ERROR);
-            return this.buildResult(false, `System Error: ${error.message}`, [], [], undefined, startTime);
+            return this.buildResult(false, `System Error: ${error.message}`, [], [], undefined, startTime, runId);
         }
     }
 
@@ -237,7 +239,7 @@ export class AgentOrchestrator implements AgenticRunner {
 
     public async halt(reason: HaltReason): Promise<void> {
         this.state.isHalted = true;
-        console.warn(`[Orchestrator] Halted: ${reason}`);
+        logger.warn('[AgentOrchestrator] Halted', { traceId: this.state.traceId, reason });
     }
 
     private updatePhase(phase: AgentPhase) {
@@ -251,7 +253,8 @@ export class AgentOrchestrator implements AgenticRunner {
             tokenCount: 0,
             costCents: 0,
             startTime: Date.now(),
-            isHalted: false
+            isHalted: false,
+            traceId: `trace-${Date.now()}`
         };
     }
 
@@ -261,7 +264,8 @@ export class AgentOrchestrator implements AgenticRunner {
         steps: AgentStep[],
         observations: ProcessedObservation[],
         reflection: any,
-        startTime: number
+        startTime: number,
+        traceId: string
     ): AgenticRunResult {
         return {
             success,
@@ -272,7 +276,7 @@ export class AgentOrchestrator implements AgenticRunner {
             totalTokens: this.state.tokenCount,
             totalCostCents: this.state.costCents,
             durationMs: Date.now() - startTime,
-            traceId: `trace-${startTime}`
+            traceId
         };
     }
 }

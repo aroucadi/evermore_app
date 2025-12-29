@@ -11,7 +11,10 @@ import { ToolRegistry, ToolCapability, ToolPermission } from '../agent/tools/Too
 import { ModelRouter, ModelTier, TaskComplexity, ModelProfile, DEFAULT_MODELS } from '../agent/routing/ModelRouter';
 import { HallucinationDetector, GroundTruthSource } from '../safety/HallucinationDetector';
 import { validateEmail } from '../security/InputSanitization';
+import { logger } from '../Logger';
+import { AgentMemoryPort } from '../ports/AgentMemoryPort';
 import { z } from 'zod';
+import { Message } from '../../domain/value-objects/Message';
 
 export class ProcessMessageUseCase {
   private hallucinationDetector: HallucinationDetector;
@@ -21,7 +24,8 @@ export class ProcessMessageUseCase {
     private userRepository: UserRepository,
     private llm: LLMPort,
     private vectorStore: VectorStorePort,
-    private contentSafetyGuard: ContentSafetyGuard
+    private contentSafetyGuard: ContentSafetyGuard,
+    private memoryFactory: (userId: string) => AgentMemoryPort
   ) {
     // Initialize HallucinationDetector for response validation
     this.hallucinationDetector = new HallucinationDetector(llm, {
@@ -40,14 +44,26 @@ export class ProcessMessageUseCase {
     const session = await this.sessionRepository.findById(sessionId);
     if (!session) throw new Error('Session not found');
 
-    const transcript = JSON.parse(session.transcriptRaw || '[]');
+    // Standardize transcript parsing
+    let transcript: Message[] = [];
+    const raw = session.transcriptRaw;
+    if (Array.isArray(raw)) {
+      transcript = raw;
+    } else if (typeof raw === 'string' && raw.trim().length > 0) {
+      try {
+        transcript = JSON.parse(raw);
+      } catch (e) {
+        logger.error('[ProcessMessageUseCase] Failed to parse transcript string', { sessionId, error: e });
+        transcript = [];
+      }
+    }
 
     // Handle conversation initialization signal
     if (message === '__init__' && speaker === 'user') {
       // Don't add __init__ to transcript - just return greeting
       const user = await this.userRepository.findById(session.userId);
       const userName = user?.name || 'there';
-      const greeting = `Hello${userName !== 'there' ? `, ${userName.split(' ')[0]}` : ''}! I'm Recall, your memory companion. What story would you like to share with me today?`;
+      const greeting = `Hello${userName !== 'there' ? `, ${userName.split(' ')[0]}` : ''}! I'm Evermore, your story companion. What story would you like to share with me today?`;
 
       // Add the greeting to transcript
       transcript.push({
@@ -56,7 +72,7 @@ export class ProcessMessageUseCase {
         text: greeting,
         timestamp: new Date().toISOString(),
       });
-      session.transcriptRaw = JSON.stringify(transcript);
+      session.transcriptRaw = transcript;
       await this.sessionRepository.update(session);
 
       return { text: greeting, strategy: 'greeting' };
@@ -86,7 +102,7 @@ export class ProcessMessageUseCase {
         if (emailValidation.valid) {
           emergencyContact = rawEmergencyEmail;
         } else {
-          console.warn('[ProcessMessageUseCase] Invalid emergency contact email format, safety alerts will not be sent:', emailValidation.error);
+          logger.warn('[ProcessMessageUseCase] Invalid emergency contact email format, safety alerts will not be sent:', { error: emailValidation.error });
         }
       }
 
@@ -101,61 +117,12 @@ export class ProcessMessageUseCase {
       // 1. Initialize Tool Registry with proper contracts
       const toolRegistry = new ToolRegistry();
 
-      const memoriesTool = new RetrieveMemoriesTool(this.vectorStore, session.userId);
-      const safetyTool = new CheckSafetyTool(this.contentSafetyGuard, session.userId, sessionId, emergencyContact);
+      const memoriesTool = new RetrieveMemoriesTool(this.memoryFactory);
+      const safetyTool = new CheckSafetyTool(this.contentSafetyGuard, emergencyContact);
 
-      // Register tools as proper ToolContracts to eliminate legacy fallback risk
-      toolRegistry.register({
-        metadata: {
-          id: 'RetrieveMemories',
-          name: 'Retrieve Memories',
-          description: 'Search for past memories or conversations based on a query.',
-          usageHint: 'Use when user asks about past events or memories.',
-          version: '1.0.0',
-          capabilities: [ToolCapability.READ],
-          defaultPermission: ToolPermission.ALLOWED,
-          estimatedCostCents: 0.01,
-          estimatedLatencyMs: 500,
-          enabled: true,
-        },
-        inputSchema: z.object({ query: z.string() }),
-        outputSchema: z.string(),
-        execute: async (input: { query: string }) => {
-          const startTime = Date.now();
-          try {
-            const result = await memoriesTool.execute(input);
-            return { success: true, data: result, durationMs: Date.now() - startTime };
-          } catch (e: any) {
-            return { success: false, error: { code: 'TOOL_ERROR', message: e.message, retryable: false }, durationMs: Date.now() - startTime };
-          }
-        }
-      });
-
-      toolRegistry.register({
-        metadata: {
-          id: 'CheckSafety',
-          name: 'Check Safety',
-          description: 'Check if the user input or intended response is safe.',
-          usageHint: 'Use when checking content for safety concerns.',
-          version: '1.0.0',
-          capabilities: [ToolCapability.PURE],
-          defaultPermission: ToolPermission.ALLOWED,
-          estimatedCostCents: 0.05,
-          estimatedLatencyMs: 1000,
-          enabled: true,
-        },
-        inputSchema: z.object({ text: z.string() }),
-        outputSchema: z.string(),
-        execute: async (input: { text: string }) => {
-          const startTime = Date.now();
-          try {
-            const result = await safetyTool.execute(input);
-            return { success: true, data: result, durationMs: Date.now() - startTime };
-          } catch (e: any) {
-            return { success: false, error: { code: 'TOOL_ERROR', message: e.message, retryable: false }, durationMs: Date.now() - startTime };
-          }
-        }
-      });
+      // Register tools
+      toolRegistry.register(memoriesTool);
+      toolRegistry.register(safetyTool);
 
       // 2. Initialize Model Router (Use centralized defaults from ModelRouter.ts)
       const modelRouter = new ModelRouter(DEFAULT_MODELS);
@@ -190,7 +157,7 @@ export class ProcessMessageUseCase {
       // Don't interrupt storytelling with useless filler messages
       if (!result.success || !result.finalAnswer || result.finalAnswer.trim().length < 10) {
         // HARDENING: Even for silent listen, save the user message (no agent response)
-        session.transcriptRaw = JSON.stringify(transcript);
+        session.transcriptRaw = transcript;
         await this.sessionRepository.update(session);
         return { text: '', strategy: 'silent_listen' };
       }
@@ -219,13 +186,13 @@ export class ProcessMessageUseCase {
           });
 
           if (hallucinationResult.isLikelyHallucination && hallucinationResult.confidence > 0.7) {
-            console.warn('[ProcessMessageUseCase] Hallucination detected:', hallucinationResult.summary);
+            logger.warn('[ProcessMessageUseCase] Hallucination detected:', { summary: hallucinationResult.summary });
             hallucinationWarning = hallucinationResult.summary;
 
             // If corrections are suggested, use the first one
             if (hallucinationResult.suggestedCorrections && hallucinationResult.suggestedCorrections.length > 0) {
               // Don't replace the response, but note it for transparency
-              console.log('[ProcessMessageUseCase] Suggested correction available');
+              logger.info('[ProcessMessageUseCase] Suggested correction available');
             }
 
             // Append a soft disclaimer for high-confidence hallucinations
@@ -236,7 +203,7 @@ export class ProcessMessageUseCase {
         }
       } catch (hallucinationError) {
         // Don't fail the response if hallucination check fails
-        console.warn('[ProcessMessageUseCase] Hallucination check failed:', hallucinationError);
+        logger.warn('[ProcessMessageUseCase] Hallucination check failed:', { error: hallucinationError });
       }
 
       // HARDENING: Atomic save - Both user message and agent response saved together
@@ -256,7 +223,7 @@ export class ProcessMessageUseCase {
         }
       });
 
-      session.transcriptRaw = JSON.stringify(transcript);
+      session.transcriptRaw = transcript;
       await this.sessionRepository.update(session);
 
       return { text: responseText, strategy: 'agentic', hallucinationWarning };

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 const features = [
     {
         title: "Chat Naturally",
-        description: "Grandma chats comfortably with our friendly AI voice companion, recalling her favorite moments.",
+        description: "Grandma chats comfortably with our friendly AI voice companion, sharing her favorite moments.",
         icon: "mic",
         color: "bg-[#E07A5F]",
         textColor: "text-[#E07A5F]",

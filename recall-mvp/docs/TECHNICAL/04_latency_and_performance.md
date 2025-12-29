@@ -1,12 +1,12 @@
 # Latency & Performance Targets
 
-Recall is a real-time conversational agent. Latency is the primary UX metric.
+Evermore is a real-time conversational agent. Latency is the primary UX metric.
 
 ## ⏱️ Voice Latency Targets
 
 **Primary Target: <1 second for first response acknowledgment**
 
-See [VoiceLatencyBenchmarks.ts](file:///d:/rouca/DVM/workPlace/recall/recall-mvp/lib/core/application/services/VoiceLatencyBenchmarks.ts) for programmatic targets.
+See [VoiceLatencyBenchmarks.ts](file:///d:/rouca/DVM/workPlace/Evermore/Evermore-mvp/lib/core/application/services/VoiceLatencyBenchmarks.ts) for programmatic targets.
 
 ### Pipeline Phase Targets
 
@@ -22,7 +22,7 @@ See [VoiceLatencyBenchmarks.ts](file:///d:/rouca/DVM/workPlace/recall/recall-mvp
 
 ### Silence Timeout Handling
 
-The [SpeechContextService](file:///d:/rouca/DVM/workPlace/recall/recall-mvp/lib/core/application/services/SpeechContextService.ts) handles:
+The [SpeechContextService](file:///d:/rouca/DVM/workPlace/Evermore/Evermore-mvp/lib/core/application/services/SpeechContextService.ts) handles:
 - **Silence Timeout**: 10 seconds default
 - **Graceful User Messaging**: Calm, encouraging prompts when timeout occurs
 - **Explicit Context Passing**: `SpeechContext` object preserves all STT metadata for reasoning

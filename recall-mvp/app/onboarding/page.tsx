@@ -27,13 +27,13 @@ export default function OnboardingPage() {
             <div className="w-10 h-10 bg-gradient-to-br from-peach-warm to-terracotta rounded-xl flex items-center justify-center shadow-sm">
               <span className="material-symbols-outlined text-white text-2xl filled">mic</span>
             </div>
-            <span className="text-2xl font-serif font-extrabold text-terracotta tracking-tight">ReCall</span>
+            <span className="text-2xl font-serif font-extrabold text-terracotta tracking-tight">Evermore</span>
           </Link>
 
           {/* Progress Indicator */}
           <div className="flex flex-col items-center flex-1 max-w-sm px-4">
             <p className="text-[10px] font-extrabold text-text-secondary uppercase tracking-[0.15em] mb-2.5">
-              Step <span className="text-terracotta">1 of 3</span>: Who are you recalling for?
+              Step <span className="text-terracotta">1 of 3</span>: Whose stories are you preserving?
             </p>
             <div className="w-full h-2.5 bg-peach-main/20 rounded-full relative shadow-inner overflow-hidden">
               <div className="absolute left-0 top-0 bottom-0 w-1/3 bg-gradient-to-r from-peach-warm to-terracotta rounded-full flex items-center justify-end pr-1">
@@ -58,7 +58,7 @@ export default function OnboardingPage() {
 
           <div className="text-center mb-16 animate-fade-in max-w-3xl">
             <h1 className="text-5xl md:text-6xl font-serif font-extrabold text-text-primary mb-6 leading-tight">
-              ReCall Voice Companion Setup
+              Evermore Voice Companion Setup
             </h1>
             <p className="text-xl text-text-secondary font-medium leading-relaxed opacity-80">
               Immortalize family stories from speech to text to books. Who is this companion for? Select the option that best describes your journey.

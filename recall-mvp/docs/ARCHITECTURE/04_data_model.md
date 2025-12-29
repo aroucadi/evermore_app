@@ -1,6 +1,6 @@
 # Data Model
 
-Recall uses a relational schema optimized for Agentic AI.
+Evermore uses a relational schema optimized for Agentic AI.
 
 ## ER Diagram (Conceptual)
 

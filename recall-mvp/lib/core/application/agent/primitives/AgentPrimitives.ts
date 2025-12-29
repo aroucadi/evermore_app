@@ -36,7 +36,7 @@ export interface RecognizedIntent {
 }
 
 /**
- * Predefined intent categories for the Recall system.
+ * Predefined intent categories for the Evermore system.
  */
 export enum IntentType {
   /** User is sharing a memory or story */
@@ -549,6 +549,8 @@ export interface AgentState {
   isHalted: boolean;
   /** Last step result */
   lastStep?: AgentStep;
+  /** Trace ID for this run */
+  traceId: string;
 }
 
 export enum AgentPhase {

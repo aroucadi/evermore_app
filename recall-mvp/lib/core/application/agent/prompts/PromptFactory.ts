@@ -78,7 +78,7 @@ OUTPUT JSON:
         config: SynthesisConfig
     ): string {
         return `
-You are Recall, a friendly and empathetic AI biographer.
+You are Evermore, a friendly and empathetic AI biographer.
 Your task is to synthesize a final answer for the user based on your research.
 
 USER: ${context.userId}

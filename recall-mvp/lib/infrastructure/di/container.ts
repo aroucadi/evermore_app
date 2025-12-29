@@ -240,6 +240,11 @@ export const userProfileUpdater = new UserProfileUpdater(userRepository);
 
 import { AgentMemoryManager } from '../../core/application/agent/memory/AgentMemory';
 import { AgentMemoryPort } from '../../core/application/ports/AgentMemoryPort';
+import { ToolRegistry } from '../../core/application/agent/tools/ToolContracts';
+import { RetrieveMemoriesTool } from '../../core/application/agent/tools/RetrieveMemoriesTool';
+import { CheckSafetyTool } from '../../core/application/agent/tools/CheckSafetyTool';
+import { createDefaultRegistry } from '../../core/application/agent/registry/AgentRegistry';
+import { ModelRouter } from '../../core/application/agent/routing/ModelRouter';
 
 export const agentMemoryFactory = (userId: string): AgentMemoryPort => {
     return new AgentMemoryManager(
@@ -250,6 +255,21 @@ export const agentMemoryFactory = (userId: string): AgentMemoryPort => {
 };
 
 export const agentMemoryManager = agentMemoryFactory("system");
+
+// --- TOOL REGISTRY ---
+export const toolRegistry = new ToolRegistry();
+toolRegistry.register(new RetrieveMemoriesTool(agentMemoryFactory));
+toolRegistry.register(new CheckSafetyTool(contentSafetyGuard));
+
+// --- AGENT REGISTRY ---
+export const modelRouter = new ModelRouter();
+export const agentRegistry = createDefaultRegistry(
+    llmProvider,
+    modelRouter,
+    vectorStore,
+    embeddingProvider,
+    toolRegistry
+);
 
 // VoiceAgentProvider: Use ManualVoiceAgentAdapter as fallback if ElevenLabs not available
 // SAFETY: Check if speechProvider is actually ElevenLabsAdapter before using its voice agent features
@@ -333,7 +353,8 @@ export const processMessageUseCase = new ProcessMessageUseCase(
     userRepository, // Added UserRepository injection
     llmProvider,
     vectorStore,
-    contentSafetyGuard
+    contentSafetyGuard,
+    agentMemoryFactory
 );
 
 export const generateChapterUseCase = new GenerateChapterUseCase(
@@ -364,6 +385,7 @@ export const streamingProcessMessageUseCase = new StreamingProcessMessageUseCase
     userRepository,
     llmProvider,
     vectorStore,
-    contentSafetyGuard
+    contentSafetyGuard,
+    agentMemoryFactory
 );
 

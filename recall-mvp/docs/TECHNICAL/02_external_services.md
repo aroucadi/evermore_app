@@ -1,6 +1,6 @@
 # External Services Setup
 
-Recall integrates Best-in-Class AI services. This guide details how to set up each one.
+Evermore integrates Best-in-Class AI services. This guide details how to set up each one.
 
 ## 🧠 Brain: Google Vertex AI (Required)
 
@@ -8,14 +8,14 @@ We use Google's Gemini 1.5 Pro/Flash models via Vertex AI for reasoning and gene
 
 ### 1. Google Cloud Project
 1. Go to [Google Cloud Console](https://console.cloud.google.com).
-2. Create a new project (e.g., `recall-ai`).
+2. Create a new project (e.g., `Evermore-ai`).
 3. Enable **Vertex AI API**.
 4. Enable **Generative AI API**.
 
 ### 2. Authentication (Service Account)
 For Local/Docker & Vercel:
 1. Go to **IAM & Admin** > **Service Accounts**.
-2. Create new Service Account (e.g., `recall-app`).
+2. Create new Service Account (e.g., `Evermore-app`).
 3. Grant Role: **Vertex AI User**.
 4. Create Key: JSON format. Download it.
 5. Base64 encode the JSON key:
@@ -33,7 +33,7 @@ GOOGLE_APPLICATION_CREDENTIALS_BASE64=your-base64-string...
 
 ## 🎙️ Voice: ElevenLabs (Recommended)
 
-Recall uses ElevenLabs for the most natural, empathetic voice interface.
+Evermore uses ElevenLabs for the most natural, empathetic voice interface.
 
 ### 1. Setup
 1. Sign up at [elevenlabs.io](https://elevenlabs.io).
@@ -52,12 +52,12 @@ ELEVENLABS_AGENT_ID=agent_...             # If using conversational agent
 
 ## 🧬 Memory: Pinecone (Recommended)
 
-Stores semantic memories (vectors) to give the AI long-term recall.
+Stores semantic memories (vectors) to give the AI long-term Evermore.
 
 ### 1. Setup
 1. Sign up at [pinecone.io](https://pinecone.io).
 2. Create Index:
-   - Name: `recall-memories`
+   - Name: `Evermore-memories`
    - Dimensions: `768` (standard for Google embeddings)
    - Metric: `cosine`
    - Cloud: AWS / Starter (Free)
@@ -65,7 +65,7 @@ Stores semantic memories (vectors) to give the AI long-term recall.
 ### 2. Environment Variables
 ```env
 PINECONE_API_KEY=pcsk_...
-PINECONE_INDEX_NAME=recall-memories
+PINECONE_INDEX_NAME=Evermore-memories
 ```
 
 ---

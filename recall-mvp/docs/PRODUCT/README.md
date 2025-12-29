@@ -1,15 +1,15 @@
-# Recall Product Documentation
+# Evermore Product Documentation
 
-> Canonical product reference for the Recall Agentic Super App.
+> Canonical product reference for the Evermore Agentic Super App.
 > Single source of truth for product strategy, personas, and execution.
 
 ---
 
-## What is Recall
+## What is Evermore
 
-Recall is an **empathetic AI biographer for seniors**. It helps elderly users recount, preserve, and share their life stories through natural voice conversations, photo-triggered memories, and a persistent knowledge base that grows with every interaction.
+Evermore is an **empathetic AI biographer for seniors**. It helps elderly users recount, preserve, and share their life stories through natural voice conversations, photo-triggered memories, and a persistent knowledge base that grows with every interaction.
 
-Recall is not a chatbot. It is an agentic AI system with:
+Evermore is not a chatbot. It is an agentic AI system with:
 
 - Multi-modal inputs (voice, text, images)
 - Tiered memory architecture (short-term, semantic, episodic)

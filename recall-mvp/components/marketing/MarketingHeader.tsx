@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export function MarketingHeader() {
     return (
@@ -10,9 +11,9 @@ export function MarketingHeader() {
                     {/* Logo & Icon */}
                     <Link href="/" className="flex items-center gap-2 group transition-transform active:scale-95">
                         <div className="w-10 h-10 bg-gradient-to-br from-peach-warm to-terracotta rounded-xl flex items-center justify-center shadow-sm transform group-hover:rotate-6 transition-transform">
-                            <span className="material-symbols-outlined text-white text-2xl filled">heart_plus</span>
+                            <Image src="/evermore-icon-white.svg" alt="Evermore Logo" width={24} height={24} className="object-contain" />
                         </div>
-                        <span className="text-2xl font-serif font-extrabold text-text-primary tracking-tight">ReCall</span>
+                        <span className="text-2xl font-serif font-extrabold text-text-primary tracking-tight">Evermore</span>
                     </Link>
 
                     {/* Navigation - Pill Shaped */}

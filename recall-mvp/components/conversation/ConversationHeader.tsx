@@ -8,7 +8,7 @@ export function ConversationHeader() {
         <header className="flex items-center justify-between px-8 py-6 w-full max-w-7xl mx-auto z-10 relative">
             <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-[#E07A5F] text-3xl">mic_external_on</span>
-                <span className="text-[#E07A5F] font-bold text-2xl font-display tracking-tight">ReCall</span>
+                <span className="text-[#E07A5F] font-bold text-2xl font-display tracking-tight">Evermore</span>
             </div>
 
             <nav className="flex items-center gap-8">

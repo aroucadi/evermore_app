@@ -1,6 +1,6 @@
 # Vercel Deployment Guide
 
-Complete step-by-step guide for deploying Recall to Vercel.
+Complete step-by-step guide for deploying Evermore to Vercel.
 
 ---
 

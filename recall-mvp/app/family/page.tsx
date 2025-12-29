@@ -200,225 +200,200 @@ export default function FamilyPortalPage() {
    }
 
    return (
-      <div className="min-h-screen bg-[#FCF8F3] font-sans text-text-primary overflow-x-hidden">
+      <AppShell userType="family" showNav={true}>
 
-         {/* Premium Header */}
-         <header className="h-24 bg-white/40 backdrop-blur-xl flex items-center px-10 border-b border-peach-main/5">
-            <div className="container mx-auto flex justify-between items-center">
-               <Link href="/" className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-peach-warm to-terracotta rounded-2xl flex items-center justify-center text-white shadow-lg">
-                     <span className="material-symbols-outlined text-3xl filled">mic</span>
-                  </div>
-                  <span className="text-3xl font-serif font-black text-terracotta tracking-tight">ReCall</span>
-               </Link>
-               <nav className="hidden lg:flex items-center gap-10">
-                  <Link href="/" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Home</Link>
-                  <Link href="/stories" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Stories</Link>
-                  <div className="bg-peach-main/10 px-6 py-2 rounded-full ring-2 ring-peach-main/20">
-                     <Link href="/family" className="font-extrabold text-terracotta">Family Portal</Link>
-                  </div>
-                  <Link href="/profile" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Profile</Link>
-                  <Link href="/settings" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Settings</Link>
-               </nav>
-            </div>
-         </header>
-
-         <main className="max-w-7xl mx-auto px-6 py-12 min-h-screen">
-
-            {/* Hero Section: Warm & Illustrative */}
-            <div className="relative w-full rounded-[3rem] overflow-hidden mb-16 bg-[#F3E5D8]/40 border border-[#E8D4C0] animate-fade-in shadow-inner-soft">
-               <div className="relative z-10 px-8 py-16 md:px-20 flex flex-col md:flex-row justify-between items-center gap-10">
-                  <div className="text-center md:text-left">
-                     <h1 className="text-5xl md:text-7xl font-serif font-extrabold text-text-primary mb-4 leading-tight">
-                        {profile?.displayName ? `${profile.displayName} Portal` : 'Arthur Portal'}
-                     </h1>
-                     <p className="text-text-secondary text-xl font-medium max-w-xl leading-relaxed opacity-80">
-                        Immortalizing our family's stories, one conversation at a time.
-                     </p>
-                  </div>
-                  <div className="flex-shrink-0">
-                     <button
-                        disabled
-                        className="bg-terracotta/50 text-white px-10 py-5 rounded-full font-bold shadow-xl shadow-terracotta/10 cursor-not-allowed opacity-70"
-                        title="Coming soon - Feature in development"
-                     >
-                        Invite Family (Coming Soon)
-                     </button>
-                  </div>
+         {/* Hero Section: Warm & Illustrative */}
+         <div className="relative w-full rounded-[3rem] overflow-hidden mb-16 bg-[#F3E5D8]/40 border border-[#E8D4C0] animate-fade-in shadow-inner-soft">
+            <div className="relative z-10 px-8 py-16 md:px-20 flex flex-col md:flex-row justify-between items-center gap-10">
+               <div className="text-center md:text-left">
+                  <h1 className="text-5xl md:text-7xl font-serif font-extrabold text-text-primary mb-4 leading-tight">
+                     {profile?.displayName ? `${profile.displayName} Portal` : 'Arthur Portal'}
+                  </h1>
+                  <p className="text-text-secondary text-xl font-medium max-w-xl leading-relaxed opacity-80">
+                     Immortalizing our family's stories, one conversation at a time.
+                  </p>
                </div>
-
-               {/* Decorative background element */}
-               <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-peach-main/20 to-transparent pointer-events-none"></div>
+               <div className="flex-shrink-0">
+                  <button
+                     disabled
+                     className="bg-terracotta/50 text-white px-10 py-5 rounded-full font-bold shadow-xl shadow-terracotta/10 cursor-not-allowed opacity-70"
+                     title="Coming soon - Feature in development"
+                  >
+                     Invite Family (Coming Soon)
+                  </button>
+               </div>
             </div>
 
-            {/* Layout Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
+            {/* Decorative background element */}
+            <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-peach-main/20 to-transparent pointer-events-none"></div>
+         </div>
 
-               {/* Left Column: Updates & Topics */}
-               <div className="lg:col-span-7 space-y-16 animate-fade-in [animation-delay:0.1s]">
+         {/* Layout Grid */}
+         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
 
-                  {/* Latest Updates */}
-                  <section>
-                     <h2 className="text-3xl font-serif font-extrabold text-text-primary mb-8 italic">Latest Updates</h2>
+            {/* Left Column: Updates & Topics */}
+            <div className="lg:col-span-7 space-y-16 animate-fade-in [animation-delay:0.1s]">
 
-                     {latestUpdates.length === 0 ? (
-                        <div className="bg-white/50 border border-peach-main/10 rounded-[2rem] p-12 text-center shadow-sm">
-                           <p className="text-text-secondary font-medium italic opacity-60">No stories recorded yet. Check back soon!</p>
-                        </div>
-                     ) : (
-                        <div className="space-y-6">
-                           {latestUpdates.map((chapter, index) => (
-                              <div
-                                 key={chapter.id}
-                                 className={`relative bg-[#E8C5A4]/40 hover:bg-[#E8C5A4]/60 border rounded-[2rem] p-4 shadow-sm transition-all duration-300 ${selectedIds.has(chapter.id) ? 'border-terracotta ring-2 ring-terracotta/30' : 'border-white/50'}`}
+               {/* Latest Updates */}
+               <section>
+                  <h2 className="text-3xl font-serif font-extrabold text-text-primary mb-8 italic">Latest Updates</h2>
+
+                  {latestUpdates.length === 0 ? (
+                     <div className="bg-white/50 border border-peach-main/10 rounded-[2rem] p-12 text-center shadow-sm">
+                        <p className="text-text-secondary font-medium italic opacity-60">No stories recorded yet. Check back soon!</p>
+                     </div>
+                  ) : (
+                     <div className="space-y-6">
+                        {latestUpdates.map((chapter, index) => (
+                           <div
+                              key={chapter.id}
+                              className={`relative bg-[#E8C5A4]/40 hover:bg-[#E8C5A4]/60 border rounded-[2rem] p-4 shadow-sm transition-all duration-300 ${selectedIds.has(chapter.id) ? 'border-terracotta ring-2 ring-terracotta/30' : 'border-white/50'}`}
+                           >
+                              {/* Selection Checkbox */}
+                              <button
+                                 onClick={() => toggleSelection(chapter.id)}
+                                 className={`absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all ${selectedIds.has(chapter.id)
+                                    ? 'bg-terracotta text-white scale-110'
+                                    : 'bg-white/90 text-text-muted hover:bg-white'
+                                    } shadow-lg`}
                               >
-                                 {/* Selection Checkbox */}
-                                 <button
-                                    onClick={() => toggleSelection(chapter.id)}
-                                    className={`absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all ${selectedIds.has(chapter.id)
-                                       ? 'bg-terracotta text-white scale-110'
-                                       : 'bg-white/90 text-text-muted hover:bg-white'
-                                       } shadow-lg`}
-                                 >
-                                    <span className="material-symbols-outlined text-lg">
-                                       {selectedIds.has(chapter.id) ? 'check' : 'add'}
-                                    </span>
-                                 </button>
+                                 <span className="material-symbols-outlined text-lg">
+                                    {selectedIds.has(chapter.id) ? 'check' : 'add'}
+                                 </span>
+                              </button>
 
-                                 <div className="flex items-center gap-6">
-                                    <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white/50 flex-shrink-0 border-2 border-white shadow-sm">
-                                       <Image
-                                          src={chapter.imageUrl || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length]}
-                                          alt={chapter.title}
-                                          width={120}
-                                          height={120}
-                                          className="w-full h-full object-cover"
-                                       />
-                                    </div>
-                                    <div className="flex-1">
-                                       <h3 className="text-xl font-serif font-extrabold text-text-primary mb-1">
-                                          {chapter.title || 'Untitled Memory'}
-                                       </h3>
-                                       <p className="text-sm font-bold text-text-muted uppercase tracking-widest opacity-70 mb-3">
-                                          {formatRelativeDate(chapter.createdAt)}
-                                       </p>
-                                       <div className="flex gap-3">
-                                          <Link
-                                             href={`/stories/${chapter.id}`}
-                                             className="inline-flex items-center gap-1 text-xs font-bold text-terracotta hover:underline"
-                                          >
-                                             <span className="material-symbols-outlined text-sm">visibility</span>
-                                             Read Story
-                                          </Link>
-                                          <Link
-                                             href={`/storybook/${chapter.id}`}
-                                             className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 hover:underline"
-                                          >
-                                             <span className="material-symbols-outlined text-sm">auto_stories</span>
-                                             View as Storybook
-                                          </Link>
-                                       </div>
+                              <div className="flex items-center gap-6">
+                                 <div className="w-24 h-24 rounded-2xl overflow-hidden bg-white/50 flex-shrink-0 border-2 border-white shadow-sm">
+                                    <Image
+                                       src={chapter.imageUrl || FALLBACK_IMAGES[index % FALLBACK_IMAGES.length]}
+                                       alt={chapter.title}
+                                       width={120}
+                                       height={120}
+                                       className="w-full h-full object-cover"
+                                    />
+                                 </div>
+                                 <div className="flex-1">
+                                    <h3 className="text-xl font-serif font-extrabold text-text-primary mb-1">
+                                       {chapter.title || 'Untitled Memory'}
+                                    </h3>
+                                    <p className="text-sm font-bold text-text-muted uppercase tracking-widest opacity-70 mb-3">
+                                       {formatRelativeDate(chapter.createdAt)}
+                                    </p>
+                                    <div className="flex gap-3">
+                                       <Link
+                                          href={`/stories/${chapter.id}`}
+                                          className="inline-flex items-center gap-1 text-xs font-bold text-terracotta hover:underline"
+                                       >
+                                          <span className="material-symbols-outlined text-sm">visibility</span>
+                                          Read Story
+                                       </Link>
+                                       <Link
+                                          href={`/storybook/${chapter.id}`}
+                                          className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 hover:underline"
+                                       >
+                                          <span className="material-symbols-outlined text-sm">auto_stories</span>
+                                          View as Storybook
+                                       </Link>
                                     </div>
                                  </div>
                               </div>
-                           ))}
-                        </div>
-                     )}
-                  </section>
-
-                  {/* Topics to Avoid */}
-                  <section>
-                     <h2 className="text-3xl font-serif font-extrabold text-text-primary mb-8 italic">Topics to Avoid</h2>
-
-                     <div className="space-y-6">
-                        <div className="flex flex-wrap gap-3">
-                           {topicsToAvoid.length === 0 ? (
-                              <p className="text-text-muted font-medium italic">No topics restricted yet.</p>
-                           ) : (
-                              topicsToAvoid.map(topic => (
-                                 <span key={topic} className={`px-6 py-2 rounded-full text-sm font-bold shadow-sm border transition-all ${topic === 'Politics' ? 'bg-[#FDE2D0] border-peach-main/50 text-terracotta' : 'bg-[#F3E5D8]/50 border-transparent text-text-secondary'
-                                    }`}>
-                                    {topic}
-                                 </span>
-                              ))
-                           )}
-                        </div>
-
-                        {/* Info: Topics managed by senior */}
-                        <p className="text-xs text-text-muted italic opacity-60 mt-4">
-                           Topics are managed by the storyteller in their settings.
-                        </p>
-                     </div>
-                  </section>
-
-               </div>
-
-               {/* Right Column: Progress & Media */}
-               <div className="lg:col-span-5 space-y-16 animate-fade-in [animation-delay:0.2s]">
-
-                  {/* Book Progress */}
-                  <section>
-                     <h2 className="text-3xl font-serif font-extrabold text-text-primary mb-8 italic">Book Progress</h2>
-                     <div className="bg-white rounded-[3rem] p-10 shadow-xl shadow-peach-warm/10 border border-peach-main/10 text-center relative overflow-hidden">
-                        <div className="flex items-baseline justify-center gap-4 mb-8">
-                           <span className="text-[120px] font-serif font-extrabold text-[#D5B59C] leading-none">{bookProgress.current}</span>
-                           <div className="text-left">
-                              <span className="block text-xl font-bold text-text-primary">of {bookProgress.target} stories</span>
-                              <span className="text-2xl font-extrabold text-text-primary">{bookProgress.percentage}%</span>
-                           </div>
-                        </div>
-
-                        <div className="w-full h-4 bg-[#F3E5D8]/50 rounded-full overflow-hidden mb-10 shadow-inner">
-                           <div
-                              className="h-full bg-gradient-to-r from-[#8DB6A8] to-terracotta rounded-full transition-all duration-1000"
-                              style={{ width: `${Math.min(bookProgress.percentage, 100)}%` }}
-                           ></div>
-                        </div>
-
-                        <button
-                           onClick={handleExportBook}
-                           disabled={exporting || chapters.length === 0}
-                           className="w-full py-5 rounded-2xl font-bold bg-[#D68D5B] text-white hover:bg-sienna shadow-xl shadow-terracotta/20 transition-all active:scale-95 disabled:opacity-50"
-                        >
-                           {exporting ? 'Exporting...' : 'Export Book (PDF)'}
-                        </button>
-                     </div>
-                  </section>
-
-                  {/* Recent Photos */}
-                  <section>
-                     <h2 className="text-3xl font-serif font-extrabold text-text-primary mb-8 italic">Recent Photos</h2>
-
-                     <div className="grid grid-cols-2 gap-6 mb-6">
-                        {recentPhotos.map((photo, i) => (
-                           <div key={i} className="group">
-                              <div className="aspect-square rounded-[2rem] overflow-hidden shadow-sm border-4 border-white transition-all duration-500 hover:shadow-xl hover:-translate-y-1">
-                                 <Image
-                                    src={photo.src}
-                                    alt={photo.label}
-                                    width={300}
-                                    height={300}
-                                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                 />
-                              </div>
-                              <p className="mt-3 text-sm font-bold text-text-secondary opacity-60 px-2">{photo.label}</p>
                            </div>
                         ))}
                      </div>
+                  )}
+               </section>
 
-                     <div className="flex justify-end">
-                        <Link href="/stories" className="flex items-center gap-2 text-text-primary font-bold hover:text-terracotta transition-colors">
-                           View All <span className="material-symbols-outlined text-sm">expand_less</span>
-                        </Link>
+               {/* Topics to Avoid */}
+               <section>
+                  <h2 className="text-3xl font-serif font-extrabold text-text-primary mb-8 italic">Topics to Avoid</h2>
+
+                  <div className="space-y-6">
+                     <div className="flex flex-wrap gap-3">
+                        {topicsToAvoid.length === 0 ? (
+                           <p className="text-text-muted font-medium italic">No topics restricted yet.</p>
+                        ) : (
+                           topicsToAvoid.map(topic => (
+                              <span key={topic} className={`px-6 py-2 rounded-full text-sm font-bold shadow-sm border transition-all ${topic === 'Politics' ? 'bg-[#FDE2D0] border-peach-main/50 text-terracotta' : 'bg-[#F3E5D8]/50 border-transparent text-text-secondary'
+                                 }`}>
+                                 {topic}
+                              </span>
+                           ))
+                        )}
                      </div>
-                  </section>
 
-               </div>
+                     {/* Info: Topics managed by senior */}
+                     <p className="text-xs text-text-muted italic opacity-60 mt-4">
+                        Topics are managed by the storyteller in their settings.
+                     </p>
+                  </div>
+               </section>
+
             </div>
 
-         </main>
+            {/* Right Column: Progress & Media */}
+            <div className="lg:col-span-5 space-y-16 animate-fade-in [animation-delay:0.2s]">
 
-         {/* Floating Storybook Action Bar - Family Only Feature */}
+               {/* Book Progress */}
+               <section>
+                  <h2 className="text-3xl font-serif font-extrabold text-text-primary mb-8 italic">Book Progress</h2>
+                  <div className="bg-white rounded-[3rem] p-10 shadow-xl shadow-peach-warm/10 border border-peach-main/10 text-center relative overflow-hidden">
+                     <div className="flex items-baseline justify-center gap-4 mb-8">
+                        <span className="text-[120px] font-serif font-extrabold text-[#D5B59C] leading-none">{bookProgress.current}</span>
+                        <div className="text-left">
+                           <span className="block text-xl font-bold text-text-primary">of {bookProgress.target} stories</span>
+                           <span className="text-2xl font-extrabold text-text-primary">{bookProgress.percentage}%</span>
+                        </div>
+                     </div>
+
+                     <div className="w-full h-4 bg-[#F3E5D8]/50 rounded-full overflow-hidden mb-10 shadow-inner">
+                        <div
+                           className="h-full bg-gradient-to-r from-[#8DB6A8] to-terracotta rounded-full transition-all duration-1000"
+                           style={{ width: `${Math.min(bookProgress.percentage, 100)}%` }}
+                        ></div>
+                     </div>
+
+                     <button
+                        onClick={handleExportBook}
+                        disabled={exporting || chapters.length === 0}
+                        className="w-full py-5 rounded-2xl font-bold bg-[#D68D5B] text-white hover:bg-sienna shadow-xl shadow-terracotta/20 transition-all active:scale-95 disabled:opacity-50"
+                     >
+                        {exporting ? 'Exporting...' : 'Export Book (PDF)'}
+                     </button>
+                  </div>
+               </section>
+
+               {/* Recent Photos */}
+               <section>
+                  <h2 className="text-3xl font-serif font-extrabold text-text-primary mb-8 italic">Recent Photos</h2>
+
+                  <div className="grid grid-cols-2 gap-6 mb-6">
+                     {recentPhotos.map((photo, i) => (
+                        <div key={i} className="group">
+                           <div className="aspect-square rounded-[2rem] overflow-hidden shadow-sm border-4 border-white transition-all duration-500 hover:shadow-xl hover:-translate-y-1">
+                              <Image
+                                 src={photo.src}
+                                 alt={photo.label}
+                                 width={300}
+                                 height={300}
+                                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                              />
+                           </div>
+                           <p className="mt-3 text-sm font-bold text-text-secondary opacity-60 px-2">{photo.label}</p>
+                        </div>
+                     ))}
+                  </div>
+
+                  <div className="flex justify-end">
+                     <Link href="/stories" className="flex items-center gap-2 text-text-primary font-bold hover:text-terracotta transition-colors">
+                        View All <span className="material-symbols-outlined text-sm">expand_less</span>
+                     </Link>
+                  </div>
+               </section>
+
+            </div>
+         </div>
+
+
          {selectedIds.size > 0 && (
             <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-fade-in">
                <div className="bg-white rounded-full shadow-2xl shadow-black/20 border border-peach-main/20 px-8 py-4 flex items-center gap-6">
@@ -441,18 +416,6 @@ export default function FamilyPortalPage() {
                </div>
             </div>
          )}
-
-         {/* Footer */}
-         <footer className="py-20 bg-white/40 border-t border-peach-main/10 mt-32">
-            <div className="container mx-auto px-10 max-w-7xl flex flex-col md:flex-row justify-between items-center gap-10">
-               <p className="text-sm font-bold text-text-muted opacity-60">© 2024 ReCall. Immortalizing Stories.</p>
-               <div className="flex gap-10 text-sm font-bold text-text-muted opacity-60">
-                  <Link href="#" className="hover:text-terracotta transition-colors">About</Link>
-                  <Link href="#" className="hover:text-terracotta transition-colors">Help</Link>
-                  <Link href="#" className="hover:text-terracotta transition-colors">Privacy</Link>
-               </div>
-            </div>
-         </footer>
-      </div>
+      </AppShell>
    );
 }

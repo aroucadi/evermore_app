@@ -25,7 +25,7 @@ docker compose -f docker-compose.staging.yml up --build -d
 
 ### View Logs
 ```bash
-docker logs -f recall_staging
+docker logs -f Evermore_staging
 ```
 
 ### Stop

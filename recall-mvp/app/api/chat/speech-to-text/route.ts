@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { speechProvider } from '@/lib/infrastructure/di/container';
 import { getAudioConverter } from '@/lib/infrastructure/services/AudioConverter';
+import { logger } from '@/lib/core/application/Logger';
 
 export async function POST(request: NextRequest) {
     try {
@@ -32,12 +33,12 @@ export async function POST(request: NextRequest) {
                     const convertedData = new Uint8Array(converted.buffer);
                     buffer = Buffer.from(convertedData);
                     contentType = converted.format;
-                    console.log('[STT] Audio converted to WAV for STT compatibility');
+                    logger.info('[STT] Audio converted to WAV for STT compatibility');
                 } else {
-                    console.warn('[STT] FFmpeg not available, sending original format');
+                    logger.warn('[STT] FFmpeg not available, sending original format');
                 }
             } catch (conversionError: any) {
-                console.warn('[STT] Audio conversion failed, trying original format:', conversionError.message);
+                logger.warn('[STT] Audio conversion failed, trying original format', { error: conversionError.message });
                 // Continue with original format - some APIs might still accept it
             }
         }
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ text: result.text });
 
     } catch (error: any) {
-        console.error("STT failed:", error);
+        logger.error('[STT] STT failed', { error: error.message });
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

@@ -1,10 +1,10 @@
-# Recall Retention Canvas
+# Evermore Retention Canvas
 
 ---
 
 ## Retention Model
 
-Recall has two retention surfaces that must be optimized together:
+Evermore has two retention surfaces that must be optimized together:
 
 1. **Senior retention**: Seniors continuing to engage in sessions
 2. **Family retention**: Families continuing to pay and engage with dashboard
@@ -40,7 +40,7 @@ Success requires both. Senior engagement drives family value. Family payment ena
 
 | Driver | Mechanism | Importance |
 |--------|-----------|------------|
-| **Memory continuity** | Recall references past stories, user feels known | Critical |
+| **Memory continuity** | Evermore references past stories, user feels known | Critical |
 | **Proactive prompts** | Gentle daily outreach when inactive | High |
 | **Photo triggers** | Family-sent photos create engagement reasons | High |
 | **Topic variety** | Guided exploration of new life areas | Medium |

@@ -12,6 +12,7 @@ import { AgentContext } from '../types';
 import { AgentRegistry, AgentRole } from '../registry/AgentRegistry';
 import { LLMPort } from '../../ports/LLMPort';
 import { ModelRouter } from '../routing/ModelRouter';
+import { ToolRegistry as SecureToolRegistry } from '../tools/ToolContracts';
 
 // ============================================================================
 // Types
@@ -212,11 +213,13 @@ export class MultiAgentOrchestrator {
     private approvalHandler?: ApprovalHandler;
     private llm: LLMPort;
     private modelRouter: ModelRouter;
+    private toolRegistry?: SecureToolRegistry;
 
-    constructor(registry: AgentRegistry, llm: LLMPort, modelRouter: ModelRouter) {
+    constructor(registry: AgentRegistry, llm: LLMPort, modelRouter: ModelRouter, toolRegistry?: SecureToolRegistry) {
         this.registry = registry;
         this.llm = llm;
         this.modelRouter = modelRouter;
+        this.toolRegistry = toolRegistry;
     }
 
     /**
@@ -278,7 +281,7 @@ export class MultiAgentOrchestrator {
             let agent = this.agents.get(stage.agentId);
             if (!agent) {
                 try {
-                    agent = this.registry.create(stage.agentId, context, this.llm, this.modelRouter);
+                    agent = this.registry.create(stage.agentId, context, this.llm, this.modelRouter, undefined, undefined, this.toolRegistry);
                     this.agents.set(stage.agentId, agent);
                 } catch (error) {
                     console.error(`[Orchestrator] Failed to create agent ${stage.agentId}:`, error);
@@ -464,7 +467,7 @@ export class MultiAgentOrchestrator {
     ): Promise<CritiqueResult> {
         let critic = this.agents.get(criticId);
         if (!critic) {
-            critic = this.registry.create(criticId, context, this.llm, this.modelRouter);
+            critic = this.registry.create(criticId, context, this.llm, this.modelRouter, undefined, undefined, this.toolRegistry);
             this.agents.set(criticId, critic);
         }
 

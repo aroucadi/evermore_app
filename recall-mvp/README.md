@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Evermore (formerly Recall)
+
+**Evermore** is a voice-first, AI-agentic application designed to preserve family stories. It allows "Seniors" (Storytellers) to record memories via natural conversation with an empathetic AI, and "Family Members" to curate and cherish these stories.
+
+## Core Features
+
+### For Storytellers (Seniors)
+*   **Voice-First Interface**: Natural conversation with an AI host that listens, understands, and asks follow-up questions.
+*   **Story Immersion**: Listen to your recorded stories with generated audio, view transcripts, and relive memories.
+*   **Favorites**: Mark your most cherished stories for easy access.
+*   **Delete**: Remove stories you no longer wish to keep.
+*   **Profile**: Manage your personal details and "Voiceprint".
+
+### For Family Members
+*   **Family Portal**: View recent updates from your loved ones.
+*   **Storybook Creation**: Select stories to export as a beautifully formatted PDF storybook.
+
+## Technology Stack
+
+*   **Frontend**: Next.js 14 (App Router), Tailwind CSS, Framer Motion.
+*   **Backend**: Next.js API Routes, Drizzle ORM, PostgreSQL.
+*   **AI/Agentic**: Custom "Evermore" Agent (built on Google Gemini/Vertex AI), Deepgram (STT), ElevenLabs (TTS).
+*   **Vector DB**: Pinecone (for memory recall and context).
 
 ## Getting Started
 
-First, run the development server:
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+2.  **Environment Setup**:
+    Copy `docs/env-template.txt` to `.env.local` and fill in the required API keys.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+3.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+4.  **Open Application**:
+    Navigate to [http://localhost:3000](http://localhost:3000).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Documentation
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*   See `docs/PRODUCT` for product requirements and user stories.
+*   See `docs/ARCHITECTURE` for system design and agentic flow.

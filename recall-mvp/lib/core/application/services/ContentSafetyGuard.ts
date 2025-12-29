@@ -1,13 +1,14 @@
 import { LLMPort } from '../ports/LLMPort';
 import { EmailServicePort } from '../ports/EmailServicePort';
 import { SessionRepository } from '../../domain/repositories/SessionRepository';
+import { logger } from '../Logger';
 
 export class ContentSafetyGuard {
   constructor(
     private llm: LLMPort,
     private emailService: EmailServicePort,
     private sessionRepository: SessionRepository
-  ) {}
+  ) { }
 
   async monitor(
     message: string,
@@ -43,7 +44,7 @@ export class ContentSafetyGuard {
           reason = analysis.reason;
         }
       } catch (e) {
-        console.error('ContentSafetyGuard LLM check failed', e);
+        logger.error('[ContentSafetyGuard] LLM check failed', { error: e });
       }
     }
 
@@ -70,7 +71,7 @@ export class ContentSafetyGuard {
     severity: string,
     reason: string
   ) {
-    console.warn(`[SAFETY ALERT] User ${userId}: ${severity}`);
+    logger.warn('[SAFETY ALERT] Risk detected', { userId, sessionId, severity, reason });
 
     // 1. Send Email
     if (contact) {
@@ -89,7 +90,7 @@ export class ContentSafetyGuard {
         await this.sessionRepository.update(session);
       }
     } catch (e) {
-      console.error('Failed to persist safety alert to DB', e);
+      logger.error('[ContentSafetyGuard] Failed to persist safety alert to DB', { sessionId, error: e });
     }
   }
 }

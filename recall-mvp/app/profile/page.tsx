@@ -37,6 +37,10 @@ export default function ProfilePage() {
     const [chapters, setChapters] = useState<Chapter[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success' | 'error'>('idle');
+    const [saveMessage, setSaveMessage] = useState('');
+    const [interestInput, setInterestInput] = useState('');
+    const [showInterestInput, setShowInterestInput] = useState(false);
 
     // All hooks must be defined before any conditional returns
     const [isEditing, setIsEditing] = useState(false);
@@ -106,9 +110,69 @@ export default function ProfilePage() {
     }, [profile]);
 
     const handleSave = async () => {
-        // Mock save for now
-        setIsEditing(false);
-        setProfile(prev => prev ? { ...prev, displayName: editData.displayName } : null);
+        if (!profile) return;
+
+        setSaveStatus('saving');
+        setSaveMessage('');
+
+        try {
+            const res = await fetch('/api/users/profile', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-user-id': profile.userId,
+                    'x-user-role': profile.role
+                },
+                body: JSON.stringify({
+                    type: profile.role,
+                    updates: {
+                        topicsLove: editData.interests,
+                        // Other fields would go here if backend supported them
+                    }
+                })
+            });
+
+            if (!res.ok) throw new Error('Failed to save profile');
+
+            const updatedProfile = await res.json();
+            setProfile(updatedProfile); // Update local state with server response
+            setSaveStatus('success');
+            setTimeout(() => {
+                setSaveStatus('idle');
+                setIsEditing(false);
+            }, 1500);
+        } catch (err: any) {
+            console.error('Error saving profile:', err);
+            setSaveStatus('error');
+            setSaveMessage('Failed to save changes. Please try again.');
+        }
+    };
+
+    const handleChangePhoto = () => {
+        alert("Photo upload is coming soon!");
+    };
+
+    const handleShareProfile = () => {
+        navigator.clipboard.writeText(window.location.href);
+        alert("Profile link copied to clipboard!");
+    };
+
+    const removeInterest = (interest: string) => {
+        setEditData(prev => ({
+            ...prev,
+            interests: prev.interests.filter(i => i !== interest)
+        }));
+    };
+
+    const addInterest = () => {
+        if (interestInput.trim() && !editData.interests.includes(interestInput.trim())) {
+            setEditData(prev => ({
+                ...prev,
+                interests: [...prev.interests, interestInput.trim()]
+            }));
+            setInterestInput('');
+            setShowInterestInput(false);
+        }
     };
 
     // Calculate book progress
@@ -167,29 +231,8 @@ export default function ProfilePage() {
 
     if (isEditing) {
         return (
-            <div className="min-h-screen bg-[#FCF8F3] font-sans text-text-primary">
-                {/* Header (Simplified for Edit) */}
-                <header className="h-20 bg-white/60 backdrop-blur-xl border-b border-peach-main/10 flex items-center px-6">
-                    <div className="container mx-auto flex justify-between items-center">
-                        <Link href="/" className="flex items-center gap-2">
-                            <div className="w-8 h-8 bg-gradient-to-br from-peach-warm to-terracotta rounded-lg flex items-center justify-center text-white">
-                                <span className="material-symbols-outlined text-xl filled">mic</span>
-                            </div>
-                            <span className="text-xl font-serif font-extrabold text-terracotta">ReCall</span>
-                        </Link>
-                        <nav className="flex gap-8 text-sm font-bold text-text-secondary">
-                            <Link href="/" className="hover:text-terracotta transition-colors text-brown-main/60">Home</Link>
-                            <Link href="/stories" className="bg-[#D4A373]/20 px-4 py-1.5 rounded-full text-brown-main/80">Stories</Link>
-                            <Link href="#" className="hover:text-terracotta transition-colors text-brown-main/60">Collexues</Link>
-                            <Link href="#" className="hover:text-terracotta transition-colors text-brown-main/60">Collects</Link>
-                            <Link href="#" className="hover:text-terracotta transition-colors text-brown-main/60">Accounts</Link>
-                            <Link href="/profile" className="text-terracotta">Profile</Link>
-                        </nav>
-                        <button className="text-sm font-bold text-text-muted hover:text-terracotta">Log out</button>
-                    </div>
-                </header>
-
-                <main className="container mx-auto py-16 px-6 max-w-6xl">
+            <AppShell userType={profile?.role} showNav={true}>
+                <main className="container mx-auto py-10 px-0 max-w-6xl">
                     <h1 className="text-4xl md:text-5xl font-serif font-extrabold text-terracotta text-center mb-16">
                         Update <span className="text-text-primary">{displayName.split(' ')[0]}'s Details 📖</span>
                     </h1>
@@ -212,7 +255,9 @@ export default function ProfilePage() {
                                     </div>
                                 </div>
                                 <h3 className="text-xl font-serif font-bold text-text-primary mb-6">{displayName}</h3>
-                                <button className="w-full py-4 rounded-full bg-peach-main/10 text-brown-main font-bold hover:bg-peach-main/20 transition-all flex items-center justify-center gap-2">
+                                <button
+                                    onClick={handleChangePhoto}
+                                    className="w-full py-4 rounded-full bg-peach-main/10 text-brown-main font-bold hover:bg-peach-main/20 transition-all flex items-center justify-center gap-2">
                                     <span className="material-symbols-outlined text-xl">image</span>
                                     Change Photo
                                 </button>
@@ -365,10 +410,34 @@ export default function ProfilePage() {
                                                 {editData.interests.map((tag, idx) => (
                                                     <span key={idx} className="px-4 py-1.5 bg-white rounded-full text-sm font-bold text-brown-main shadow-sm flex items-center gap-2 group">
                                                         {tag}
-                                                        <button className="material-symbols-outlined text-sm text-text-muted hover:text-red-500">close</button>
+                                                        <button
+                                                            onClick={() => removeInterest(tag)}
+                                                            className="material-symbols-outlined text-sm text-text-muted hover:text-red-500">close</button>
                                                     </span>
                                                 ))}
-                                                <button className="px-4 py-1.5 border border-dashed border-peach-main/40 rounded-full text-sm font-bold text-text-muted hover:border-terracotta hover:text-terracotta transition-all">+ Add Interest</button>
+                                                {showInterestInput ? (
+                                                    <div className="flex gap-2 w-full md:w-auto mt-2">
+                                                        <input
+                                                            type="text"
+                                                            value={interestInput}
+                                                            onChange={(e) => setInterestInput(e.target.value)}
+                                                            onKeyDown={(e) => e.key === 'Enter' && addInterest()}
+                                                            placeholder="Enter interest..."
+                                                            autoFocus
+                                                            className="px-4 py-1.5 border-b-2 border-terracotta bg-transparent focus:outline-none text-sm font-bold"
+                                                        />
+                                                        <button onClick={addInterest} className="text-terracotta">
+                                                            <span className="material-symbols-outlined">check</span>
+                                                        </button>
+                                                        <button onClick={() => setShowInterestInput(false)} className="text-text-muted">
+                                                            <span className="material-symbols-outlined">close</span>
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => setShowInterestInput(true)}
+                                                        className="px-4 py-1.5 border border-dashed border-peach-main/40 rounded-full text-sm font-bold text-text-muted hover:border-terracotta hover:text-terracotta transition-all">+ Add Interest</button>
+                                                )}
                                             </div>
                                         </div>
                                     </>
@@ -387,9 +456,10 @@ export default function ProfilePage() {
                                 <div className="pt-6 flex flex-col sm:flex-row gap-4">
                                     <button
                                         onClick={handleSave}
-                                        className="flex-1 py-5 rounded-full bg-[#8CAF8C] hover:bg-[#7A9E7A] text-white font-black text-xl shadow-xl shadow-green-900/10 transition-all active:scale-95"
+                                        disabled={saveStatus === 'saving'}
+                                        className="flex-1 py-5 rounded-full bg-[#8CAF8C] hover:bg-[#7A9E7A] text-white font-black text-xl shadow-xl shadow-green-900/10 transition-all active:scale-95 disabled:opacity-50"
                                     >
-                                        Save Changes
+                                        {saveStatus === 'saving' ? 'Saving...' : 'Save Changes'}
                                     </button>
                                     <button
                                         onClick={() => setIsEditing(false)}
@@ -398,20 +468,29 @@ export default function ProfilePage() {
                                         Cancel
                                     </button>
                                 </div>
+
+                                {/* Feedback UI */}
+                                {saveStatus === 'error' && (
+                                    <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-xl text-center font-bold">
+                                        {saveMessage}
+                                    </div>
+                                )}
+                                {saveStatus === 'success' && (
+                                    <div className="mt-4 p-4 bg-green-50 text-green-600 rounded-xl text-center font-bold">
+                                        Changes saved successfully!
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 </main>
-            </div>
+            </AppShell>
         );
     }
 
     return (
-        <div className="min-h-screen bg-[#FCF8F3] font-sans text-text-primary overflow-x-hidden">
-            {/* Use shared Header for persona-aware navigation */}
-            <Header />
-
-            <main className="container mx-auto py-20 px-6 max-w-7xl">
+        <AppShell userType={profile?.role} showNav={true}>
+            <main className="container mx-auto py-10 px-0 max-w-7xl">
                 <div className="grid lg:grid-cols-12 gap-16 items-start">
 
                     {/* Identity Section (Sticky) */}
@@ -439,7 +518,9 @@ export default function ProfilePage() {
                         </p>
 
                         <div className="flex flex-col gap-4 w-full max-w-xs">
-                            <button className="w-full py-4 rounded-full bg-white border-2 border-peach-main/20 text-text-secondary font-bold hover:bg-peach-main/5 transition-all flex items-center justify-center gap-2 shadow-sm">
+                            <button
+                                onClick={handleShareProfile}
+                                className="w-full py-4 rounded-full bg-white border-2 border-peach-main/20 text-text-secondary font-bold hover:bg-peach-main/5 transition-all flex items-center justify-center gap-2 shadow-sm">
                                 <span className="material-symbols-outlined text-xl">share</span>
                                 Share Profile
                             </button>
@@ -461,7 +542,7 @@ export default function ProfilePage() {
                             <div className="relative z-10">
                                 <div className="flex justify-between items-start mb-10">
                                     <h2 className="text-3xl font-serif font-black text-text-primary opacity-80 uppercase tracking-tight">
-                                        {isSenior ? "My Story Book Progress" : "Family Archive Growth"}
+                                        {isSenior ? "My Story Book Progress" : "Family Collection Growth"}
                                     </h2>
                                     <div className="text-right">
                                         <div className="text-5xl font-serif font-black text-text-primary">
@@ -561,25 +642,6 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </main>
-
-            {/* Footer */}
-            <footer className="py-20 bg-white/40 border-t border-peach-main/10 mt-32">
-                <div className="container mx-auto px-6 max-w-7xl flex flex-col md:flex-row justify-between items-center gap-10">
-                    <div className="flex gap-10 text-sm font-bold text-text-muted">
-                        <Link href="/about" className="hover:text-terracotta transition-colors">About Us</Link>
-                        <Link href="/contact" className="hover:text-terracotta transition-colors">Contact</Link>
-                        <Link href="/privacy" className="hover:text-terracotta transition-colors">Privacy Policy</Link>
-                        <Link href="/terms" className="hover:text-terracotta transition-colors">Terms of Service</Link>
-                    </div>
-                    <p className="text-sm font-bold text-text-muted opacity-40">Copyright © 2022 ReCall</p>
-                </div>
-            </footer>
-
-            {/* Background elements */}
-            <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-20">
-                <div className="absolute top-1/2 left-1/4 w-[800px] h-[800px] bg-peach-main/10 rounded-full blur-[150px] opacity-40"></div>
-                <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-[#D4A373]/5 rounded-full blur-[120px] opacity-30"></div>
-            </div>
-        </div>
+        </AppShell>
     );
 }

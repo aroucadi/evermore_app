@@ -192,7 +192,7 @@ export class PDFService implements PDFPort {
         doc.setFontSize(10);
         const footerColor = this.hexToRgb(this.COLORS.textLight);
         doc.setTextColor(footerColor.r, footerColor.g, footerColor.b);
-        doc.text('Made with ❤️ by Recall', pageWidth / 2, pageHeight - 15, { align: 'center' });
+        doc.text('Made with ❤️ by Evermore', pageWidth / 2, pageHeight - 15, { align: 'center' });
     }
 
     private addInnerTitlePage(doc: jsPDF, storybook: StorybookData): void {
@@ -404,11 +404,11 @@ export class PDFService implements PDFPort {
             { align: 'center' }
         );
 
-        // Recall branding
+        // Evermore branding
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.text(
-            'Created with Recall - Preserving Memories for Generations',
+            'Created with Evermore - Preserving Memories for Generations',
             pageWidth / 2,
             pageHeight - 20,
             { align: 'center' }
@@ -458,7 +458,7 @@ export class PDFService implements PDFPort {
         const pageHeight = doc.internal.pageSize.height;
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text('Generated with Recall - Your Memory Companion', 105, pageHeight - 10, { align: 'center' });
+        doc.text('Generated with Evermore - Your Memory Companion', 105, pageHeight - 10, { align: 'center' });
     }
 
     private addWarmGradientBackground(doc: jsPDF, width: number, height: number): void {

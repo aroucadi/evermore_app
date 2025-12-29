@@ -29,10 +29,44 @@ const FALLBACK_IMAGES = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDmaBwnfZ0jlqigJaix5kYuz0Rq0JHiiTFWAmZz4VPJF6Ly17lEUbdA0f6lzKqpivxd9bk0hxEHldS4uLelKsew9eey3VqugEZGhIttfhgQX4YXqIRTg1o8d0pPtsr3VOn81miKv41Dyimh4u8jWF8VYlNLH5F_f_brWOxnn_3kMfqT8tm2lGSw91Yrgzqzi2mTudG7RRV5KjXpEB6YYRtiqh9MUis0D6t_PWL63vPdYl-a3tMDYd3svcfefhAEbQjpkwUJO5ov7TA",
 ];
 
+type FilterType = 'all' | 'byTopic' | 'byDate' | 'favorites';
+
 export default function StoriesPage() {
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
+
+  // Filter and sort stories based on active filter and search term
+  const filteredStories = React.useMemo(() => {
+    let result = [...stories];
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(story =>
+        story.title.toLowerCase().includes(term) ||
+        story.excerpt.toLowerCase().includes(term)
+      );
+    }
+
+    // Apply category filter
+    if (activeFilter === 'favorites') {
+      result = result.filter(story => favoriteIds.includes(story.id));
+    }
+
+    // Apply sorting based on filter
+    if (activeFilter === 'byDate') {
+      result.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } else if (activeFilter === 'byTopic') {
+      result.sort((a, b) => a.title.localeCompare(b.title));
+    }
+
+    return result;
+  }, [stories, activeFilter, searchTerm, favoriteIds]);
 
   // Senior-focused: Simple story viewing, no storybook creation
 
@@ -53,6 +87,9 @@ export default function StoriesPage() {
           throw new Error('Failed to fetch profile');
         }
         const profile = await profileRes.json();
+        if (profile.preferences?.favoriteChapterIds) {
+          setFavoriteIds(profile.preferences.favoriteChapterIds);
+        }
 
         // SECURITY: Enforce Persona - Only seniors can access stories page
         if (profile.role !== 'senior') {
@@ -94,44 +131,35 @@ export default function StoriesPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FCF8F3] font-sans text-text-primary overflow-x-hidden">
-
-      {/* Premium Header */}
-      <header className="h-24 bg-white/40 backdrop-blur-xl flex items-center px-10 border-b border-peach-main/5">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-peach-warm to-terracotta rounded-2xl flex items-center justify-center text-white shadow-lg">
-              <span className="material-symbols-outlined text-3xl filled">mic</span>
-            </div>
-            <span className="text-3xl font-serif font-black text-terracotta tracking-tight">ReCall</span>
-          </Link>
-          <nav className="hidden lg:flex items-center gap-10">
-            <Link href="/" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Home</Link>
-            <div className="bg-peach-main/10 px-6 py-2 rounded-full ring-2 ring-peach-main/20">
-              <Link href="/stories" className="font-extrabold text-terracotta">My Stories</Link>
-            </div>
-            <Link href="/conversation" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Conversation</Link>
-            <Link href="/profile" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Profile</Link>
-            <Link href="/settings" className="font-bold text-brown-main opacity-60 hover:opacity-100 transition-opacity">Settings</Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="container mx-auto py-20 px-6 max-w-7xl">
+    <AppShell userType="senior" showNav={true}>
+      <main className="container mx-auto py-10 px-0 max-w-7xl">
 
         {/* Page Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-16 gap-10 animate-fade-in">
           <div>
             <h1 className="text-5xl md:text-7xl font-serif font-extrabold text-text-primary mb-4 leading-tight">
-              Your Memory Archive
+              Your Memory Collection
             </h1>
             <p className="text-xl text-text-secondary font-medium opacity-70">A collection of your cherished stories, preserved forever.</p>
           </div>
           <div className="flex flex-wrap items-center gap-4 w-full lg:w-auto">
             <div className="flex bg-white/60 backdrop-blur-sm border border-peach-main/10 rounded-full p-1.5 shadow-sm">
-              <button className="px-6 py-2.5 rounded-full text-sm font-bold text-terracotta bg-white shadow-md">All Stories</button>
-              <button className="px-6 py-2.5 rounded-full text-sm font-bold text-text-muted hover:text-text-secondary transition-colors">By Topic</button>
-              <button className="px-6 py-2.5 rounded-full text-sm font-bold text-text-muted hover:text-text-secondary transition-colors">By Date</button>
+              <button
+                onClick={() => setActiveFilter('all')}
+                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${activeFilter === 'all' ? 'text-terracotta bg-white shadow-md' : 'text-text-muted hover:text-text-secondary'}`}
+              >All Stories</button>
+              <button
+                onClick={() => setActiveFilter('byTopic')}
+                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${activeFilter === 'byTopic' ? 'text-terracotta bg-white shadow-md' : 'text-text-muted hover:text-text-secondary'}`}
+              >By Topic</button>
+              <button
+                onClick={() => setActiveFilter('byDate')}
+                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${activeFilter === 'byDate' ? 'text-terracotta bg-white shadow-md' : 'text-text-muted hover:text-text-secondary'}`}
+              >By Date</button>
+              <button
+                onClick={() => setActiveFilter('favorites')}
+                className={`px-6 py-2.5 rounded-full text-sm font-bold transition-colors ${activeFilter === 'favorites' ? 'text-terracotta bg-white shadow-md' : 'text-text-muted hover:text-text-secondary'}`}
+              >Favorites</button>
             </div>
             <Link href="/conversation" className="bg-[#D4A373] hover:bg-[#C18E5E] text-white px-10 py-4 rounded-full font-bold shadow-xl shadow-peach-warm/20 hover:scale-105 transition-all flex items-center gap-3">
               <span className="material-symbols-outlined text-xl">add</span>
@@ -145,6 +173,8 @@ export default function StoriesPage() {
           <div className="relative mb-16 animate-fade-in [animation-delay:0.1s]">
             <input
               type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search through your memories..."
               className="w-full bg-white border-2 border-peach-main/10 rounded-2xl px-16 py-5 text-text-primary shadow-lg shadow-peach-warm/5 focus:outline-none focus:ring-4 focus:ring-terracotta/10 transition-all placeholder:text-text-muted font-medium"
             />
@@ -186,7 +216,7 @@ export default function StoriesPage() {
             </div>
             <h2 className="text-4xl font-serif font-extrabold text-text-primary mb-6">No stories yet</h2>
             <p className="text-xl text-text-secondary mb-12 max-w-lg mx-auto leading-relaxed font-medium opacity-70">
-              Your masterpiece is waiting for its first brushstroke. Start a conversation with ReCall to record your first memory.
+              Your masterpiece is waiting for its first brushstroke. Start a conversation with Evermore to capture your first story.
             </p>
             <Link href="/conversation" className="inline-flex items-center gap-4 bg-[#D4A373] hover:bg-[#C18E5E] text-white px-12 py-5 rounded-full font-bold shadow-2xl shadow-peach-warm/30 hover:scale-105 transition-all">
               <span className="material-symbols-outlined text-2xl">mic</span>
@@ -199,7 +229,12 @@ export default function StoriesPage() {
         {/* Stories Grid - Senior View (Simple) */}
         {!loading && !error && stories.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 animate-fade-in [animation-delay:0.2s]">
-            {stories.map((story) => (
+            {filteredStories.length === 0 && searchTerm && (
+              <div className="col-span-full text-center py-12">
+                <p className="text-lg text-text-muted">No stories match "{searchTerm}"</p>
+              </div>
+            )}
+            {filteredStories.map((story) => (
               <Link href={`/stories/${story.id}`} key={story.id} className="h-full group">
                 <div className="bg-white rounded-[2rem] overflow-hidden shadow-xl shadow-peach-warm/5 border border-peach-main/5 h-full flex flex-col hover:-translate-y-2 transition-all duration-500">
                   <div className="aspect-[16/10] overflow-hidden relative">
@@ -224,18 +259,6 @@ export default function StoriesPage() {
         )}
 
       </main>
-
-      {/* Footer */}
-      <footer className="py-20 bg-white/40 border-t border-peach-main/10 mt-32">
-        <div className="container mx-auto px-10 max-w-7xl flex flex-col md:flex-row justify-between items-center gap-10">
-          <p className="text-sm font-bold text-text-muted opacity-60">© 2024 ReCall. Immortalizing Stories.</p>
-          <div className="flex gap-10 text-sm font-bold text-text-muted opacity-60">
-            <Link href="#" className="hover:text-terracotta transition-colors">About</Link>
-            <Link href="#" className="hover:text-terracotta transition-colors">Help</Link>
-            <Link href="#" className="hover:text-terracotta transition-colors">Privacy</Link>
-          </div>
-        </div>
-      </footer>
-    </div>
+    </AppShell>
   );
 }

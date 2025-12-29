@@ -2,7 +2,7 @@
 
 ## 1. High-Level Architecture
 
-Recall is built on a **Clean Architecture** backbone, prioritizing separation of concerns and dependency injection.
+Evermore is built on a **Clean Architecture** backbone, prioritizing separation of concerns and dependency injection.
 
 ```mermaid
 graph TD
@@ -44,14 +44,14 @@ graph TD
 
 ## 2. Cognitive Architecture (The "Brain")
 
-Recall uses a **ReAct (Reasoning + Acting)** loop extended with **AoT (Atom of Thought)** for complex tasks.
+Evermore uses a **ReAct (Reasoning + Acting)** loop extended with **AoT (Atom of Thought)** for complex tasks.
 
 ### Biographer Agent
 The core agent that drives conversation.
 - **Capabilities**: Interviewing, Active Listening, Topic Discovery.
 - **Memory**: 
   - *Short-term*: Current conversation buffer.
-  - *Long-term*: Pinecone vector store (Semantic recall of past stories).
+  - *Long-term*: Pinecone vector store (Semantic Evermore of past stories).
 - **Tools**: Can trigger "Save Memory", "Generate Chapter", "Suggest Topic".
 
 ### AoT (Atom of Thought) Pattern
@@ -62,7 +62,7 @@ We do not rely on single large constraints. Complex tasks are broken down into a
 
 ## 3. Service Integration
 
-Recall orchestrates multiple high-performance AI services:
+Evermore orchestrates multiple high-performance AI services:
 
 | Capability | Provider | Fallback |
 |------------|----------|----------|

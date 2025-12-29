@@ -1,3 +1,5 @@
+import { ToolContract } from './tools/ToolContracts';
+
 export interface AgentStep {
   thought: string;
   action: string;
@@ -10,12 +12,7 @@ export interface AgentPlan {
   steps: string[];
 }
 
-export interface Tool {
-  name: string;
-  description: string;
-  schema: any; // JSON schema for arguments
-  execute(input: any): Promise<unknown>;
-}
+export type Tool = ToolContract<any, any>;
 
 export interface AgentContext {
   userId: string;

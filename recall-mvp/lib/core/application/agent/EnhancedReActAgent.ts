@@ -204,7 +204,7 @@ export class EnhancedReActAgent implements AgenticRunner {
         this.explanationEngine = new ExplanationEngine();
 
         // Initialize Memory and Tracing
-        this.memory = new AgentMemoryManager((config as any).role || 'default-agent', vectorStore, embeddingPort);
+        this.memory = new AgentMemoryManager(this.config.userId || 'system', vectorStore, embeddingPort);
         // Note: tracer is initialized in run() where goal/context are available
     }
 
@@ -242,7 +242,7 @@ Think step by step, use tools when needed, and provide final answers.`;
             maxReplanAttempts: this.config.maxReplanAttempts,
             validatePlans: this.config.validatePlans,
             systemPromptId: this.config.systemPromptId || 'default',
-            toolIds: this.tools.map(t => t.name),
+            toolIds: this.tools.map(t => t.metadata.id),
         };
         const stateMachine = new AgentStateMachine(smConfig, context, goal);
         const monitor = new AgentLoopMonitor({
@@ -577,7 +577,7 @@ Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
 
         // Build tool descriptions
         const toolDescriptions = this.tools
-            .map((t) => `${t.name}: ${t.description} (Schema: ${JSON.stringify(t.schema)})`)
+            .map((t) => `${t.metadata.name}: ${t.metadata.description} (Schema: ${JSON.stringify(t.inputSchema)})`)
             .join('\n');
 
         // Create an implicit plan - the ReAct loop itself is the "plan"
@@ -742,10 +742,19 @@ Example: ["Retrieve memories about X", "Synthesize story", "Format as email"]
                     }
                 } else {
                     // Fallback to legacy array check
-                    const tool = this.tools.find((t) => t.name === step.action);
+                    const tool = this.tools.find((t) => t.metadata.id === step.action || t.metadata.name === step.action);
                     if (tool) {
-                        const rawResult = await tool.execute(step.actionInput);
-                        observation = typeof rawResult === 'string' ? rawResult : JSON.stringify(rawResult);
+                        const rawResult = await tool.execute(step.actionInput, {
+                            userId: this.config.userId || 'system',
+                            sessionId: smContext.id || 'unknown',
+                            agentId: 'enhanced-react',
+                            requestId: tracer.getTraceId(),
+                            permissions: new Map(),
+                            dryRun: false
+                        });
+                        observation = rawResult.success
+                            ? (typeof rawResult.data === 'string' ? rawResult.data : JSON.stringify(rawResult.data))
+                            : `Error: ${rawResult.error?.message}`;
                     } else {
                         observation = `Error: Tool ${step.action} not found.`;
                     }
@@ -1102,7 +1111,8 @@ OUTPUT JSON:
             tokenCount: 0,
             costCents: 0,
             startTime: Date.now(),
-            isHalted: false
+            isHalted: false,
+            traceId: 'idle'
         };
     }
 

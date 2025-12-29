@@ -1,6 +1,6 @@
 # Prompt Engineering Guide
 
-Recall uses advanced prompting techniques to ensure empathy, safety, and high-quality storytelling.
+Evermore uses advanced prompting techniques to ensure empathy, safety, and high-quality storytelling.
 
 ## 🎭 Persona System
 

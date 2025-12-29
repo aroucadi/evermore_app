@@ -1,6 +1,7 @@
 import { SessionRepository } from '../../domain/repositories/SessionRepository';
 import { JobRepository } from '../../domain/repositories/JobRepository';
 import { GenerateChapterUseCase } from './GenerateChapterUseCase';
+import { logger } from '../Logger';
 
 export class EndSessionUseCase {
   constructor(
@@ -15,10 +16,10 @@ export class EndSessionUseCase {
 
     // Use transaction to update status
     await this.sessionRepository.completeSessionTransaction(sessionId);
+    logger.info('[EndSessionUseCase] Session completed and transaction finalized', { sessionId });
 
     // Always queue background job for chapter generation
-    // This decouples the heavy LLM process from the user interaction loop
-    // and ensures Development environment mirrors Production architecture.
     await this.jobRepository.create('generate_chapter', { sessionId });
+    logger.info('[EndSessionUseCase] Chapter generation job queued', { sessionId });
   }
 }

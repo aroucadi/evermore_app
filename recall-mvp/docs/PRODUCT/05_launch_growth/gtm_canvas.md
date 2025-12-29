@@ -1,4 +1,4 @@
-# Recall Go-to-Market Canvas
+# Evermore Go-to-Market Canvas
 
 ---
 
@@ -54,14 +54,14 @@
 
 **For** adult children of aging parents  
 **Who** want to capture their parent's life stories before it's too late  
-**Recall is** an AI-powered voice biographer  
+**Evermore is** an AI-powered voice biographer  
 **That** engages seniors in daily conversations, remembers everything, and creates a lasting family legacy  
 **Unlike** phone calls, journaling apps, or generic voice assistants  
-**Recall** is always patient, never forgets, and builds a searchable archive.
+**Evermore** is always patient, never forgets, and builds a searchable archive.
 
 ### Competitive Alternative
 
-| Alternative | Recall Advantage |
+| Alternative | Evermore Advantage |
 |-------------|------------------|
 | Family phone calls | Always available; structured capture |
 | Journaling apps | Voice-first; no typing required |
@@ -82,7 +82,7 @@
 | Audience | Message |
 |----------|---------|
 | Family | "Give your parent someone to talk to. Get their stories forever." |
-| Family (guilt angle) | "You can't always be there. Recall can." |
+| Family (guilt angle) | "You can't always be there. Evermore can." |
 | Family (legacy angle) | "Your kids deserve to know their grandparents' stories." |
 | Senior | "Your stories matter. Let's make sure they're remembered." |
 

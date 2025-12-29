@@ -8,6 +8,8 @@ import { EmbeddingPort } from '../../ports/EmbeddingPort';
 import { VectorStorePort } from '../../ports/VectorStorePort';
 
 import { ModelRouter, ModelProfile } from '../routing/ModelRouter';
+import { ToolRegistry as SecureToolRegistry } from '../tools/ToolContracts';
+import { PromptRegistry } from '../prompts/PromptRegistry';
 
 /**
  * Supervisor Agent - High-level orchestrator with review capabilities.
@@ -19,9 +21,11 @@ export class SupervisorAgent extends EnhancedReActAgent {
         tools: Tool[] = [],
         config: Partial<EnhancedReActAgentConfig> & { modelProfile: ModelProfile },
         vectorStore?: VectorStorePort,
-        embeddingPort?: EmbeddingPort
+        embeddingPort?: EmbeddingPort,
+        promptRegistry?: PromptRegistry,
+        toolRegistry?: SecureToolRegistry
     ) {
-        super(llm, modelRouter, tools, config, vectorStore, embeddingPort);
+        super(llm, modelRouter, tools, config as any, vectorStore, embeddingPort, promptRegistry, toolRegistry);
     }
 
     /**

@@ -95,7 +95,7 @@ export class InterjectionAgent {
         const hasMemories = context.recentMemories && context.recentMemories.length > 0;
         const hasWarmupTopic = context.warmupTopic && context.warmupTopic.trim().length > 0;
 
-        const prompt = `You are ReCall, a warm and empathetic AI companion for capturing life stories.
+        const prompt = `You are Evermore, a warm and empathetic AI companion for capturing life stories.
         
 Generate a brief, warm greeting for ${userName} who is starting a new storytelling session.
 ${hasWarmupTopic ? `
@@ -159,10 +159,10 @@ Respond with ONLY the greeting text, nothing else.`;
 
         // Get last few exchanges
         const lastExchanges = context.recentTranscript.slice(-4).map(t =>
-            `${t.speaker === 'user' ? 'User' : 'ReCall'}: ${t.text}`
+            `${t.speaker === 'user' ? 'User' : 'Evermore'}: ${t.text}`
         ).join('\n');
 
-        const prompt = `You are ReCall, a warm AI companion helping capture life stories.
+        const prompt = `You are Evermore, a warm AI companion helping capture life stories.
 
 The user has been sharing their story and has paused for ${context.silenceDuration} seconds.
 
@@ -246,7 +246,7 @@ MESSAGE: [Your message if not WAIT, otherwise leave empty]`;
         currentTopic: string,
         relevantMemory: string
     ): Promise<InterjectionDecision> {
-        const prompt = `You are ReCall, helping someone share their life story.
+        const prompt = `You are Evermore, helping someone share their life story.
 
 They just mentioned: "${currentTopic}"
 

@@ -10,6 +10,7 @@ import { AgentOrchestrator } from '../../../lib/core/application/agent/orchestra
 import { AgentContext, Tool } from '../../../lib/core/application/agent/types';
 import { LLMPort } from '../../../lib/core/application/ports/LLMPort';
 import { IntentType, AgentPhase, HaltReason } from '../../../lib/core/application/agent/primitives/AgentPrimitives';
+import { z } from 'zod';
 
 // ============================================================================
 // Mock LLM with Response Sequencing
@@ -70,30 +71,75 @@ const createTestContext = (): AgentContext => ({
 
 const createMockTools = (): Tool[] => [
     {
-        name: 'RetrieveMemoriesTool',
-        description: 'Searches vector database for relevant memories',
-        schema: { query: 'string' },
+        metadata: {
+            id: 'RetrieveMemoriesTool',
+            name: 'Retrieve Memories',
+            description: 'Searches vector database for relevant memories',
+            usageHint: 'mock',
+            version: '1.0.0',
+            capabilities: [],
+            defaultPermission: 'ALLOWED' as any,
+            estimatedCostCents: 0,
+            estimatedLatencyMs: 0,
+            enabled: true
+        },
+        inputSchema: z.object({ query: z.string() }),
+        outputSchema: z.any() as any,
         execute: vi.fn().mockResolvedValue({
-            memories: [
-                { text: 'Best friend is Bob, met in 1990', confidence: 0.95 },
-                { text: 'Bob lives in Chicago', confidence: 0.8 }
-            ]
+            success: true,
+            data: {
+                memories: [
+                    { text: 'Best friend is Bob, met in 1990', confidence: 0.95 },
+                    { text: 'Bob lives in Chicago', confidence: 0.8 }
+                ]
+            },
+            durationMs: 0
         })
     },
     {
-        name: 'CheckSafetyTool',
-        description: 'Analyzes content for safety risks',
-        schema: { text: 'string' },
+        metadata: {
+            id: 'CheckSafetyTool',
+            name: 'Check Safety',
+            description: 'Analyzes content for safety risks',
+            usageHint: 'mock',
+            version: '1.0.0',
+            capabilities: [],
+            defaultPermission: 'ALLOWED' as any,
+            estimatedCostCents: 0,
+            estimatedLatencyMs: 0,
+            enabled: true
+        },
+        inputSchema: z.object({ text: z.string() }),
+        outputSchema: z.any() as any,
         execute: vi.fn().mockResolvedValue({
-            riskLevel: 'LOW',
-            concerns: []
+            success: true,
+            data: {
+                riskLevel: 'LOW',
+                concerns: []
+            },
+            durationMs: 0
         })
     },
     {
-        name: 'SaveFactTool',
-        description: 'Persists a key fact to long-term memory',
-        schema: { fact: 'string', category: 'string' },
-        execute: vi.fn().mockResolvedValue({ saved: true, factId: 'fact-123' })
+        metadata: {
+            id: 'SaveFactTool',
+            name: 'Save Fact',
+            description: 'Persists a key fact to long-term memory',
+            usageHint: 'mock',
+            version: '1.0.0',
+            capabilities: [],
+            defaultPermission: 'ALLOWED' as any,
+            estimatedCostCents: 0,
+            estimatedLatencyMs: 0,
+            enabled: true
+        },
+        inputSchema: z.object({ fact: z.string(), category: z.string() }),
+        outputSchema: z.any() as any,
+        execute: vi.fn().mockResolvedValue({
+            success: true,
+            data: { saved: true, factId: 'fact-123' },
+            durationMs: 0
+        })
     }
 ];
 
@@ -114,7 +160,7 @@ describe('AgentOrchestrator', () => {
         context = createTestContext();
     });
 
-    describe('Full Lifecycle: Memory Recall', () => {
+    describe('Full Lifecycle: Memory Recall (Evermore)', () => {
         it('should complete Intent → Plan → Execute → Reflect → Synthesize cycle', async () => {
             // Queue responses for the full lifecycle
             mockLLM.queueJsonSequence(
@@ -264,9 +310,20 @@ describe('AgentOrchestrator', () => {
             // Create a failing tool
             const failingTools: Tool[] = [
                 {
-                    name: 'RetrieveMemoriesTool',
-                    description: 'Searches memories',
-                    schema: {},
+                    metadata: {
+                        id: 'RetrieveMemoriesTool',
+                        name: 'Retrieve Memories',
+                        description: 'Searches memories',
+                        usageHint: 'mock',
+                        version: '1.0.0',
+                        capabilities: [],
+                        defaultPermission: 'ALLOWED' as any,
+                        estimatedCostCents: 0,
+                        estimatedLatencyMs: 0,
+                        enabled: true
+                    },
+                    inputSchema: z.any() as any,
+                    outputSchema: z.any() as any,
                     execute: vi.fn().mockRejectedValue(new Error('Database connection failed'))
                 }
             ];

@@ -1,4 +1,4 @@
-# Recall Persona Canvas
+# Evermore Persona Canvas
 
 ---
 
@@ -54,18 +54,18 @@
 9:00 AM - Waters plants, looks at family photos  
 11:00 AM - Senior center or errands (2-3 days/week)  
 1:00 PM - Lunch alone, quiet afternoon  
-3:00 PM - **Potential Recall session time**  
+3:00 PM - **Potential Evermore session time**  
 5:00 PM - Light dinner, TV  
 7:00 PM - Reads, calls family if they're available  
 9:00 PM - Bed  
 
-### Relationship to Recall
+### Relationship to Evermore
 
 | Dimension | Expectation |
 |-----------|-------------|
-| Initiation | Recall should prompt her, not require her to "figure out" how to start |
+| Initiation | Evermore should prompt her, not require her to "figure out" how to start |
 | Pace | Slow, patient, never rushed |
-| Memory | Recalls past conversations ("You told me about your sister last week...") |
+| Memory | Evermores past conversations ("You told me about your sister last week...") |
 | Empathy | Responds to emotions, not just facts |
 | Output | Knows her stories are being saved for family |
 
@@ -116,7 +116,7 @@
 | Connection | "I want to hear her stories in her own voice." |
 | Heritage | "My kids need to know their roots." |
 
-### Relationship to Recall
+### Relationship to Evermore
 
 | Dimension | Expectation |
 |-----------|-------------|
@@ -139,7 +139,7 @@
 | Goals | Keep residents engaged, measurable outcomes |
 | Frustrations | Limited staff for 1:1 attention |
 
-### Relationship to Recall
+### Relationship to Evermore
 
 | Dimension | Expectation |
 |-----------|-------------|

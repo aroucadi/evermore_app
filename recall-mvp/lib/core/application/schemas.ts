@@ -34,11 +34,13 @@ export const SeniorPreferencesSchema = z.object({
         email: z.string().email().optional(),
         relationship: z.string().optional()
     }).optional(),
-    timezone: z.string().optional()
+    timezone: z.string().optional(),
+    favoriteChapterIds: z.array(z.string()).optional()
 });
 
 export const FamilyPreferencesSchema = z.object({
-    seniorId: z.string().uuid("Invalid Senior ID").optional()
+    seniorId: z.string().uuid("Invalid Senior ID").optional(),
+    favoriteChapterIds: z.array(z.string()).optional()
 });
 
 export const UpdateProfileSchema = z.discriminatedUnion('type', [

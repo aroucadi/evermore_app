@@ -77,7 +77,7 @@ export function VoiceInterface({
     // Get status text and color
     const getStatus = () => {
         if (isAISpeaking) {
-            return { text: 'ReCall is speaking...', color: 'text-terracotta', animate: true };
+            return { text: 'Evermore is speaking...', color: 'text-terracotta', animate: true };
         }
         if (agentState === 'thinking') {
             return { text: 'Thinking...', color: 'text-amber-500', animate: true };
@@ -157,7 +157,7 @@ export function VoiceInterface({
                             </div>
                             <div className={`text-xs mt-1 ${entry.isAI ? 'text-left text-terracotta' : 'text-right text-emerald-600'
                                 }`}>
-                                {entry.isAI ? '🎙️ ReCall' : '👤 You'}
+                                {entry.isAI ? '🎙️ Evermore' : '👤 You'}
                             </div>
                         </div>
                     </div>
@@ -176,7 +176,7 @@ export function VoiceInterface({
                                 <span className="inline-block w-2 h-4 bg-terracotta ml-1 animate-pulse" />
                             </div>
                             <div className="text-xs mt-1 text-left text-terracotta">
-                                🎙️ ReCall
+                                🎙️ Evermore
                             </div>
                         </div>
                     </div>

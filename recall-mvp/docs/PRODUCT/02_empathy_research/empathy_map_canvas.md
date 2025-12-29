@@ -1,4 +1,4 @@
-# Recall Empathy Map Canvas
+# Evermore Empathy Map Canvas
 
 > Empathy map for Margaret, our primary senior persona.
 
@@ -79,7 +79,7 @@ Observable behaviors:
 
 | Pain | Description |
 |------|-------------|
-| **Memory gaps** | Frustration when she cannot recall a name or detail |
+| **Memory gaps** | Frustration when she cannot Evermore a name or detail |
 | **Technology friction** | Apps that require passwords, typing, or visual navigation exclude her |
 | **Loneliness** | Long stretches without meaningful human interaction |
 | **Fear of exploitation** | Awareness of scams targeting seniors |
@@ -101,11 +101,11 @@ Observable behaviors:
 
 ---
 
-## Implications for Recall
+## Implications for Evermore
 
 | Insight | Design Implication |
 |---------|-------------------|
-| Says "no one has time" | Recall must be always available, never rushed |
+| Says "no one has time" | Evermore must be always available, never rushed |
 | Thinks she's a burden | Proactive engagement removes need to "ask" for attention |
 | Feels nostalgic with photos | Photo-triggered conversations leverage natural memory cues |
 | Does avoid typing | Voice-first is mandatory, not optional |

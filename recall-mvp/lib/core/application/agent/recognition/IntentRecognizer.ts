@@ -3,7 +3,7 @@
  * 
  * Uses an LLM to understand what the user wants:
  * - Share a memory? -> Biographer Mode
- * - Recall something? -> Retrieval Mode
+ * - Remember something? -> Retrieval Mode
  * - Just chatting? -> Conversational Mode
  * 
  * @module IntentRecognizer

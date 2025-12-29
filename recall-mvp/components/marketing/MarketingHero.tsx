@@ -4,12 +4,12 @@ import Link from 'next/link';
 
 export function MarketingHero() {
     return (
-        <section className="relative pt-44 pb-32 overflow-hidden bg-background-cream">
+        <section className="relative pt-32 md:pt-44 pb-20 md:pb-32 overflow-hidden bg-background-cream">
             <div className="container mx-auto px-6">
-                <div className="grid lg:grid-cols-2 items-center gap-20">
+                <div className="grid lg:grid-cols-2 items-center gap-12 lg:gap-20">
 
                     {/* Left Content Area */}
-                    <div className="flex flex-col items-start space-y-10 animate-fade-in relative z-10">
+                    <div className="flex flex-col items-start space-y-8 md:space-y-10 animate-fade-in relative z-10">
                         {/* Status Pill */}
                         <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white border border-peach-main/50 shadow-sm">
                             <span className="w-2 h-2 rounded-full bg-orange-warm mr-3 animate-pulse"></span>
@@ -17,7 +17,7 @@ export function MarketingHero() {
                         </div>
 
                         {/* Large Warm Heading */}
-                        <h1 className="text-6xl md:text-7xl font-serif font-extrabold text-text-primary leading-[1.05]">
+                        <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif font-extrabold text-text-primary leading-[1.1] md:leading-[1.05]">
                             Preserve your family's <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-terracotta to-orange-warm">priceless stories</span>
                         </h1>

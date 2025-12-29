@@ -172,7 +172,7 @@ export default function ChapterDetailPage() {
   // Share functionality using Web Share API or clipboard fallback
   const handleShare = async () => {
     const shareUrl = window.location.href;
-    const shareTitle = chapter?.title || 'A Story from Recall';
+    const shareTitle = chapter?.title || 'A Story from Evermore';
     const shareText = chapter?.summary || 'Check out this story!';
 
     if (navigator.share) {

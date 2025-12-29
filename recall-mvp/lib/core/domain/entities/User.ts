@@ -20,8 +20,9 @@ export class User {
         relationship?: string;
       };
       timezone?: string;
+      favoriteChapterIds?: string[]; // IDs of favorited chapters
     },
     public createdAt?: Date,
     public updatedAt?: Date
-  ) {}
+  ) { }
 }

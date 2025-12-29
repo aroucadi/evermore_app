@@ -20,7 +20,7 @@ async function seed() {
         const [seniorUser] = await db.insert(users).values({
             id: '00000000-0000-0000-0000-000000000001',
             name: 'Arthur Pendelton',
-            email: 'arthur@recall.dev',
+            email: 'arthur@evermore.dev',
             role: 'senior',
             phoneNumber: '+1234567890',
             preferences: {
@@ -54,7 +54,7 @@ async function seed() {
         const [familyUser] = await db.insert(users).values({
             id: '00000000-0000-0000-0000-000000000002',
             name: 'Emma',
-            email: 'emma@recall.dev',
+            email: 'emma@evermore.dev',
             role: 'family',
             seniorId: '00000000-0000-0000-0000-000000000001',
             phoneNumber: '+1234567891',

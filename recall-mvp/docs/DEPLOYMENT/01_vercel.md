@@ -1,6 +1,6 @@
 # Vercel Deployment Guide
 
-Deploy Recall to production using Vercel (Serverless).
+Deploy Evermore to production using Vercel (Serverless).
 
 ## Quick Start
 1. **Push code** to GitHub/GitLab.

@@ -26,6 +26,7 @@ export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [activeSection, setActiveSection] = useState('preferences');
 
     useEffect(() => {
         async function fetchProfile() {
@@ -107,179 +108,191 @@ export default function SettingsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[#FCF8F3] font-sans text-text-primary overflow-x-hidden">
+        <AppShell userType={profile?.role} showNav={true}>
 
-            {/* Use shared Header for persona-aware navigation */}
-            <Header />
+            {/* Page Header */}
+            <div className="flex items-center justify-between mb-16 animate-fade-in">
+                <div className="flex items-center gap-6">
+                    <Link href={profile?.role === 'family' ? '/family' : '/stories'} className="w-14 h-14 flex items-center justify-center rounded-full bg-white shadow-lg shadow-peach-warm/5 border border-peach-main/10 text-text-muted hover:text-terracotta transition-all">
+                        <span className="material-symbols-outlined text-2xl">arrow_back</span>
+                    </Link>
+                    <h1 className="text-5xl font-serif font-extrabold text-text-primary">
+                        Settings
+                    </h1>
+                </div>
+                <p className="hidden md:block text-lg text-text-secondary font-medium italic opacity-70">Personalize your Evermore</p>
+            </div>
 
-            <main className="container mx-auto py-20 px-6 max-w-5xl">
+            <div className="grid md:grid-cols-3 gap-16 animate-fade-in [animation-delay:0.1s]">
 
-                {/* Page Header */}
-                <div className="flex items-center justify-between mb-16 animate-fade-in">
-                    <div className="flex items-center gap-6">
-                        <Link href={profile?.role === 'family' ? '/family' : '/stories'} className="w-14 h-14 flex items-center justify-center rounded-full bg-white shadow-lg shadow-peach-warm/5 border border-peach-main/10 text-text-muted hover:text-terracotta transition-all">
-                            <span className="material-symbols-outlined text-2xl">arrow_back</span>
-                        </Link>
-                        <h1 className="text-5xl font-serif font-extrabold text-text-primary">
-                            Settings
-                        </h1>
-                    </div>
-                    <p className="hidden md:block text-lg text-text-secondary font-medium italic opacity-70">Personalize your ReCall</p>
+                {/* Navigation Sidebar */}
+                <div className="md:col-span-1 space-y-3">
+                    <button
+                        onClick={() => setActiveSection('preferences')}
+                        className={`w-full text-left px-8 py-4 rounded-2xl font-bold transition-all ${activeSection === 'preferences' ? 'bg-white shadow-lg shadow-peach-warm/5 text-terracotta border border-peach-main/10' : 'text-text-muted hover:bg-white/50'}`}>
+                        Preferences
+                    </button>
+                    <button
+                        onClick={() => setActiveSection('security')}
+                        className={`w-full text-left px-8 py-4 rounded-2xl font-bold transition-all ${activeSection === 'security' ? 'bg-white shadow-lg shadow-peach-warm/5 text-terracotta border border-peach-main/10' : 'text-text-muted hover:bg-white/50'}`}>
+                        Account Security
+                    </button>
+                    <button
+                        onClick={() => setActiveSection('notifications')}
+                        className={`w-full text-left px-8 py-4 rounded-2xl font-bold transition-all ${activeSection === 'notifications' ? 'bg-white shadow-lg shadow-peach-warm/5 text-terracotta border border-peach-main/10' : 'text-text-muted hover:bg-white/50'}`}>
+                        Notifications
+                    </button>
+                    <button
+                        onClick={() => setActiveSection('family')}
+                        className={`w-full text-left px-8 py-4 rounded-2xl font-bold transition-all ${activeSection === 'family' ? 'bg-white shadow-lg shadow-peach-warm/5 text-terracotta border border-peach-main/10' : 'text-text-muted hover:bg-white/50'}`}>
+                        Family Settings
+                    </button>
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-16 animate-fade-in [animation-delay:0.1s]">
-
-                    {/* Navigation Sidebar */}
-                    <div className="md:col-span-1 space-y-3">
-                        <button className="w-full text-left px-8 py-4 rounded-2xl bg-white shadow-lg shadow-peach-warm/5 text-terracotta font-bold border border-peach-main/10">Preferences</button>
-                        <button className="w-full text-left px-8 py-4 rounded-2xl text-text-muted hover:bg-white/50 font-bold transition-all">Account Security</button>
-                        <button className="w-full text-left px-8 py-4 rounded-2xl text-text-muted hover:bg-white/50 font-bold transition-all">Notifications</button>
-                        <button className="w-full text-left px-8 py-4 rounded-2xl text-text-muted hover:bg-white/50 font-bold transition-all">Family Settings</button>
-                    </div>
-
-                    {/* Main Settings Panel */}
-                    <div className="md:col-span-2 space-y-14">
-
-                        {/* Voice Tone Selection */}
-                        <section className="bg-white rounded-[2.5rem] p-10 md:p-12 shadow-2xl shadow-peach-warm/5 border border-peach-main/10">
-                            <div className="flex items-center gap-4 mb-8">
-                                <div className="w-14 h-14 rounded-2xl bg-peach-main/10 flex items-center justify-center text-terracotta">
-                                    <span className="material-symbols-outlined text-2xl">spatial_audio_off</span>
-                                </div>
-                                <h2 className="text-2xl font-serif font-extrabold text-text-primary">Companion Voice Tone</h2>
+                {/* Main Settings Panel */}
+                <div className="md:col-span-2 space-y-14">
+                    {activeSection !== 'preferences' ? (
+                        <div className="bg-white rounded-[2.5rem] p-12 text-center shadow-2xl shadow-peach-warm/5 border border-peach-main/10">
+                            <div className="w-20 h-20 bg-peach-main/10 rounded-3xl flex items-center justify-center text-terracotta mx-auto mb-6">
+                                <span className="material-symbols-outlined text-4xl">construction</span>
                             </div>
-                            <p className="text-text-secondary mb-10 leading-relaxed opacity-70">Choose how your ReCall companion sounds during conversations.</p>
+                            <h3 className="text-2xl font-serif font-bold text-text-primary mb-2">Coming Soon</h3>
+                            <p className="text-text-secondary opacity-70">This section is currently under construction.</p>
+                        </div>
+                    ) : (
+                        <>
 
-                            <div className="flex p-2 bg-[#FFF5ED] rounded-full border border-peach-main/10 max-w-md">
-                                {['Warm', 'Friendly', 'Gentle'].map((tone) => (
-                                    <button
-                                        key={tone}
-                                        onClick={() => setActiveTone(tone)}
-                                        className={`
+                            {/* Voice Tone Selection */}
+                            <section className="bg-white rounded-[2.5rem] p-10 md:p-12 shadow-2xl shadow-peach-warm/5 border border-peach-main/10">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-14 h-14 rounded-2xl bg-peach-main/10 flex items-center justify-center text-terracotta">
+                                        <span className="material-symbols-outlined text-2xl">spatial_audio_off</span>
+                                    </div>
+                                    <h2 className="text-2xl font-serif font-extrabold text-text-primary">Companion Voice Tone</h2>
+                                </div>
+                                <p className="text-text-secondary mb-10 leading-relaxed opacity-70">Choose how your Evermore companion sounds during conversations.</p>
+
+                                <div className="flex p-2 bg-[#FFF5ED] rounded-full border border-peach-main/10 max-w-md">
+                                    {['Warm', 'Friendly', 'Gentle'].map((tone) => (
+                                        <button
+                                            key={tone}
+                                            onClick={() => setActiveTone(tone)}
+                                            className={`
                                             flex-1 py-4 rounded-full text-sm font-bold transition-all duration-300
                                             ${activeTone === tone
-                                                ? 'bg-[#D4A373] text-white shadow-xl'
-                                                : 'text-brown-main opacity-70 hover:opacity-100'
-                                            }
+                                                    ? 'bg-[#D4A373] text-white shadow-xl'
+                                                    : 'text-brown-main opacity-70 hover:opacity-100'
+                                                }
                                         `}
-                                    >
-                                        {tone}
-                                    </button>
-                                ))}
-                            </div>
-                        </section>
-
-                        {/* Topics Section */}
-                        <section className="bg-white rounded-[2.5rem] p-10 md:p-12 shadow-2xl shadow-peach-warm/5 border border-peach-main/10">
-                            <div className="flex items-center gap-4 mb-8">
-                                <div className="w-14 h-14 rounded-2xl bg-peach-main/10 flex items-center justify-center text-terracotta">
-                                    <span className="material-symbols-outlined text-2xl">auto_awesome</span>
-                                </div>
-                                <h2 className="text-2xl font-serif font-extrabold text-text-primary">Memory Focus</h2>
-                            </div>
-                            <p className="text-text-secondary mb-10 leading-relaxed opacity-70">Add topics or time periods you'd like your companion to explore with you more often.</p>
-
-                            <div className="flex flex-wrap gap-3 mb-8">
-                                {topics.map((topic) => (
-                                    <span key={topic} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-peach-main/10 text-terracotta text-sm font-bold border border-peach-main/10">
-                                        {topic}
-                                        <button onClick={() => removeTopic(topic)} className="hover:text-red-500 transition-colors">
-                                            <span className="material-symbols-outlined text-sm">close</span>
+                                        >
+                                            {tone}
                                         </button>
-                                    </span>
-                                ))}
-                                <div className="relative flex-1 min-w-[150px]">
-                                    <input
-                                        type="text"
-                                        value={newTopic}
-                                        onChange={(e) => setNewTopic(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && handleAddTopic()}
-                                        placeholder="Add topic..."
-                                        className="w-full bg-transparent border-b-2 border-peach-main/20 py-2 text-sm text-text-primary focus:outline-none focus:border-terracotta transition-all placeholder:text-text-muted italic"
-                                    />
+                                    ))}
                                 </div>
-                            </div>
-                        </section>
+                            </section>
 
-                        {/* Account Section */}
-                        <section className="bg-white rounded-[2.5rem] p-10 md:p-12 shadow-2xl shadow-peach-warm/5 border border-peach-main/10">
-                            <div className="flex items-center gap-4 mb-10">
-                                <div className="w-14 h-14 rounded-2xl bg-peach-main/10 flex items-center justify-center text-terracotta">
-                                    <span className="material-symbols-outlined text-2xl">account_circle</span>
+                            {/* Topics Section */}
+                            <section className="bg-white rounded-[2.5rem] p-10 md:p-12 shadow-2xl shadow-peach-warm/5 border border-peach-main/10">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-14 h-14 rounded-2xl bg-peach-main/10 flex items-center justify-center text-terracotta">
+                                        <span className="material-symbols-outlined text-2xl">auto_awesome</span>
+                                    </div>
+                                    <h2 className="text-2xl font-serif font-extrabold text-text-primary">Memory Focus</h2>
                                 </div>
-                                <h2 className="text-2xl font-serif font-extrabold text-text-primary">Account Details</h2>
-                            </div>
+                                <p className="text-text-secondary mb-10 leading-relaxed opacity-70">Add topics or time periods you'd like your companion to explore with you more often.</p>
 
-                            <div className="space-y-8">
-                                <div className="flex flex-col md:flex-row md:items-center gap-4">
-                                    <label className="md:w-40 text-xs font-black text-text-muted uppercase tracking-widest">Display Name</label>
-                                    <input
-                                        type="text"
-                                        value={displayName}
-                                        onChange={(e) => setDisplayName(e.target.value)}
-                                        className="flex-1 bg-[#FCF8F3]/50 border-2 border-peach-main/10 rounded-xl px-6 py-4 text-sm text-text-primary focus:outline-none focus:ring-4 focus:ring-terracotta/10 font-medium"
-                                    />
-                                </div>
-                                <div className="flex flex-col md:flex-row md:items-center gap-4">
-                                    <label className="md:w-40 text-xs font-black text-text-muted uppercase tracking-widest">Account Type</label>
-                                    <div className="flex-1 bg-peach-main/10 border-2 border-peach-main/10 rounded-xl px-6 py-4 text-sm text-terracotta font-bold">
-                                        {profile?.role === 'senior' ? 'Storyteller (Solo)' : 'Family Archivist'}
+                                <div className="flex flex-wrap gap-3 mb-8">
+                                    {topics.map((topic) => (
+                                        <span key={topic} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-peach-main/10 text-terracotta text-sm font-bold border border-peach-main/10">
+                                            {topic}
+                                            <button onClick={() => removeTopic(topic)} className="hover:text-red-500 transition-colors">
+                                                <span className="material-symbols-outlined text-sm">close</span>
+                                            </button>
+                                        </span>
+                                    ))}
+                                    <div className="relative flex-1 min-w-[150px]">
+                                        <input
+                                            type="text"
+                                            value={newTopic}
+                                            onChange={(e) => setNewTopic(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleAddTopic()}
+                                            placeholder="Add topic..."
+                                            className="w-full bg-transparent border-b-2 border-peach-main/20 py-2 text-sm text-text-primary focus:outline-none focus:border-terracotta transition-all placeholder:text-text-muted italic"
+                                        />
                                     </div>
                                 </div>
-                            </div>
-                        </section>
+                            </section>
 
-                        {/* Save Actions */}
-                        <div className="pt-10 border-t border-peach-main/10 flex items-center justify-between">
-                            <div className="flex-1">
-                                {saveStatus === 'success' && (
-                                    <div className="flex items-center gap-3 text-green-600 text-sm font-bold animate-fade-in">
-                                        <span className="material-symbols-outlined text-xl">check_circle</span>
-                                        Your changes have been preserved.
+                            {/* Account Section */}
+                            <section className="bg-white rounded-[2.5rem] p-10 md:p-12 shadow-2xl shadow-peach-warm/5 border border-peach-main/10">
+                                <div className="flex items-center gap-4 mb-10">
+                                    <div className="w-14 h-14 rounded-2xl bg-peach-main/10 flex items-center justify-center text-terracotta">
+                                        <span className="material-symbols-outlined text-2xl">account_circle</span>
                                     </div>
-                                )}
-                                {saveStatus === 'error' && (
-                                    <div className="flex items-center gap-3 text-red-500 text-sm font-bold animate-fade-in">
-                                        <span className="material-symbols-outlined text-xl">error</span>
-                                        Something went wrong. Please try again.
-                                    </div>
-                                )}
-                            </div>
-                            <button
-                                onClick={handleSave}
-                                disabled={saving}
-                                className="bg-[#D4A373] hover:bg-[#C18E5E] text-white px-12 py-4 rounded-full font-bold shadow-xl shadow-peach-warm/20 hover:scale-105 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-3"
-                            >
-                                {saving ? (
-                                    <>
-                                        <span className="material-symbols-outlined animate-spin text-lg">sync</span>
-                                        Updating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <span className="material-symbols-outlined text-lg">save</span>
-                                        Save Changes
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                                    <h2 className="text-2xl font-serif font-extrabold text-text-primary">Account Details</h2>
+                                </div>
 
-                    </div>
+                                <div className="space-y-8">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        <label className="md:w-40 text-xs font-black text-text-muted uppercase tracking-widest">Display Name</label>
+                                        <input
+                                            type="text"
+                                            value={displayName}
+                                            readOnly
+                                            disabled
+                                            className="flex-1 bg-gray-100 border-2 border-gray-200 rounded-xl px-6 py-4 text-sm text-text-muted cursor-not-allowed font-medium opacity-70"
+                                            title="Display name updates are disabled for this account type"
+                                        />
+                                    </div>
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        <label className="md:w-40 text-xs font-black text-text-muted uppercase tracking-widest">Account Type</label>
+                                        <div className="flex-1 bg-peach-main/10 border-2 border-peach-main/10 rounded-xl px-6 py-4 text-sm text-terracotta font-bold">
+                                            {profile?.role === 'senior' ? 'Storyteller (Solo)' : 'Family Archivist'}
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            {/* Save Actions */}
+                            <div className="pt-10 border-t border-peach-main/10 flex items-center justify-between">
+                                <div className="flex-1">
+                                    {saveStatus === 'success' && (
+                                        <div className="flex items-center gap-3 text-green-600 text-sm font-bold animate-fade-in">
+                                            <span className="material-symbols-outlined text-xl">check_circle</span>
+                                            Your changes have been preserved.
+                                        </div>
+                                    )}
+                                    {saveStatus === 'error' && (
+                                        <div className="flex items-center gap-3 text-red-500 text-sm font-bold animate-fade-in">
+                                            <span className="material-symbols-outlined text-xl">error</span>
+                                            Something went wrong. Please try again.
+                                        </div>
+                                    )}
+                                </div>
+                                <button
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    className="bg-[#D4A373] hover:bg-[#C18E5E] text-white px-12 py-4 rounded-full font-bold shadow-xl shadow-peach-warm/20 hover:scale-105 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-3"
+                                >
+                                    {saving ? (
+                                        <>
+                                            <span className="material-symbols-outlined animate-spin text-lg">sync</span>
+                                            Updating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span className="material-symbols-outlined text-lg">save</span>
+                                            Save Changes
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
 
-            </main>
+            </div>
 
-            {/* Footer */}
-            <footer className="py-20 bg-white/40 border-t border-peach-main/10 mt-32">
-                <div className="container mx-auto px-10 max-w-5xl flex flex-col md:flex-row justify-between items-center gap-10">
-                    <p className="text-sm font-bold text-text-muted opacity-60">© 2024 ReCall. Immortalizing Stories.</p>
-                    <div className="flex gap-10 text-sm font-bold text-text-muted opacity-60">
-                        <Link href="#" className="hover:text-terracotta transition-colors">About</Link>
-                        <Link href="#" className="hover:text-terracotta transition-colors">Help</Link>
-                        <Link href="#" className="hover:text-terracotta transition-colors">Privacy</Link>
-                    </div>
-                </div>
-            </footer>
-        </div>
+        </AppShell>
     );
 }

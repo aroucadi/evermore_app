@@ -32,7 +32,7 @@ export class ReActAgent {
     let currentStepCount = 0;
 
     const toolDescriptions = this.tools
-      .map((t) => `${t.name}: ${t.description} (Schema: ${JSON.stringify(t.schema)})`)
+      .map((t) => `${t.metadata.name}: ${t.metadata.description} (Schema: ${JSON.stringify(t.inputSchema)})`)
       .join('\n');
 
     const history = `
@@ -111,11 +111,24 @@ OUTPUT FORMAT:
       }
 
       // 3. OBSERVE
-      const tool = this.tools.find((t) => t.name === step.action);
+      const tool = this.tools.find((t) => t.metadata.id === step.action || t.metadata.name === step.action);
       if (tool) {
         try {
-          const observation = await tool.execute(step.actionInput);
-          step.observation = typeof observation === 'string' ? observation : JSON.stringify(observation);
+          const toolResult = await tool.execute(step.actionInput, {
+            userId: context.userId || 'system',
+            sessionId: context.sessionId || 'unknown',
+            agentId: 'legacy-react',
+            requestId: `legacy-${Date.now()}`,
+            permissions: new Map(),
+            dryRun: false
+          });
+
+          if (toolResult.success) {
+            const observation = toolResult.data;
+            step.observation = typeof observation === 'string' ? observation : JSON.stringify(observation);
+          } else {
+            step.observation = `Error: ${toolResult.error?.message}`;
+          }
           steps.push(step);
         } catch (e: any) {
           step.observation = `Error: ${e.message}`;

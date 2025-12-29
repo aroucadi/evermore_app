@@ -1,10 +1,10 @@
-# Recall Assumption Mapping Canvas
+# Evermore Assumption Mapping Canvas
 
 ---
 
 ## Purpose
 
-This canvas maps the key assumptions underlying Recall's product and business model. Assumptions are categorized by risk and importance to guide validation priorities.
+This canvas maps the key assumptions underlying Evermore's product and business model. Assumptions are categorized by risk and importance to guide validation priorities.
 
 ---
 

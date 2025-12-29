@@ -45,6 +45,7 @@ export const users = pgTable('users', {
       relationship?: string;
     };
     timezone?: string;
+    favoriteChapterIds?: string[]; // IDs of favorited chapters
   }>(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()

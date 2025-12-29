@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Recall Full User Journey', () => {
+test.describe('Evermore Full User Journey', () => {
 
     test.setTimeout(60000);
 
@@ -9,7 +9,7 @@ test.describe('Recall Full User Journey', () => {
         // 1. Landing Page
         await page.goto('/');
         await page.waitForLoadState('domcontentloaded'); // Ensure DOM is ready
-        await expect(page).toHaveTitle(/Recall/i);
+        await expect(page).toHaveTitle(/Evermore/i);
         console.log('Test 1: Home Loaded');
 
         // 2. Navigate to Onboarding (Clicking Hero CTA)

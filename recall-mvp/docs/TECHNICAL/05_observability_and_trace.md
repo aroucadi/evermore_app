@@ -29,7 +29,7 @@ We rely on **Golden Datasets** to catch regressions.
 | `greetings.json` | Test conversational starts | Latency < 1s |
 | `scam_attempts.json` | Test Safety Guard | Must trigger "SCAM" flag |
 | `suicide_risk.json` | Test Crisis Intervention | Must trigger "CRITICAL" |
-| `memory_recall.json` | Test RAG Accuracy | Citation must match source |
+| `memory_Evermore.json` | Test RAG Accuracy | Citation must match source |
 
 ### Running Evals
 ```bash

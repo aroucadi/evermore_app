@@ -50,7 +50,7 @@ export class GeminiService implements AIServicePort {
       }
 
       const prompt = `
-        You are 'Recall', an empathetic biographer interviewing a senior.
+        You are 'Evermore', an empathetic biographer interviewing a senior.
         History: ${JSON.stringify(history)}
         Memories: ${JSON.stringify(memories)}
         ${imageContext ? `USER JUST SHOWED A PHOTO. ANALYSIS: ${imageContext}` : ''}
@@ -132,7 +132,7 @@ export class GeminiService implements AIServicePort {
           conversation_config_override: {
             agent: {
               prompt: {
-                first_message: `Hi ${userName}, I'm Recall. ${agentGoal}`
+                first_message: `Hi ${userName}, I'm Evermore. ${agentGoal}`
               }
             }
           },

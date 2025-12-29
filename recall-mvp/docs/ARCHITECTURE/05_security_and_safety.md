@@ -1,6 +1,6 @@
 # Security & Safety Guardrails
 
-Security is a prerequisite, not a feature. Recall protects vulnerable senior users through a multi-layered defense system.
+Security is a prerequisite, not a feature. Evermore protects vulnerable senior users through a multi-layered defense system.
 
 ## 🛡️ Threat Model
 

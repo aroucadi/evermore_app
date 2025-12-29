@@ -1,6 +1,6 @@
-# Recall System Guarantees
+# Evermore System Guarantees
 
-This document clearly states what Recall guarantees and what it does NOT guarantee.
+This document clearly states what Evermore guarantees and what it does NOT guarantee.
 
 ## ✅ What We Guarantee
 
@@ -37,7 +37,7 @@ This document clearly states what Recall guarantees and what it does NOT guarant
 ### Accuracy
 - **LLM Responses**: AI responses may contain errors despite hallucination detection
 - **Transcript Accuracy**: Speech-to-text may misinterpret words, especially names
-- **Memory Recall**: Long-term memory retrieval is probabilistic, not guaranteed
+- **Memory Evermore**: Long-term memory retrieval is probabilistic, not guaranteed
 - **Emotional Interpretation**: Voice indicators are inferred, not measured
 
 ### Availability
@@ -46,9 +46,9 @@ This document clearly states what Recall guarantees and what it does NOT guarant
 - **Voice Quality**: Browser-based TTS quality varies by device and browser
 
 ### Medical/Legal
-- **Not Medical Advice**: Recall explicitly blocks medical advice and symptom interpretation
+- **Not Medical Advice**: Evermore explicitly blocks medical advice and symptom interpretation
 - **Not Legal Advice**: No legal guidance or financial advice
-- **Not Emergency Service**: Recall may suggest calling 911 but cannot call for users
+- **Not Emergency Service**: Evermore may suggest calling 911 but cannot call for users
 
 ### Privacy
 - **End-to-End Encryption**: Audio is processed by external STT services

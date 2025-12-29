@@ -5,12 +5,30 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     try {
         const { id } = await params;
         const body = await req.json();
-        const { topicsAvoid } = body;
 
-        // We assume the user calling this is a senior or family member authorized to update preferences.
-        // For MVP, we allow updates to preferences.
-        // The service method expects a partial of preferences.
-        const updatedUser = await userProfileUpdater.updateSeniorProfile(id, { topicsAvoid });
+        // Extract all allowed preference fields
+        const {
+            topicsAvoid,
+            topicsLove,
+            voiceTone,
+            conversationSchedule,
+            timezone,
+            emergencyContact
+        } = body.updates || body; // Handle nested 'updates' or flat body
+
+        const updates = {
+            topicsAvoid,
+            topicsLove,
+            voiceTone,
+            conversationSchedule,
+            timezone,
+            emergencyContact
+        };
+
+        // Remove undefined keys
+        Object.keys(updates).forEach(key => (updates as any)[key] === undefined && delete (updates as any)[key]);
+
+        const updatedUser = await userProfileUpdater.updateSeniorProfile(id, updates);
 
         return NextResponse.json(updatedUser);
     } catch (error: any) {
