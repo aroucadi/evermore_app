@@ -18,7 +18,7 @@ const PUBLIC_ROUTES = [
 export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
-    // Only apply to API routes
+    // Only apply to API routes (via matcher)
     if (pathname.startsWith('/api')) {
         // 1. Check if the route is explicitly public
         const isPublicRoute = PUBLIC_ROUTES.some(route => {
@@ -28,6 +28,13 @@ export async function proxy(request: NextRequest) {
             }
             return pathname.startsWith(route);
         });
+
+        // Create a new response headers object to securely inject/strip headers
+        const requestHeaders = new Headers(request.headers);
+
+        // SECURITY: Always strip client-provided auth headers to prevent spoofing
+        requestHeaders.delete('x-user-id');
+        requestHeaders.delete('x-user-role');
 
         // 2. If not public, enforce authentication
         if (!isPublicRoute) {
@@ -44,7 +51,6 @@ export async function proxy(request: NextRequest) {
             }
 
             // 3. Inject user info into headers for downstream handlers
-            const requestHeaders = new Headers(request.headers);
             requestHeaders.set('x-user-id', payload.userId);
             requestHeaders.set('x-user-role', payload.role);
 
@@ -54,6 +60,14 @@ export async function proxy(request: NextRequest) {
                 },
             });
         }
+
+        // If it IS a public route, we still return next() with stripped headers
+        // This ensures even public routes don't get spoofed headers if they decided to check them
+        return NextResponse.next({
+            request: {
+                headers: requestHeaders,
+            },
+        });
     }
 
     return NextResponse.next();
