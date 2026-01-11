@@ -53,6 +53,32 @@ describe('Cron Job Security', () => {
     expect(res.status).toBe(401);
   });
 
+  test('should return 401 when Authorization header has correct prefix but wrong secret', async () => {
+    process.env.CRON_SECRET = 'secure-secret';
+
+    const req = new NextRequest('http://localhost/api/cron/process-jobs', {
+      headers: {
+        authorization: 'Bearer secure-secreX', // Same length, different char
+      },
+    });
+
+    const res = await GET(req);
+    expect(res.status).toBe(401);
+  });
+
+  test('should return 401 when Authorization header has correct secret but wrong length', async () => {
+      process.env.CRON_SECRET = 'secure-secret';
+
+      const req = new NextRequest('http://localhost/api/cron/process-jobs', {
+        headers: {
+          authorization: 'Bearer secure-secret-extra', // Longer
+        },
+      });
+
+      const res = await GET(req);
+      expect(res.status).toBe(401);
+    });
+
   test('should return 200 when Authorization header is correct', async () => {
     process.env.CRON_SECRET = 'secure-secret';
 
