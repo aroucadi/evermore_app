@@ -1,12 +1,37 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateChapterUseCase, jobRepository } from '@/lib/infrastructure/di/container';
+import crypto from 'crypto';
 
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
 
-  // Security: Ensure CRON_SECRET is set and matches the header
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  // Security: Ensure CRON_SECRET is set
+  if (!cronSecret) {
+    console.error('CRON_SECRET is not defined');
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  let isValid = false;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7); // Remove 'Bearer '
+
+    try {
+      const secretBuffer = Buffer.from(cronSecret);
+      const tokenBuffer = Buffer.from(token);
+
+      // crypto.timingSafeEqual throws if lengths differ
+      if (secretBuffer.length === tokenBuffer.length) {
+        isValid = crypto.timingSafeEqual(secretBuffer, tokenBuffer);
+      }
+    } catch (error) {
+      // In case of any error during buffer creation or comparison, treat as invalid
+      isValid = false;
+    }
+  }
+
+  if (!isValid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
