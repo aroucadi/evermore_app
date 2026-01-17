@@ -3,6 +3,16 @@
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 
+// Simple HTML escape function to prevent XSS
+const escapeHtml = (text: string) => {
+    return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+};
+
 interface ChapterData {
     id: string;
     title: string;
@@ -128,7 +138,9 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                                 );
                             }
                             // Handle emphasized text (italic)
-                            const processedText = paragraph.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+                            // Sentinel: Escaping HTML before replacing markdown emphasis to prevent XSS
+                            const safeParagraph = escapeHtml(paragraph);
+                            const processedText = safeParagraph.replace(/\*([^*]+)\*/g, '<em>$1</em>');
                             return (
                                 <p
                                     key={idx}

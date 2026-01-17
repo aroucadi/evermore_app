@@ -1,0 +1,131 @@
+
+> evermore-mvp@0.1.0 dev /app/recall-mvp
+> next dev
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.0.2:3000
+
+ ✓ Starting...
+ ○ Compiling instrumentation Node.js ...
+[RedisService] No REDIS_URL provided. Operating in no-op mode (in-memory fallbacks may be needed).
+[GoogleSpeechAdapter] No project ID configured
+[DI] Container re-evaluating providers...
+[DI] No LLM API keys found or all adapters failed, using MockLLM.
+[LLMGateway] Initialized with throughput controls
+[DI] Using InMemoryVectorStore (no PINECONE_API_KEY - local dev mode)
+[InMemoryVectorStore] Initialized (max 10000 vectors)
+[DI] Using MockImageGenerator (no GOOGLE_CLOUD_PROJECT)
+{"timestamp":"2026-01-17T02:18:01.876Z","level":"info","message":"[Worker] Background worker started"}
+{"timestamp":"2026-01-17T02:18:01.970Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+ ✓ Ready in 52.4s
+ ○ Compiling /stories/[id]/book ...
+{"timestamp":"2026-01-17T02:18:11.884Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+ GET /stories/test-id/book 200 in 10.7s (compile: 10.2s, render: 531ms)
+ ⚠ ./instrumentation.ts:12:30
+Ecmascript file had an error
+[0m [90m 10 |[39m         [36mtry[39m {
+ [90m 11 |[39m             [90m// Dynamically import fs/path/os to avoid Edge Runtime crashes[39m
+[31m[1m>[22m[39m[90m 12 |[39m             [36mconst[39m fs [33m=[39m [36mawait[39m [36mimport[39m([32m'fs'[39m)[33m;[39m
+ [90m    |[39m                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 13 |[39m             [36mconst[39m path [33m=[39m [36mawait[39m [36mimport[39m([32m'path'[39m)[33m;[39m
+ [90m 14 |[39m             [36mconst[39m os [33m=[39m [36mawait[39m [36mimport[39m([32m'os'[39m)[33m;[39m
+ [90m 15 |[39m[0m
+
+A Node.js module is loaded ('fs' at line 12) which is not supported in the Edge Runtime.
+Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+
+
+ ⚠ ./instrumentation.ts:14:30
+Ecmascript file had an error
+[0m [90m 12 |[39m             [36mconst[39m fs [33m=[39m [36mawait[39m [36mimport[39m([32m'fs'[39m)[33m;[39m
+ [90m 13 |[39m             [36mconst[39m path [33m=[39m [36mawait[39m [36mimport[39m([32m'path'[39m)[33m;[39m
+[31m[1m>[22m[39m[90m 14 |[39m             [36mconst[39m os [33m=[39m [36mawait[39m [36mimport[39m([32m'os'[39m)[33m;[39m
+ [90m    |[39m                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 15 |[39m
+ [90m 16 |[39m             [36mconst[39m credentialsJson [33m=[39m [33mBuffer[39m[33m.[39m[36mfrom[39m(base64Creds[33m,[39m [32m'base64'[39m)[33m.[39mtoString([32m'utf-8'[39m)[33m;[39m
+ [90m 17 |[39m[0m
+
+A Node.js module is loaded ('os' at line 14) which is not supported in the Edge Runtime.
+Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+
+
+ ⚠ ./instrumentation.ts:13:32
+Ecmascript file had an error
+[0m [90m 11 |[39m             [90m// Dynamically import fs/path/os to avoid Edge Runtime crashes[39m
+ [90m 12 |[39m             [36mconst[39m fs [33m=[39m [36mawait[39m [36mimport[39m([32m'fs'[39m)[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m             [36mconst[39m path [33m=[39m [36mawait[39m [36mimport[39m([32m'path'[39m)[33m;[39m
+ [90m    |[39m                                [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 14 |[39m             [36mconst[39m os [33m=[39m [36mawait[39m [36mimport[39m([32m'os'[39m)[33m;[39m
+ [90m 15 |[39m
+ [90m 16 |[39m             [36mconst[39m credentialsJson [33m=[39m [33mBuffer[39m[33m.[39m[36mfrom[39m(base64Creds[33m,[39m [32m'base64'[39m)[33m.[39mtoString([32m'utf-8'[39m)[33m;[39m[0m
+
+A Node.js module is loaded ('path' at line 13) which is not supported in the Edge Runtime.
+Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+
+
+{"timestamp":"2026-01-17T02:18:21.892Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:18:31.887Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:18:41.886Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:18:51.886Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:19:01.885Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:19:11.885Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+ GET /stories/test-id/book 200 in 240ms (compile: 143ms, render: 97ms)
+ ⚠ ./instrumentation.ts:12:30
+Ecmascript file had an error
+[0m [90m 10 |[39m         [36mtry[39m {
+ [90m 11 |[39m             [90m// Dynamically import fs/path/os to avoid Edge Runtime crashes[39m
+[31m[1m>[22m[39m[90m 12 |[39m             [36mconst[39m fs [33m=[39m [36mawait[39m [36mimport[39m([32m'fs'[39m)[33m;[39m
+ [90m    |[39m                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 13 |[39m             [36mconst[39m path [33m=[39m [36mawait[39m [36mimport[39m([32m'path'[39m)[33m;[39m
+ [90m 14 |[39m             [36mconst[39m os [33m=[39m [36mawait[39m [36mimport[39m([32m'os'[39m)[33m;[39m
+ [90m 15 |[39m[0m
+
+A Node.js module is loaded ('fs' at line 12) which is not supported in the Edge Runtime.
+Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+
+
+ ⚠ ./instrumentation.ts:14:30
+Ecmascript file had an error
+[0m [90m 12 |[39m             [36mconst[39m fs [33m=[39m [36mawait[39m [36mimport[39m([32m'fs'[39m)[33m;[39m
+ [90m 13 |[39m             [36mconst[39m path [33m=[39m [36mawait[39m [36mimport[39m([32m'path'[39m)[33m;[39m
+[31m[1m>[22m[39m[90m 14 |[39m             [36mconst[39m os [33m=[39m [36mawait[39m [36mimport[39m([32m'os'[39m)[33m;[39m
+ [90m    |[39m                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 15 |[39m
+ [90m 16 |[39m             [36mconst[39m credentialsJson [33m=[39m [33mBuffer[39m[33m.[39m[36mfrom[39m(base64Creds[33m,[39m [32m'base64'[39m)[33m.[39mtoString([32m'utf-8'[39m)[33m;[39m
+ [90m 17 |[39m[0m
+
+A Node.js module is loaded ('os' at line 14) which is not supported in the Edge Runtime.
+Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+
+
+ ⚠ ./instrumentation.ts:13:32
+Ecmascript file had an error
+[0m [90m 11 |[39m             [90m// Dynamically import fs/path/os to avoid Edge Runtime crashes[39m
+ [90m 12 |[39m             [36mconst[39m fs [33m=[39m [36mawait[39m [36mimport[39m([32m'fs'[39m)[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m             [36mconst[39m path [33m=[39m [36mawait[39m [36mimport[39m([32m'path'[39m)[33m;[39m
+ [90m    |[39m                                [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 14 |[39m             [36mconst[39m os [33m=[39m [36mawait[39m [36mimport[39m([32m'os'[39m)[33m;[39m
+ [90m 15 |[39m
+ [90m 16 |[39m             [36mconst[39m credentialsJson [33m=[39m [33mBuffer[39m[33m.[39m[36mfrom[39m(base64Creds[33m,[39m [32m'base64'[39m)[33m.[39mtoString([32m'utf-8'[39m)[33m;[39m[0m
+
+A Node.js module is loaded ('path' at line 13) which is not supported in the Edge Runtime.
+Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+
+
+{"timestamp":"2026-01-17T02:19:21.886Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:19:31.886Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:19:41.887Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:19:51.886Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:20:01.886Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:20:11.886Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:20:21.886Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:20:31.886Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:20:41.890Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:20:51.888Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:21:01.888Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:21:11.887Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:21:21.888Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:21:31.888Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:21:41.888Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-01-17T02:21:51.890Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
