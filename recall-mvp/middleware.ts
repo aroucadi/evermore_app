@@ -15,7 +15,7 @@ const PUBLIC_ROUTES = [
  * Implements a "Fail Closed" security model where all /api routes
  * are protected by default, except those explicitly in PUBLIC_ROUTES.
  */
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Only apply to API routes
