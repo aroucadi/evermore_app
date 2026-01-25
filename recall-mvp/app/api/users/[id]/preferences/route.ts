@@ -4,6 +4,13 @@ import { userProfileUpdater } from '@/lib/infrastructure/di/container';
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
+
+        // SECURITY: Prevent IDOR by verifying the authenticated user matches the target
+        const requesterId = req.headers.get('x-user-id');
+        if (!requesterId || requesterId !== id) {
+            return NextResponse.json({ error: 'Forbidden: Access Denied' }, { status: 403 });
+        }
+
         const body = await req.json();
 
         // Extract all allowed preference fields
@@ -40,6 +47,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
+
+        // SECURITY: Prevent IDOR by verifying the authenticated user matches the target
+        const requesterId = req.headers.get('x-user-id');
+        if (!requesterId || requesterId !== id) {
+            return NextResponse.json({ error: 'Forbidden: Access Denied' }, { status: 403 });
+        }
+
         const user = await userProfileUpdater.getProfile(id);
 
         if (!user) {
