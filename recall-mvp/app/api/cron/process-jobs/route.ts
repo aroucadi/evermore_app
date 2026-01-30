@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateChapterUseCase, jobRepository } from '@/lib/infrastructure/di/container';
+import { validateCronAuth } from '@/lib/auth/cron';
 
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = request.headers.get('authorization');
 
-  // Security: Ensure CRON_SECRET is set and matches the header
-  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+  // Security: Secure auth check (Constant-Time comparison)
+  if (!validateCronAuth(authHeader, cronSecret)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -40,6 +41,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ processed: results.length, results });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Cron job failed:', error);
+    // Fail securely: Do not leak internal error details
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
