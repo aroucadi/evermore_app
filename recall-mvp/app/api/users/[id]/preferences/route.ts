@@ -4,6 +4,13 @@ import { userProfileUpdater } from '@/lib/infrastructure/di/container';
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
+
+        // SECURITY: Verify that the authenticated user matches the requested profile ID
+        const authenticatedUserId = req.headers.get('x-user-id');
+        if (!authenticatedUserId || authenticatedUserId !== id) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
         const body = await req.json();
 
         // Extract all allowed preference fields
@@ -33,13 +40,20 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json(updatedUser);
     } catch (error: any) {
         console.error('Preferences API Error:', error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
+
+        // SECURITY: Verify that the authenticated user matches the requested profile ID
+        const authenticatedUserId = req.headers.get('x-user-id');
+        if (!authenticatedUserId || authenticatedUserId !== id) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
         const user = await userProfileUpdater.getProfile(id);
 
         if (!user) {
@@ -48,6 +62,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
         return NextResponse.json(user.preferences || {});
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        console.error('Preferences API Error:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
