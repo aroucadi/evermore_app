@@ -1,0 +1,93 @@
+
+> evermore-mvp@0.1.0 dev
+> next dev
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.0.2:3000
+
+ ✓ Starting...
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+ ○ Compiling instrumentation Node.js ...
+[RedisService] No REDIS_URL provided. Operating in no-op mode (in-memory fallbacks may be needed).
+[GoogleSpeechAdapter] No project ID configured
+[DI] Container re-evaluating providers...
+[DI] No LLM API keys found or all adapters failed, using MockLLM.
+[LLMGateway] Initialized with throughput controls
+[DI] Using InMemoryVectorStore (no PINECONE_API_KEY - local dev mode)
+[InMemoryVectorStore] Initialized (max 10000 vectors)
+[DI] Using MockImageGenerator (no GOOGLE_CLOUD_PROJECT)
+{"timestamp":"2026-02-02T02:23:37.038Z","level":"info","message":"[Worker] Background worker started"}
+{"timestamp":"2026-02-02T02:23:37.097Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+ ✓ Ready in 54.7s
+ ○ Compiling /stories/[id]/book ...
+ GET /stories/1/book 200 in 2.8s (compile: 2.4s, render: 368ms)
+ ⚠ ./instrumentation.ts:12:30
+Ecmascript file had an error
+[0m [90m 10 |[39m         [36mtry[39m {
+ [90m 11 |[39m             [90m// Dynamically import fs/path/os to avoid Edge Runtime crashes[39m
+[31m[1m>[22m[39m[90m 12 |[39m             [36mconst[39m fs [33m=[39m [36mawait[39m [36mimport[39m([32m'fs'[39m)[33m;[39m
+ [90m    |[39m                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 13 |[39m             [36mconst[39m path [33m=[39m [36mawait[39m [36mimport[39m([32m'path'[39m)[33m;[39m
+ [90m 14 |[39m             [36mconst[39m os [33m=[39m [36mawait[39m [36mimport[39m([32m'os'[39m)[33m;[39m
+ [90m 15 |[39m[0m
+
+A Node.js module is loaded ('fs' at line 12) which is not supported in the Edge Runtime.
+Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+
+
+ ⚠ ./instrumentation.ts:14:30
+Ecmascript file had an error
+[0m [90m 12 |[39m             [36mconst[39m fs [33m=[39m [36mawait[39m [36mimport[39m([32m'fs'[39m)[33m;[39m
+ [90m 13 |[39m             [36mconst[39m path [33m=[39m [36mawait[39m [36mimport[39m([32m'path'[39m)[33m;[39m
+[31m[1m>[22m[39m[90m 14 |[39m             [36mconst[39m os [33m=[39m [36mawait[39m [36mimport[39m([32m'os'[39m)[33m;[39m
+ [90m    |[39m                              [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 15 |[39m
+ [90m 16 |[39m             [36mconst[39m credentialsJson [33m=[39m [33mBuffer[39m[33m.[39m[36mfrom[39m(base64Creds[33m,[39m [32m'base64'[39m)[33m.[39mtoString([32m'utf-8'[39m)[33m;[39m
+ [90m 17 |[39m[0m
+
+A Node.js module is loaded ('os' at line 14) which is not supported in the Edge Runtime.
+Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+
+
+ ⚠ ./instrumentation.ts:13:32
+Ecmascript file had an error
+[0m [90m 11 |[39m             [90m// Dynamically import fs/path/os to avoid Edge Runtime crashes[39m
+ [90m 12 |[39m             [36mconst[39m fs [33m=[39m [36mawait[39m [36mimport[39m([32m'fs'[39m)[33m;[39m
+[31m[1m>[22m[39m[90m 13 |[39m             [36mconst[39m path [33m=[39m [36mawait[39m [36mimport[39m([32m'path'[39m)[33m;[39m
+ [90m    |[39m                                [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 14 |[39m             [36mconst[39m os [33m=[39m [36mawait[39m [36mimport[39m([32m'os'[39m)[33m;[39m
+ [90m 15 |[39m
+ [90m 16 |[39m             [36mconst[39m credentialsJson [33m=[39m [33mBuffer[39m[33m.[39m[36mfrom[39m(base64Creds[33m,[39m [32m'base64'[39m)[33m.[39mtoString([32m'utf-8'[39m)[33m;[39m[0m
+
+A Node.js module is loaded ('path' at line 13) which is not supported in the Edge Runtime.
+Learn More: https://nextjs.org/docs/messages/node-module-in-edge-runtime
+
+
+{"timestamp":"2026-02-02T02:23:47.051Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:23:57.048Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:24:07.044Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:24:17.044Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:24:27.045Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:24:37.045Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:24:47.045Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:24:57.046Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:25:07.046Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:25:17.045Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:25:27.044Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:25:37.045Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:25:47.044Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:25:57.046Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:26:07.050Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:26:17.046Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:26:27.050Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:26:37.048Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:26:47.048Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:26:57.048Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:27:07.048Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
+{"timestamp":"2026-02-02T02:27:17.049Z","level":"error","message":"[Worker] Error in processing loop:","query":"select \"id\", \"type\", \"status\", \"payload\", \"result\", \"error\", \"created_at\", \"started_at\", \"completed_at\" from \"jobs\" where (\"jobs\".\"status\" = $1 and \"jobs\".\"type\" = $2) order by \"jobs\".\"created_at\" asc limit $3","params":["pending","generate_chapter",1],"cause":{"code":"ECONNREFUSED"}}
