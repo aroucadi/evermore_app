@@ -4,6 +4,13 @@ import { userProfileUpdater } from '@/lib/infrastructure/di/container';
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
+
+        // IDOR Protection: Ensure authenticated user matches the target ID
+        const userId = req.headers.get('x-user-id');
+        if (!userId || userId !== id) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const body = await req.json();
 
         // Extract all allowed preference fields
@@ -40,6 +47,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
+
+        // IDOR Protection: Ensure authenticated user matches the target ID
+        const userId = req.headers.get('x-user-id');
+        if (!userId || userId !== id) {
+             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
         const user = await userProfileUpdater.getProfile(id);
 
         if (!user) {
