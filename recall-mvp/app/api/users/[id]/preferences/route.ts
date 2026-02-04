@@ -4,6 +4,13 @@ import { userProfileUpdater } from '@/lib/infrastructure/di/container';
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
+
+        // SECURITY: Prevent IDOR - Ensure user can only modify their own preferences
+        const authenticatedUserId = req.headers.get('x-user-id');
+        if (!authenticatedUserId || authenticatedUserId !== id) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
         const body = await req.json();
 
         // Extract all allowed preference fields
@@ -40,6 +47,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
+
+        // SECURITY: Prevent IDOR - Ensure user can only view their own preferences
+        const authenticatedUserId = req.headers.get('x-user-id');
+        if (!authenticatedUserId || authenticatedUserId !== id) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
         const user = await userProfileUpdater.getProfile(id);
 
         if (!user) {
