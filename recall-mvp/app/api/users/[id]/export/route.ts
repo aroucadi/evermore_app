@@ -7,7 +7,12 @@ export async function GET(
 ) {
     try {
         const { id } = await context.params;
-        // Verify user is asking for their own book or family member (Auth check skipped for now per MVP, assuming middleware or session check upstream)
+        const userId = request.headers.get('x-user-id');
+
+        // Security: Ensure the requesting user is the owner of the data
+        if (!userId || userId !== id) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
         const pdfBuffer = await exportBookUseCase.execute(id);
 
@@ -23,6 +28,7 @@ export async function GET(
         });
     } catch (error: any) {
         console.error("Export failed:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        // Security: Return generic error message to client
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }
