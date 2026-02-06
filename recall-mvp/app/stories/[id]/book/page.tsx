@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, use } from 'react';
 import Link from 'next/link';
+import { escapeHtml } from '@/lib/utils';
 
 interface ChapterData {
     id: string;
@@ -128,7 +129,7 @@ export default function BookPage({ params }: { params: Promise<{ id: string }> }
                                 );
                             }
                             // Handle emphasized text (italic)
-                            const processedText = paragraph.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+                            const processedText = escapeHtml(paragraph).replace(/\*([^*]+)\*/g, '<em>$1</em>');
                             return (
                                 <p
                                     key={idx}
